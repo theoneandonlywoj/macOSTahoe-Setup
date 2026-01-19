@@ -50,7 +50,12 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-# === 4. Add Docker alias to Zsh ===
+# === 4. Set DOCKER_HOST to Podman socket ===
+echo
+echo "🔌 Configuring DOCKER_HOST to use Podman socket..."
+export DOCKER_HOST="unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')"
+
+# === 5. Add Docker alias to Zsh ===
 echo
 echo "🔗 Adding Docker alias to ~/.zshrc..."
 if grep -Fxq "$alias_line" "$zshrc_path"; then
@@ -64,7 +69,7 @@ fi
 # Apply immediately
 eval "$alias_line"
 
-# === 5. Verify Podman functionality ===
+# === 6. Verify Podman functionality ===
 echo
 echo "🧪 Testing Podman setup..."
 if podman info >/dev/null 2>&1; then
@@ -76,7 +81,7 @@ else
   echo "   podman machine stop && podman machine start"
 fi
 
-# === 6. Verify Docker alias works ===
+# === 7. Verify Docker alias works ===
 echo
 echo "🧩 Testing docker alias..."
 if docker ps >/dev/null 2>&1; then
@@ -85,7 +90,7 @@ else
   echo "⚠️  Docker alias may not yet be active in new shells. Run: source ~/.zshrc"
 fi
 
-# === 7. Wrap-up ===
+# === 8. Wrap-up ===
 echo
 echo "🎉 Podman installation complete!"
 echo
