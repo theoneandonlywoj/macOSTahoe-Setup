@@ -24,6 +24,7 @@ okta_installed=false
 claude_installed=false
 gh_installed=false
 openclaw_installed=false
+gateway_installed=false
 
 if xcode-select -p >/dev/null 2>&1; then
   xcode_installed=true
@@ -95,10 +96,17 @@ else
   echo "❌ OpenClaw: Not installed"
 fi
 
+if openclaw gateway status >/dev/null 2>&1; then
+  gateway_installed=true
+  echo "✅ OpenClaw Gateway: Installed"
+else
+  echo "❌ OpenClaw Gateway: Not installed"
+fi
+
 echo
 
 # Check if everything is already set up
-if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$sleep_disabled" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" ]]; then
+if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$sleep_disabled" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" && "$gateway_installed" == "true" ]]; then
   echo "🎉 Everything is already set up!"
   echo "➡️  Nothing to do. Your system is ready."
   echo "----------------------------------------------------"
@@ -396,7 +404,28 @@ fi
 
 echo
 
-# === 12. Summary ===
+# === 12. Install OpenClaw Gateway ===
+echo "🔧 Step 11: OpenClaw Gateway Installation"
+echo
+
+if [[ "$gateway_installed" == "true" ]]; then
+  echo "ℹ️  OpenClaw Gateway already installed. Skipping..."
+else
+  echo "📥 Installing OpenClaw Gateway..."
+  openclaw gateway install
+
+  if [[ $? -ne 0 ]]; then
+    echo "❌ OpenClaw Gateway installation failed!"
+    echo "⚠️  Please try running 'openclaw gateway install' manually."
+    exit 1
+  fi
+
+  echo "✅ OpenClaw Gateway installed successfully!"
+fi
+
+echo
+
+# === 13. Summary ===
 echo "----------------------------------------------------"
 echo "🎉 OpenClaw Setup Complete!"
 echo
@@ -411,6 +440,7 @@ echo "   • Okta Verify: $([[ -d '/Applications/Okta Verify.app' ]] && echo 'In
 echo "   • Claude Code: $([[ -d '/Applications/Claude.app' ]] && echo 'Installed' || echo 'N/A')"
 echo "   • GitHub CLI: $(command -v gh >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo "   • OpenClaw: $(command -v openclaw >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
+echo "   • OpenClaw Gateway: $(openclaw gateway status >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo
 echo "💡 Next steps:"
 echo "   • Sleep has been disabled - to restore defaults: sudo pmset -a displaysleep 10 sleep 1 disksleep 10 networkoversleep 0"
