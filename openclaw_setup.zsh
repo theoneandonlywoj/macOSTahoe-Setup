@@ -3,8 +3,8 @@
 # Author: theoneandonlywoj
 # Description:
 #   Installs Xcode Command Line Tools, verifies Git,
-#   installs Homebrew package manager, Tailscale VPN, Jira CLI, and Okta Verify.
-#   Skips steps that are already completed.
+#   installs Homebrew package manager, Tailscale VPN, Jira CLI, Okta Verify,
+#   and Claude Code. Skips steps that are already completed.
 
 echo "🦞 OpenClaw macOS Setup Script"
 echo "----------------------------------------------------"
@@ -19,6 +19,7 @@ brew_installed=false
 tailscale_installed=false
 jira_installed=false
 okta_installed=false
+claude_installed=false
 
 if xcode-select -p >/dev/null 2>&1; then
   xcode_installed=true
@@ -62,10 +63,17 @@ else
   echo "❌ Okta Verify: Not installed"
 fi
 
+if [[ -d "/Applications/Claude.app" ]]; then
+  claude_installed=true
+  echo "✅ Claude Code: Installed"
+else
+  echo "❌ Claude Code: Not installed"
+fi
+
 echo
 
 # Check if everything is already set up
-if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" ]]; then
+if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" ]]; then
   echo "🎉 Everything is already set up!"
   echo "➡️  Nothing to do. Your system is ready."
   echo "----------------------------------------------------"
@@ -263,7 +271,32 @@ fi
 
 echo
 
-# === 8. Summary ===
+# === 8. Install Claude Code ===
+echo "🔧 Step 7: Claude Code Installation"
+echo
+
+if [[ "$claude_installed" == "true" ]]; then
+  echo "ℹ️  Claude Code already installed. Skipping..."
+else
+  echo "📥 Installing Claude Code..."
+  brew install --cask claude-code
+
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Claude Code installation failed!"
+    echo "⚠️  Please try running 'brew install --cask claude-code' manually."
+    exit 1
+  fi
+
+  echo "✅ Claude Code installed successfully!"
+  echo
+  echo "💡 To use Claude Code:"
+  echo "   • Open Claude from Applications"
+  echo "   • Or run: open /Applications/Claude.app"
+fi
+
+echo
+
+# === 9. Summary ===
 echo "----------------------------------------------------"
 echo "🎉 OpenClaw Setup Complete!"
 echo
@@ -274,14 +307,16 @@ echo "   • Homebrew: $(brew --version 2>/dev/null | head -n1 || echo 'N/A')"
 echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Installed' || echo 'N/A')"
 echo "   • Jira CLI: $(command -v jira >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo "   • Okta Verify: $([[ -d '/Applications/Okta Verify.app' ]] && echo 'Installed' || echo 'N/A')"
+echo "   • Claude Code: $([[ -d '/Applications/Claude.app' ]] && echo 'Installed' || echo 'N/A')"
 echo
 echo "💡 Next steps:"
 echo "   • Run 'brew doctor' to verify Homebrew setup"
 echo "   • Open Tailscale and sign in to your account"
 echo "   • Run 'jira init' to configure Jira CLI"
-echo "   • Open Okta Verify and add your organization"
-echo "   • Configure Git with your name and email"
-echo "   • Set up SSH keys for GitHub"
+echo "   • Open Okta Verify and add your organization (or add it from your Mac with Open Okta Verify -> Add Account to another device)"
+echo "   • Open Claude from Applications to start using it"
+echo "   • Configure Git with your name and email" (optional)
+echo "   • Set up SSH keys for GitHub" (optional)
 echo
 echo "✨ Your Mac is ready for OpenClaw bot!"
 echo "----------------------------------------------------"
