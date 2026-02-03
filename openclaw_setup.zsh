@@ -4,7 +4,7 @@
 # Description:
 #   Installs Xcode Command Line Tools, verifies Git,
 #   installs Homebrew package manager, Tailscale VPN, Jira CLI, Okta Verify,
-#   and Claude Code. Skips steps that are already completed.
+#   Claude Code, GitHub CLI, and OpenClaw. Skips steps that are already completed.
 
 echo "🦞 OpenClaw macOS Setup Script"
 echo "----------------------------------------------------"
@@ -20,6 +20,8 @@ tailscale_installed=false
 jira_installed=false
 okta_installed=false
 claude_installed=false
+gh_installed=false
+openclaw_installed=false
 
 if xcode-select -p >/dev/null 2>&1; then
   xcode_installed=true
@@ -70,10 +72,24 @@ else
   echo "❌ Claude Code: Not installed"
 fi
 
+if command -v gh >/dev/null 2>&1; then
+  gh_installed=true
+  echo "✅ GitHub CLI: Installed"
+else
+  echo "❌ GitHub CLI: Not installed"
+fi
+
+if command -v openclaw >/dev/null 2>&1; then
+  openclaw_installed=true
+  echo "✅ OpenClaw: Installed"
+else
+  echo "❌ OpenClaw: Not installed"
+fi
+
 echo
 
 # Check if everything is already set up
-if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" ]]; then
+if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" ]]; then
   echo "🎉 Everything is already set up!"
   echo "➡️  Nothing to do. Your system is ready."
   echo "----------------------------------------------------"
@@ -296,7 +312,57 @@ fi
 
 echo
 
-# === 9. Summary ===
+# === 9. Install GitHub CLI ===
+echo "🔧 Step 8: GitHub CLI Installation"
+echo
+
+if [[ "$gh_installed" == "true" ]]; then
+  echo "ℹ️  GitHub CLI already installed. Skipping..."
+else
+  echo "📥 Installing GitHub CLI..."
+  brew install gh
+
+  if [[ $? -ne 0 ]]; then
+    echo "❌ GitHub CLI installation failed!"
+    echo "⚠️  Please try running 'brew install gh' manually."
+    exit 1
+  fi
+
+  echo "✅ GitHub CLI installed successfully!"
+  echo
+  echo "💡 To configure GitHub CLI:"
+  echo "   • Run: gh auth login"
+  echo "   • Follow the prompts to authenticate with GitHub"
+fi
+
+echo
+
+# === 10. Install OpenClaw ===
+echo "🔧 Step 9: OpenClaw Installation"
+echo
+
+if [[ "$openclaw_installed" == "true" ]]; then
+  echo "ℹ️  OpenClaw already installed. Skipping..."
+else
+  echo "📥 Installing OpenClaw..."
+  curl -fsSL https://openclaw.ai/install.sh | bash
+
+  if [[ $? -ne 0 ]]; then
+    echo "❌ OpenClaw installation failed!"
+    echo "⚠️  Please try running 'curl -fsSL https://openclaw.ai/install.sh | bash' manually."
+    exit 1
+  fi
+
+  echo "✅ OpenClaw installed successfully!"
+  echo
+  echo "💡 To use OpenClaw:"
+  echo "   • Run: openclaw"
+  echo "   • Or run: openclaw --help for available commands"
+fi
+
+echo
+
+# === 11. Summary ===
 echo "----------------------------------------------------"
 echo "🎉 OpenClaw Setup Complete!"
 echo
@@ -308,6 +374,8 @@ echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Instal
 echo "   • Jira CLI: $(command -v jira >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo "   • Okta Verify: $([[ -d '/Applications/Okta Verify.app' ]] && echo 'Installed' || echo 'N/A')"
 echo "   • Claude Code: $([[ -d '/Applications/Claude.app' ]] && echo 'Installed' || echo 'N/A')"
+echo "   • GitHub CLI: $(command -v gh >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
+echo "   • OpenClaw: $(command -v openclaw >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo
 echo "💡 Next steps:"
 echo "   • Run 'brew doctor' to verify Homebrew setup"
@@ -315,6 +383,8 @@ echo "   • Open Tailscale and sign in to your account"
 echo "   • Run 'jira init' to configure Jira CLI"
 echo "   • Open Okta Verify and add your organization (or add it from your Mac with Open Okta Verify -> Add Account to another device)"
 echo "   • Open Claude from Applications to start using it"
+echo "   • Run 'gh auth login' to authenticate GitHub CLI"
+echo "   • Run 'openclaw' to start using OpenClaw"
 echo "   • Configure Git with your name and email" (optional)
 echo "   • Set up SSH keys for GitHub" (optional)
 echo
