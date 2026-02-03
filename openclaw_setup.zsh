@@ -3,7 +3,7 @@
 # Author: theoneandonlywoj
 # Description:
 #   Installs Xcode Command Line Tools, verifies Git,
-#   installs Homebrew package manager, Tailscale VPN, and Jira CLI.
+#   installs Homebrew package manager, Tailscale VPN, Jira CLI, and Okta Verify.
 #   Skips steps that are already completed.
 
 echo "🦞 OpenClaw macOS Setup Script"
@@ -18,6 +18,7 @@ git_installed=false
 brew_installed=false
 tailscale_installed=false
 jira_installed=false
+okta_installed=false
 
 if xcode-select -p >/dev/null 2>&1; then
   xcode_installed=true
@@ -54,10 +55,17 @@ else
   echo "❌ Jira CLI: Not installed"
 fi
 
+if [[ -d "/Applications/Okta Verify.app" ]]; then
+  okta_installed=true
+  echo "✅ Okta Verify: Installed"
+else
+  echo "❌ Okta Verify: Not installed"
+fi
+
 echo
 
 # Check if everything is already set up
-if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" ]]; then
+if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" ]]; then
   echo "🎉 Everything is already set up!"
   echo "➡️  Nothing to do. Your system is ready."
   echo "----------------------------------------------------"
@@ -230,7 +238,32 @@ fi
 
 echo
 
-# === 7. Summary ===
+# === 7. Install Okta Verify ===
+echo "🔧 Step 6: Okta Verify Installation"
+echo
+
+if [[ "$okta_installed" == "true" ]]; then
+  echo "ℹ️  Okta Verify already installed. Skipping..."
+else
+  echo "📥 Installing Okta Verify..."
+  brew install --cask okta-verify
+
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Okta Verify installation failed!"
+    echo "⚠️  Please try running 'brew install --cask okta-verify' manually."
+    exit 1
+  fi
+
+  echo "✅ Okta Verify installed successfully!"
+  echo
+  echo "💡 To set up Okta Verify:"
+  echo "   • Open Okta Verify from Applications"
+  echo "   • Follow the prompts to add your organization"
+fi
+
+echo
+
+# === 8. Summary ===
 echo "----------------------------------------------------"
 echo "🎉 OpenClaw Setup Complete!"
 echo
@@ -240,13 +273,15 @@ echo "   • Git: $(git --version 2>/dev/null || echo 'N/A')"
 echo "   • Homebrew: $(brew --version 2>/dev/null | head -n1 || echo 'N/A')"
 echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Installed' || echo 'N/A')"
 echo "   • Jira CLI: $(command -v jira >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
+echo "   • Okta Verify: $([[ -d '/Applications/Okta Verify.app' ]] && echo 'Installed' || echo 'N/A')"
 echo
 echo "💡 Next steps:"
 echo "   • Run 'brew doctor' to verify Homebrew setup"
 echo "   • Open Tailscale and sign in to your account"
 echo "   • Run 'jira init' to configure Jira CLI"
-echo "   • Configure Git with your name and email" (optional)
-echo "   • Set up SSH keys for GitHub" (optional)
+echo "   • Open Okta Verify and add your organization"
+echo "   • Configure Git with your name and email"
+echo "   • Set up SSH keys for GitHub"
 echo
 echo "✨ Your Mac is ready for OpenClaw bot!"
 echo "----------------------------------------------------"
