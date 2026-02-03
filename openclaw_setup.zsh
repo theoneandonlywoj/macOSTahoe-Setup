@@ -3,7 +3,7 @@
 # Author: theoneandonlywoj
 # Description:
 #   Installs Xcode Command Line Tools, verifies Git,
-#   installs Homebrew package manager, and Tailscale VPN.
+#   installs Homebrew package manager, Tailscale VPN, and Jira CLI.
 #   Skips steps that are already completed.
 
 echo "🦞 OpenClaw macOS Setup Script"
@@ -17,6 +17,7 @@ xcode_installed=false
 git_installed=false
 brew_installed=false
 tailscale_installed=false
+jira_installed=false
 
 if xcode-select -p >/dev/null 2>&1; then
   xcode_installed=true
@@ -46,10 +47,17 @@ else
   echo "❌ Tailscale: Not installed"
 fi
 
+if command -v jira >/dev/null 2>&1; then
+  jira_installed=true
+  echo "✅ Jira CLI: Installed"
+else
+  echo "❌ Jira CLI: Not installed"
+fi
+
 echo
 
 # Check if everything is already set up
-if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$tailscale_installed" == "true" ]]; then
+if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" ]]; then
   echo "🎉 Everything is already set up!"
   echo "➡️  Nothing to do. Your system is ready."
   echo "----------------------------------------------------"
@@ -197,7 +205,32 @@ fi
 
 echo
 
-# === 6. Summary ===
+# === 6. Install Jira CLI ===
+echo "🔧 Step 5: Jira CLI Installation"
+echo
+
+if [[ "$jira_installed" == "true" ]]; then
+  echo "ℹ️  Jira CLI already installed. Skipping..."
+else
+  echo "📥 Installing Jira CLI..."
+  brew install jira-cli
+
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Jira CLI installation failed!"
+    echo "⚠️  Please try running 'brew install jira-cli' manually."
+    exit 1
+  fi
+
+  echo "✅ Jira CLI installed successfully!"
+  echo
+  echo "💡 To configure Jira CLI:"
+  echo "   • Run: jira init"
+  echo "   • Follow the prompts to connect to your Jira instance"
+fi
+
+echo
+
+# === 7. Summary ===
 echo "----------------------------------------------------"
 echo "🎉 OpenClaw Setup Complete!"
 echo
@@ -206,12 +239,14 @@ echo "   • Xcode Command Line Tools: $(xcode-select -p 2>/dev/null || echo 'N/
 echo "   • Git: $(git --version 2>/dev/null || echo 'N/A')"
 echo "   • Homebrew: $(brew --version 2>/dev/null | head -n1 || echo 'N/A')"
 echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Installed' || echo 'N/A')"
+echo "   • Jira CLI: $(command -v jira >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo
 echo "💡 Next steps:"
 echo "   • Run 'brew doctor' to verify Homebrew setup"
 echo "   • Open Tailscale and sign in to your account"
-echo "   • Configure Git with your name and email"
-echo "   • Set up SSH keys for GitHub"
+echo "   • Run 'jira init' to configure Jira CLI"
+echo "   • Configure Git with your name and email" (optional)
+echo "   • Set up SSH keys for GitHub" (optional)
 echo
 echo "✨ Your Mac is ready for OpenClaw bot!"
 echo "----------------------------------------------------"
