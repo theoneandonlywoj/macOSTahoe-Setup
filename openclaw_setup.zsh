@@ -3,7 +3,7 @@
 # Author: theoneandonlywoj
 # Description:
 #   Installs Xcode Command Line Tools, verifies Git,
-#   and installs Homebrew package manager.
+#   installs Homebrew package manager, and Tailscale VPN.
 #   Skips steps that are already completed.
 
 echo "🦞 OpenClaw macOS Setup Script"
@@ -16,6 +16,7 @@ echo "🔍 Checking current setup status..."
 xcode_installed=false
 git_installed=false
 brew_installed=false
+tailscale_installed=false
 
 if xcode-select -p >/dev/null 2>&1; then
   xcode_installed=true
@@ -38,10 +39,17 @@ else
   echo "❌ Homebrew: Not installed"
 fi
 
+if [[ -d "/Applications/Tailscale.app" ]]; then
+  tailscale_installed=true
+  echo "✅ Tailscale: Installed"
+else
+  echo "❌ Tailscale: Not installed"
+fi
+
 echo
 
 # Check if everything is already set up
-if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" ]]; then
+if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$tailscale_installed" == "true" ]]; then
   echo "🎉 Everything is already set up!"
   echo "➡️  Nothing to do. Your system is ready."
   echo "----------------------------------------------------"
@@ -164,7 +172,32 @@ fi
 
 echo
 
-# === 5. Summary ===
+# === 5. Install Tailscale ===
+echo "🔧 Step 4: Tailscale Installation"
+echo
+
+if [[ "$tailscale_installed" == "true" ]]; then
+  echo "ℹ️  Tailscale already installed. Skipping..."
+else
+  echo "📥 Installing Tailscale..."
+  brew install --cask tailscale
+
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Tailscale installation failed!"
+    echo "⚠️  Please try running 'brew install --cask tailscale' manually."
+    exit 1
+  fi
+
+  echo "✅ Tailscale installed successfully!"
+  echo
+  echo "💡 To start Tailscale:"
+  echo "   • Open Tailscale from Applications"
+  echo "   • Or run: open /Applications/Tailscale.app"
+fi
+
+echo
+
+# === 6. Summary ===
 echo "----------------------------------------------------"
 echo "🎉 OpenClaw Setup Complete!"
 echo
@@ -172,9 +205,11 @@ echo "📋 Installed Components:"
 echo "   • Xcode Command Line Tools: $(xcode-select -p 2>/dev/null || echo 'N/A')"
 echo "   • Git: $(git --version 2>/dev/null || echo 'N/A')"
 echo "   • Homebrew: $(brew --version 2>/dev/null | head -n1 || echo 'N/A')"
+echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Installed' || echo 'N/A')"
 echo
 echo "💡 Next steps:"
 echo "   • Run 'brew doctor' to verify Homebrew setup"
+echo "   • Open Tailscale and sign in to your account"
 echo "   • Configure Git with your name and email"
 echo "   • Set up SSH keys for GitHub"
 echo
