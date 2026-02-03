@@ -3,8 +3,9 @@
 # Author: theoneandonlywoj
 # Description:
 #   Installs Xcode Command Line Tools, verifies Git,
-#   installs Homebrew package manager, Tailscale VPN, Jira CLI, Okta Verify,
-#   Claude Code, GitHub CLI, and OpenClaw. Skips steps that are already completed.
+#   installs Homebrew package manager, disables sleep (Mac Mini),
+#   Tailscale VPN, Jira CLI, Okta Verify, Claude Code, GitHub CLI,
+#   and OpenClaw. Skips steps that are already completed.
 
 echo "🦞 OpenClaw macOS Setup Script"
 echo "----------------------------------------------------"
@@ -16,6 +17,7 @@ echo "🔍 Checking current setup status..."
 xcode_installed=false
 git_installed=false
 brew_installed=false
+sleep_disabled=false
 tailscale_installed=false
 jira_installed=false
 okta_installed=false
@@ -42,6 +44,13 @@ if command -v brew >/dev/null 2>&1; then
   echo "✅ Homebrew: Installed ($(brew --version | head -n1))"
 else
   echo "❌ Homebrew: Not installed"
+fi
+
+if pmset -g 2>/dev/null | grep -q "disablesleep.*1"; then
+  sleep_disabled=true
+  echo "✅ Sleep Disabled: Yes"
+else
+  echo "❌ Sleep Disabled: No"
 fi
 
 if [[ -d "/Applications/Tailscale.app" ]]; then
@@ -89,7 +98,7 @@ fi
 echo
 
 # Check if everything is already set up
-if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" ]]; then
+if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$sleep_disabled" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" ]]; then
   echo "🎉 Everything is already set up!"
   echo "➡️  Nothing to do. Your system is ready."
   echo "----------------------------------------------------"
@@ -212,8 +221,33 @@ fi
 
 echo
 
-# === 5. Install Tailscale ===
-echo "🔧 Step 4: Tailscale Installation"
+# === 5. Disable Sleep (Mac Mini) ===
+echo "🔧 Step 4: Disable Sleep (Mac Mini)"
+echo
+
+if [[ "$sleep_disabled" == "true" ]]; then
+  echo "ℹ️  Sleep already disabled. Skipping..."
+else
+  echo "💤 Disabling sleep mode..."
+  echo "⚠️  This requires administrator privileges."
+  sudo pmset -a disablesleep 1
+
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Failed to disable sleep!"
+    echo "⚠️  Please try running 'sudo pmset -a disablesleep 1' manually."
+    exit 1
+  fi
+
+  echo "✅ Sleep mode disabled successfully!"
+  echo
+  echo "💡 To re-enable sleep later:"
+  echo "   • Run: sudo pmset -a disablesleep 0"
+fi
+
+echo
+
+# === 6. Install Tailscale ===
+echo "🔧 Step 5: Tailscale Installation"
 echo
 
 if [[ "$tailscale_installed" == "true" ]]; then
@@ -237,8 +271,8 @@ fi
 
 echo
 
-# === 6. Install Jira CLI ===
-echo "🔧 Step 5: Jira CLI Installation"
+# === 7. Install Jira CLI ===
+echo "🔧 Step 6: Jira CLI Installation"
 echo
 
 if [[ "$jira_installed" == "true" ]]; then
@@ -262,8 +296,8 @@ fi
 
 echo
 
-# === 7. Install Okta Verify ===
-echo "🔧 Step 6: Okta Verify Installation"
+# === 8. Install Okta Verify ===
+echo "🔧 Step 7: Okta Verify Installation"
 echo
 
 if [[ "$okta_installed" == "true" ]]; then
@@ -287,8 +321,8 @@ fi
 
 echo
 
-# === 8. Install Claude Code ===
-echo "🔧 Step 7: Claude Code Installation"
+# === 9. Install Claude Code ===
+echo "🔧 Step 8: Claude Code Installation"
 echo
 
 if [[ "$claude_installed" == "true" ]]; then
@@ -312,8 +346,8 @@ fi
 
 echo
 
-# === 9. Install GitHub CLI ===
-echo "🔧 Step 8: GitHub CLI Installation"
+# === 10. Install GitHub CLI ===
+echo "🔧 Step 9: GitHub CLI Installation"
 echo
 
 if [[ "$gh_installed" == "true" ]]; then
@@ -337,8 +371,8 @@ fi
 
 echo
 
-# === 10. Install OpenClaw ===
-echo "🔧 Step 9: OpenClaw Installation"
+# === 11. Install OpenClaw ===
+echo "🔧 Step 10: OpenClaw Installation"
 echo
 
 if [[ "$openclaw_installed" == "true" ]]; then
@@ -362,7 +396,7 @@ fi
 
 echo
 
-# === 11. Summary ===
+# === 12. Summary ===
 echo "----------------------------------------------------"
 echo "🎉 OpenClaw Setup Complete!"
 echo
@@ -370,6 +404,7 @@ echo "📋 Installed Components:"
 echo "   • Xcode Command Line Tools: $(xcode-select -p 2>/dev/null || echo 'N/A')"
 echo "   • Git: $(git --version 2>/dev/null || echo 'N/A')"
 echo "   • Homebrew: $(brew --version 2>/dev/null | head -n1 || echo 'N/A')"
+echo "   • Sleep Disabled: $(pmset -g 2>/dev/null | grep -q 'disablesleep.*1' && echo 'Yes' || echo 'No')"
 echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Installed' || echo 'N/A')"
 echo "   • Jira CLI: $(command -v jira >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo "   • Okta Verify: $([[ -d '/Applications/Okta Verify.app' ]] && echo 'Installed' || echo 'N/A')"
@@ -378,6 +413,7 @@ echo "   • GitHub CLI: $(command -v gh >/dev/null 2>&1 && echo 'Installed' || 
 echo "   • OpenClaw: $(command -v openclaw >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo
 echo "💡 Next steps:"
+echo "   • Sleep has been disabled - to re-enable: sudo pmset -a disablesleep 0"
 echo "   • Run 'brew doctor' to verify Homebrew setup"
 echo "   • Open Tailscale and sign in to your account"
 echo "   • Run 'jira init' to configure Jira CLI"
