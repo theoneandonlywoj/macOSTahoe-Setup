@@ -46,7 +46,7 @@ else
   echo "❌ Homebrew: Not installed"
 fi
 
-if pmset -g 2>/dev/null | grep -q "disablesleep.*1"; then
+if pmset -g 2>/dev/null | grep -q "sleep.*0"; then
   sleep_disabled=true
   echo "✅ Sleep Disabled: Yes"
 else
@@ -228,20 +228,20 @@ echo
 if [[ "$sleep_disabled" == "true" ]]; then
   echo "ℹ️  Sleep already disabled. Skipping..."
 else
-  echo "💤 Disabling sleep mode..."
+  echo "💤 Disabling sleep mode (display, system, disk) and enabling network over sleep..."
   echo "⚠️  This requires administrator privileges."
-  sudo pmset -a disablesleep 1
+  sudo pmset -a displaysleep 0 sleep 0 disksleep 0 networkoversleep 1
 
   if [[ $? -ne 0 ]]; then
     echo "❌ Failed to disable sleep!"
-    echo "⚠️  Please try running 'sudo pmset -a disablesleep 1' manually."
+    echo "⚠️  Please try running 'sudo pmset -a displaysleep 0 sleep 0 disksleep 0 networkoversleep 1' manually."
     exit 1
   fi
 
   echo "✅ Sleep mode disabled successfully!"
   echo
-  echo "💡 To re-enable sleep later:"
-  echo "   • Run: sudo pmset -a disablesleep 0"
+  echo "💡 To restore default sleep settings later:"
+  echo "   • Run: sudo pmset -a displaysleep 10 sleep 1 disksleep 10 networkoversleep 0"
 fi
 
 echo
@@ -404,7 +404,7 @@ echo "📋 Installed Components:"
 echo "   • Xcode Command Line Tools: $(xcode-select -p 2>/dev/null || echo 'N/A')"
 echo "   • Git: $(git --version 2>/dev/null || echo 'N/A')"
 echo "   • Homebrew: $(brew --version 2>/dev/null | head -n1 || echo 'N/A')"
-echo "   • Sleep Disabled: $(pmset -g 2>/dev/null | grep -q 'disablesleep.*1' && echo 'Yes' || echo 'No')"
+echo "   • Sleep Disabled: $(pmset -g 2>/dev/null | grep -q 'sleep.*0' && echo 'Yes' || echo 'No')"
 echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Installed' || echo 'N/A')"
 echo "   • Jira CLI: $(command -v jira >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo "   • Okta Verify: $([[ -d '/Applications/Okta Verify.app' ]] && echo 'Installed' || echo 'N/A')"
@@ -413,7 +413,7 @@ echo "   • GitHub CLI: $(command -v gh >/dev/null 2>&1 && echo 'Installed' || 
 echo "   • OpenClaw: $(command -v openclaw >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo
 echo "💡 Next steps:"
-echo "   • Sleep has been disabled - to re-enable: sudo pmset -a disablesleep 0"
+echo "   • Sleep has been disabled - to restore defaults: sudo pmset -a displaysleep 10 sleep 1 disksleep 10 networkoversleep 0"
 echo "   • Run 'brew doctor' to verify Homebrew setup"
 echo "   • Open Tailscale and sign in to your account"
 echo "   • Run 'jira init' to configure Jira CLI"
