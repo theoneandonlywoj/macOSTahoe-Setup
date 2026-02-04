@@ -404,11 +404,11 @@ if [[ "$claude_installed" == "true" ]]; then
   echo "ℹ️  Claude Code already installed. Skipping..."
 else
   echo "📥 Installing Claude Code..."
-  brew install --cask claude-code
+  brew install --cask claude
 
   if [[ $? -ne 0 ]]; then
     echo "❌ Claude Code installation failed!"
-    echo "⚠️  Please try running 'brew install --cask claude-code' manually."
+    echo "⚠️  Please try running 'brew install --cask claude' manually."
     exit 1
   fi
 
@@ -519,8 +519,8 @@ echo "   • Open Okta Verify and add your organization (or add it from your Mac
 echo "   • Open Claude from Applications to start using it"
 echo "   • Run 'gh auth login' to authenticate GitHub CLI"
 echo "   • Run 'openclaw' to start using OpenClaw"
-echo "   • Configure Git with your name and email" (optional)
-echo "   • Set up SSH keys for GitHub" (optional)
+echo "   • Configure Git with your name and email (optional)"
+echo "   • Set up SSH keys for GitHub (optional)"
 echo
 echo "✨ Your Mac is ready for OpenClaw bot!"
 echo "----------------------------------------------------"
