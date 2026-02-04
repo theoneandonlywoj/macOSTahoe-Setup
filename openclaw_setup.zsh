@@ -18,6 +18,7 @@ xcode_installed=false
 git_installed=false
 brew_installed=false
 sleep_disabled=false
+dock_cleaned=false
 tailscale_installed=false
 jira_installed=false
 okta_installed=false
@@ -52,6 +53,18 @@ if pmset -g 2>/dev/null | grep -q "sleep.*0"; then
   echo "✅ Sleep Disabled: Yes"
 else
   echo "❌ Sleep Disabled: No"
+fi
+
+# Check if dock has been cleaned (Messages app removed as indicator)
+if command -v dockutil >/dev/null 2>&1; then
+  if ! dockutil --list 2>/dev/null | grep -q "Messages"; then
+    dock_cleaned=true
+    echo "✅ Dock Cleaned: Yes"
+  else
+    echo "❌ Dock Cleaned: No"
+  fi
+else
+  echo "❌ Dock Cleaned: No (dockutil not installed)"
 fi
 
 if [[ -d "/Applications/Tailscale.app" ]]; then
@@ -106,7 +119,7 @@ fi
 echo
 
 # Check if everything is already set up
-if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$sleep_disabled" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" && "$gateway_installed" == "true" ]]; then
+if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$sleep_disabled" == "true" && "$dock_cleaned" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" && "$gateway_installed" == "true" ]]; then
   echo "🎉 Everything is already set up!"
   echo "➡️  Nothing to do. Your system is ready."
   echo "----------------------------------------------------"
@@ -254,8 +267,62 @@ fi
 
 echo
 
-# === 6. Install Tailscale ===
-echo "🔧 Step 5: Tailscale Installation"
+# === 6. Clean Up Dock ===
+echo "🔧 Step 5: Clean Up Dock"
+echo
+
+if [[ "$dock_cleaned" == "true" ]]; then
+  echo "ℹ️  Dock already cleaned. Skipping..."
+else
+  # Install dockutil if not present
+  if ! command -v dockutil >/dev/null 2>&1; then
+    echo "📥 Installing dockutil..."
+    brew install dockutil
+    
+    if [[ $? -ne 0 ]]; then
+      echo "❌ dockutil installation failed!"
+      echo "⚠️  Please try running 'brew install dockutil' manually."
+      exit 1
+    fi
+  fi
+
+  echo "🧹 Removing default apps from Dock..."
+  
+  # List of apps to remove from dock
+  apps_to_remove=(
+    "Messages"
+    "Mail"
+    "Maps"
+    "Photos"
+    "FaceTime"
+    "Calendar"
+    "Contacts"
+    "Notes"
+    "Freeform"
+    "TV"
+    "Music"
+    "Keynote"
+    "Numbers"
+    "Pages"
+  )
+  
+  for app in "${apps_to_remove[@]}"; do
+    if dockutil --list 2>/dev/null | grep -q "$app"; then
+      dockutil --remove "$app" --no-restart >/dev/null 2>&1
+      echo "   ✓ Removed $app"
+    fi
+  done
+  
+  # Restart Dock to apply changes
+  killall Dock
+  
+  echo "✅ Dock cleaned successfully!"
+fi
+
+echo
+
+# === 7. Install Tailscale ===
+echo "🔧 Step 6: Tailscale Installation"
 echo
 
 if [[ "$tailscale_installed" == "true" ]]; then
@@ -279,8 +346,8 @@ fi
 
 echo
 
-# === 7. Install Jira CLI ===
-echo "🔧 Step 6: Jira CLI Installation"
+# === 8. Install Jira CLI ===
+echo "🔧 Step 7: Jira CLI Installation"
 echo
 
 if [[ "$jira_installed" == "true" ]]; then
@@ -304,8 +371,8 @@ fi
 
 echo
 
-# === 8. Install Okta Verify ===
-echo "🔧 Step 7: Okta Verify Installation"
+# === 9. Install Okta Verify ===
+echo "🔧 Step 8: Okta Verify Installation"
 echo
 
 if [[ "$okta_installed" == "true" ]]; then
@@ -329,8 +396,8 @@ fi
 
 echo
 
-# === 9. Install Claude Code ===
-echo "🔧 Step 8: Claude Code Installation"
+# === 10. Install Claude Code ===
+echo "🔧 Step 9: Claude Code Installation"
 echo
 
 if [[ "$claude_installed" == "true" ]]; then
@@ -354,8 +421,8 @@ fi
 
 echo
 
-# === 10. Install GitHub CLI ===
-echo "🔧 Step 9: GitHub CLI Installation"
+# === 11. Install GitHub CLI ===
+echo "🔧 Step 10: GitHub CLI Installation"
 echo
 
 if [[ "$gh_installed" == "true" ]]; then
@@ -379,8 +446,8 @@ fi
 
 echo
 
-# === 11. Install OpenClaw ===
-echo "🔧 Step 10: OpenClaw Installation"
+# === 12. Install OpenClaw ===
+echo "🔧 Step 11: OpenClaw Installation"
 echo
 
 if [[ "$openclaw_installed" == "true" ]]; then
@@ -404,8 +471,8 @@ fi
 
 echo
 
-# === 12. Install OpenClaw Gateway ===
-echo "🔧 Step 11: OpenClaw Gateway Installation"
+# === 13. Install OpenClaw Gateway ===
+echo "🔧 Step 12: OpenClaw Gateway Installation"
 echo
 
 if [[ "$gateway_installed" == "true" ]]; then
@@ -425,7 +492,7 @@ fi
 
 echo
 
-# === 13. Summary ===
+# === 14. Summary ===
 echo "----------------------------------------------------"
 echo "🎉 OpenClaw Setup Complete!"
 echo
@@ -434,6 +501,7 @@ echo "   • Xcode Command Line Tools: $(xcode-select -p 2>/dev/null || echo 'N/
 echo "   • Git: $(git --version 2>/dev/null || echo 'N/A')"
 echo "   • Homebrew: $(brew --version 2>/dev/null | head -n1 || echo 'N/A')"
 echo "   • Sleep Disabled: $(pmset -g 2>/dev/null | grep -q 'sleep.*0' && echo 'Yes' || echo 'No')"
+echo "   • Dock Cleaned: $(command -v dockutil >/dev/null 2>&1 && ! dockutil --list 2>/dev/null | grep -q 'Messages' && echo 'Yes' || echo 'No')"
 echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Installed' || echo 'N/A')"
 echo "   • Jira CLI: $(command -v jira >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo "   • Okta Verify: $([[ -d '/Applications/Okta Verify.app' ]] && echo 'Installed' || echo 'N/A')"
