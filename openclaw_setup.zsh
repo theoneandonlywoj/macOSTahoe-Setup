@@ -18,6 +18,7 @@ xcode_installed=false
 git_installed=false
 brew_installed=false
 sleep_disabled=false
+screensaver_disabled=false
 dock_cleaned=false
 tailscale_installed=false
 jira_installed=false
@@ -53,6 +54,15 @@ if pmset -g 2>/dev/null | grep -q "sleep.*0"; then
   echo "✅ Sleep Disabled: Yes"
 else
   echo "❌ Sleep Disabled: No"
+fi
+
+# Check if screen saver is disabled (idleTime = 0)
+screensaver_idle=$(defaults -currentHost read com.apple.screensaver idleTime 2>/dev/null)
+if [[ "$screensaver_idle" == "0" ]]; then
+  screensaver_disabled=true
+  echo "✅ Screen Saver Disabled: Yes"
+else
+  echo "❌ Screen Saver Disabled: No"
 fi
 
 # Check if dock has been cleaned (Messages app removed as indicator)
@@ -119,7 +129,7 @@ fi
 echo
 
 # Check if everything is already set up
-if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$sleep_disabled" == "true" && "$dock_cleaned" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" && "$gateway_installed" == "true" ]]; then
+if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$sleep_disabled" == "true" && "$screensaver_disabled" == "true" && "$dock_cleaned" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" && "$gateway_installed" == "true" ]]; then
   echo "🎉 Everything is already set up!"
   echo "➡️  Nothing to do. Your system is ready."
   echo "----------------------------------------------------"
@@ -267,8 +277,39 @@ fi
 
 echo
 
-# === 6. Clean Up Dock ===
-echo "🔧 Step 5: Clean Up Dock"
+# === 6. Disable Screen Saver and Screen Lock (Mac Mini) ===
+echo "🔧 Step 5: Disable Screen Saver and Screen Lock (Mac Mini)"
+echo
+
+if [[ "$screensaver_disabled" == "true" ]]; then
+  echo "ℹ️  Screen saver already disabled. Skipping..."
+else
+  echo "🖥️  Disabling screen saver and screen lock..."
+  
+  # Disable screen saver (set idle time to 0 = never)
+  defaults -currentHost write com.apple.screensaver idleTime 0
+  
+  # Disable password requirement after screen saver / sleep
+  defaults write com.apple.screensaver askForPassword -int 0
+  defaults write com.apple.screensaver askForPasswordDelay -int 0
+  
+  # Clear screen saver module (no screen saver)
+  defaults -currentHost write com.apple.screensaver moduleDict -dict moduleName -string "" path -string ""
+  
+  # Refresh preferences daemon
+  killall cfprefsd 2>/dev/null || true
+
+  echo "✅ Screen saver and screen lock disabled successfully!"
+  echo
+  echo "💡 To restore default screen saver settings later:"
+  echo "   • Run: defaults -currentHost write com.apple.screensaver idleTime 300"
+  echo "   • Run: defaults write com.apple.screensaver askForPassword -int 1"
+fi
+
+echo
+
+# === 7. Clean Up Dock ===
+echo "🔧 Step 6: Clean Up Dock"
 echo
 
 if [[ "$dock_cleaned" == "true" ]]; then
@@ -321,8 +362,8 @@ fi
 
 echo
 
-# === 7. Install Tailscale ===
-echo "🔧 Step 6: Tailscale Installation"
+# === 8. Install Tailscale ===
+echo "🔧 Step 7: Tailscale Installation"
 echo
 
 if [[ "$tailscale_installed" == "true" ]]; then
@@ -346,8 +387,8 @@ fi
 
 echo
 
-# === 8. Install Jira CLI ===
-echo "🔧 Step 7: Jira CLI Installation"
+# === 9. Install Jira CLI ===
+echo "🔧 Step 8: Jira CLI Installation"
 echo
 
 if [[ "$jira_installed" == "true" ]]; then
@@ -371,8 +412,8 @@ fi
 
 echo
 
-# === 9. Install Okta Verify ===
-echo "🔧 Step 8: Okta Verify Installation"
+# === 10. Install Okta Verify ===
+echo "🔧 Step 9: Okta Verify Installation"
 echo
 
 if [[ "$okta_installed" == "true" ]]; then
@@ -396,8 +437,8 @@ fi
 
 echo
 
-# === 10. Install Claude Code ===
-echo "🔧 Step 9: Claude Code Installation"
+# === 11. Install Claude Code ===
+echo "🔧 Step 10: Claude Code Installation"
 echo
 
 if [[ "$claude_installed" == "true" ]]; then
@@ -421,8 +462,8 @@ fi
 
 echo
 
-# === 11. Install GitHub CLI ===
-echo "🔧 Step 10: GitHub CLI Installation"
+# === 12. Install GitHub CLI ===
+echo "🔧 Step 11: GitHub CLI Installation"
 echo
 
 if [[ "$gh_installed" == "true" ]]; then
@@ -446,8 +487,8 @@ fi
 
 echo
 
-# === 12. Install OpenClaw ===
-echo "🔧 Step 11: OpenClaw Installation"
+# === 13. Install OpenClaw ===
+echo "🔧 Step 12: OpenClaw Installation"
 echo
 
 if [[ "$openclaw_installed" == "true" ]]; then
@@ -471,8 +512,8 @@ fi
 
 echo
 
-# === 13. Install OpenClaw Gateway ===
-echo "🔧 Step 12: OpenClaw Gateway Installation"
+# === 14. Install OpenClaw Gateway ===
+echo "🔧 Step 13: OpenClaw Gateway Installation"
 echo
 
 if [[ "$gateway_installed" == "true" ]]; then
@@ -492,7 +533,7 @@ fi
 
 echo
 
-# === 14. Summary ===
+# === 15. Summary ===
 echo "----------------------------------------------------"
 echo "🎉 OpenClaw Setup Complete!"
 echo
@@ -501,6 +542,7 @@ echo "   • Xcode Command Line Tools: $(xcode-select -p 2>/dev/null || echo 'N/
 echo "   • Git: $(git --version 2>/dev/null || echo 'N/A')"
 echo "   • Homebrew: $(brew --version 2>/dev/null | head -n1 || echo 'N/A')"
 echo "   • Sleep Disabled: $(pmset -g 2>/dev/null | grep -q 'sleep.*0' && echo 'Yes' || echo 'No')"
+echo "   • Screen Saver Disabled: $([[ "$(defaults -currentHost read com.apple.screensaver idleTime 2>/dev/null)" == "0" ]] && echo 'Yes' || echo 'No')"
 echo "   • Dock Cleaned: $(command -v dockutil >/dev/null 2>&1 && ! dockutil --list 2>/dev/null | grep -q 'Messages' && echo 'Yes' || echo 'No')"
 echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Installed' || echo 'N/A')"
 echo "   • Jira CLI: $(command -v jira >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
@@ -511,7 +553,8 @@ echo "   • OpenClaw: $(command -v openclaw >/dev/null 2>&1 && echo 'Installed'
 echo "   • OpenClaw Gateway: $(openclaw gateway status >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo
 echo "💡 Next steps:"
-echo "   • Sleep has been disabled - to restore defaults: sudo pmset -a displaysleep 10 sleep 1 disksleep 10 networkoversleep 0"
+echo "   • Sleep has been disabled - to restore: sudo pmset -a displaysleep 10 sleep 1 disksleep 10 networkoversleep 0"
+echo "   • Screen saver disabled - to restore: defaults -currentHost write com.apple.screensaver idleTime 300"
 echo "   • Run 'brew doctor' to verify Homebrew setup"
 echo "   • Open Tailscale and sign in to your account"
 echo "   • Run 'jira init' to configure Jira CLI"
