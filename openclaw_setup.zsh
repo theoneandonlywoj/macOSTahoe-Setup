@@ -88,7 +88,7 @@ else
   echo "❌ Okta Verify: Not installed"
 fi
 
-if [[ -d "/Applications/Claude.app" ]]; then
+if command -v claude >/dev/null 2>&1; then
   claude_installed=true
   echo "✅ Claude Code: Installed"
 else
@@ -404,19 +404,19 @@ if [[ "$claude_installed" == "true" ]]; then
   echo "ℹ️  Claude Code already installed. Skipping..."
 else
   echo "📥 Installing Claude Code..."
-  brew install --cask claude
+  curl -fsSL https://claude.ai/install.sh | bash
 
   if [[ $? -ne 0 ]]; then
     echo "❌ Claude Code installation failed!"
-    echo "⚠️  Please try running 'brew install --cask claude' manually."
+    echo "⚠️  Please try running 'curl -fsSL https://claude.ai/install.sh | bash' manually."
     exit 1
   fi
 
   echo "✅ Claude Code installed successfully!"
   echo
   echo "💡 To use Claude Code:"
-  echo "   • Open Claude from Applications"
-  echo "   • Or run: open /Applications/Claude.app"
+  echo "   • Run: claude"
+  echo "   • Or run: claude --help for available commands"
 fi
 
 echo
@@ -505,7 +505,7 @@ echo "   • Dock Cleaned: $(command -v dockutil >/dev/null 2>&1 && ! dockutil -
 echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Installed' || echo 'N/A')"
 echo "   • Jira CLI: $(command -v jira >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo "   • Okta Verify: $([[ -d '/Applications/Okta Verify.app' ]] && echo 'Installed' || echo 'N/A')"
-echo "   • Claude Code: $([[ -d '/Applications/Claude.app' ]] && echo 'Installed' || echo 'N/A')"
+echo "   • Claude Code: $(command -v claude >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo "   • GitHub CLI: $(command -v gh >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo "   • OpenClaw: $(command -v openclaw >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo "   • OpenClaw Gateway: $(openclaw gateway status >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
@@ -516,7 +516,7 @@ echo "   • Run 'brew doctor' to verify Homebrew setup"
 echo "   • Open Tailscale and sign in to your account"
 echo "   • Run 'jira init' to configure Jira CLI"
 echo "   • Open Okta Verify and add your organization (or add it from your Mac with Open Okta Verify -> Add Account to another device)"
-echo "   • Open Claude from Applications to start using it"
+echo "   • Run 'claude' to start using Claude Code"
 echo "   • Run 'gh auth login' to authenticate GitHub CLI"
 echo "   • Run 'openclaw' to start using OpenClaw"
 echo "   • Configure Git with your name and email (optional)"
