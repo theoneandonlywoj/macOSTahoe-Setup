@@ -19,6 +19,7 @@ git_installed=false
 brew_installed=false
 sleep_disabled=false
 screensaver_disabled=false
+caffeinate_running=false
 dock_cleaned=false
 tailscale_installed=false
 jira_installed=false
@@ -63,6 +64,14 @@ if [[ "$screensaver_idle" == "0" ]]; then
   echo "✅ Screen Saver Disabled: Yes"
 else
   echo "❌ Screen Saver Disabled: No"
+fi
+
+# Check if caffeinate LaunchDaemon is installed and running
+if [[ -f "/Library/LaunchDaemons/com.openclaw.caffeinate.plist" ]] && launchctl list 2>/dev/null | grep -q "com.openclaw.caffeinate"; then
+  caffeinate_running=true
+  echo "✅ Caffeinate Daemon: Running"
+else
+  echo "❌ Caffeinate Daemon: Not running"
 fi
 
 # Check if dock has been cleaned (Messages app removed as indicator)
@@ -129,7 +138,7 @@ fi
 echo
 
 # Check if everything is already set up
-if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$sleep_disabled" == "true" && "$screensaver_disabled" == "true" && "$dock_cleaned" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" && "$gateway_installed" == "true" ]]; then
+if [[ "$xcode_installed" == "true" && "$git_installed" == "true" && "$brew_installed" == "true" && "$sleep_disabled" == "true" && "$screensaver_disabled" == "true" && "$caffeinate_running" == "true" && "$dock_cleaned" == "true" && "$tailscale_installed" == "true" && "$jira_installed" == "true" && "$okta_installed" == "true" && "$claude_installed" == "true" && "$gh_installed" == "true" && "$openclaw_installed" == "true" && "$gateway_installed" == "true" ]]; then
   echo "🎉 Everything is already set up!"
   echo "➡️  Nothing to do. Your system is ready."
   echo "----------------------------------------------------"
@@ -259,20 +268,44 @@ echo
 if [[ "$sleep_disabled" == "true" ]]; then
   echo "ℹ️  Sleep already disabled. Skipping..."
 else
-  echo "💤 Disabling sleep mode (display, system, disk) and enabling network over sleep..."
+  echo "💤 Disabling all sleep and power-off modes..."
   echo "⚠️  This requires administrator privileges."
-  sudo pmset -a displaysleep 0 sleep 0 disksleep 0 networkoversleep 1
+  echo
+  echo "   Configuring power settings:"
+  echo "   • displaysleep 0    - Never turn off display"
+  echo "   • sleep 0           - Never sleep"
+  echo "   • disksleep 0       - Never spin down disks"
+  echo "   • standby 0         - Disable standby mode"
+  echo "   • autopoweroff 0    - Disable automatic power off"
+  echo "   • hibernatemode 0   - Disable hibernation"
+  echo "   • networkoversleep 1 - Keep network active during sleep"
+  echo "   • womp 1            - Wake on network access"
+  echo "   • powernap 0        - Disable Power Nap"
+  echo "   • ttyskeepawake 1   - Prevent sleep during remote sessions"
+  echo
+  
+  sudo pmset -a \
+    displaysleep 0 \
+    sleep 0 \
+    disksleep 0 \
+    standby 0 \
+    autopoweroff 0 \
+    hibernatemode 0 \
+    networkoversleep 1 \
+    womp 1 \
+    powernap 0 \
+    ttyskeepawake 1
 
   if [[ $? -ne 0 ]]; then
     echo "❌ Failed to disable sleep!"
-    echo "⚠️  Please try running 'sudo pmset -a displaysleep 0 sleep 0 disksleep 0 networkoversleep 1' manually."
+    echo "⚠️  Please try running the pmset command manually."
     exit 1
   fi
 
-  echo "✅ Sleep mode disabled successfully!"
+  echo "✅ All sleep and power-off modes disabled!"
   echo
-  echo "💡 To restore default sleep settings later:"
-  echo "   • Run: sudo pmset -a displaysleep 10 sleep 1 disksleep 10 networkoversleep 0"
+  echo "💡 To restore default power settings later:"
+  echo "   • Run: sudo pmset -a displaysleep 10 sleep 1 disksleep 10 standby 1 autopoweroff 1 hibernatemode 3 networkoversleep 0 womp 0 powernap 1 ttyskeepawake 0"
 fi
 
 echo
@@ -308,8 +341,77 @@ fi
 
 echo
 
-# === 7. Clean Up Dock ===
-echo "🔧 Step 6: Clean Up Dock"
+# === 7. Install Caffeinate Daemon (Mac Mini) ===
+echo "🔧 Step 6: Install Caffeinate Daemon (Mac Mini)"
+echo
+
+if [[ "$caffeinate_running" == "true" ]]; then
+  echo "ℹ️  Caffeinate daemon already running. Skipping..."
+else
+  echo "☕ Installing caffeinate as a LaunchDaemon..."
+  echo "⚠️  This requires administrator privileges."
+  echo "   Caffeinate prevents the system from sleeping even if power settings are changed."
+  
+  # Create the LaunchDaemon plist
+  caffeinate_plist="/Library/LaunchDaemons/com.openclaw.caffeinate.plist"
+  
+  sudo tee "$caffeinate_plist" > /dev/null << 'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.openclaw.caffeinate</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/caffeinate</string>
+        <string>-dimsu</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+</dict>
+</plist>
+PLIST
+
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Failed to create caffeinate LaunchDaemon!"
+    echo "⚠️  Please try creating the plist manually."
+    exit 1
+  fi
+
+  # Set correct permissions
+  sudo chown root:wheel "$caffeinate_plist"
+  sudo chmod 644 "$caffeinate_plist"
+
+  # Load the daemon
+  sudo launchctl load "$caffeinate_plist"
+
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Failed to load caffeinate daemon!"
+    echo "⚠️  Please try running 'sudo launchctl load $caffeinate_plist' manually."
+    exit 1
+  fi
+
+  echo "✅ Caffeinate daemon installed and running!"
+  echo
+  echo "💡 Caffeinate flags used:"
+  echo "   • -d: Prevent display sleep"
+  echo "   • -i: Prevent idle sleep"
+  echo "   • -m: Prevent disk sleep"
+  echo "   • -s: Prevent system sleep (AC power)"
+  echo "   • -u: Declare user activity"
+  echo
+  echo "💡 To stop caffeinate later:"
+  echo "   • Run: sudo launchctl unload /Library/LaunchDaemons/com.openclaw.caffeinate.plist"
+  echo "   • Run: sudo rm /Library/LaunchDaemons/com.openclaw.caffeinate.plist"
+fi
+
+echo
+
+# === 8. Clean Up Dock ===
+echo "🔧 Step 7: Clean Up Dock"
 echo
 
 if [[ "$dock_cleaned" == "true" ]]; then
@@ -362,8 +464,8 @@ fi
 
 echo
 
-# === 8. Install Tailscale ===
-echo "🔧 Step 7: Tailscale Installation"
+# === 9. Install Tailscale ===
+echo "🔧 Step 8: Tailscale Installation"
 echo
 
 if [[ "$tailscale_installed" == "true" ]]; then
@@ -387,8 +489,8 @@ fi
 
 echo
 
-# === 9. Install Jira CLI ===
-echo "🔧 Step 8: Jira CLI Installation"
+# === 10. Install Jira CLI ===
+echo "🔧 Step 9: Jira CLI Installation"
 echo
 
 if [[ "$jira_installed" == "true" ]]; then
@@ -412,8 +514,8 @@ fi
 
 echo
 
-# === 10. Install Okta Verify ===
-echo "🔧 Step 9: Okta Verify Installation"
+# === 11. Install Okta Verify ===
+echo "🔧 Step 10: Okta Verify Installation"
 echo
 
 if [[ "$okta_installed" == "true" ]]; then
@@ -437,8 +539,8 @@ fi
 
 echo
 
-# === 11. Install Claude Code ===
-echo "🔧 Step 10: Claude Code Installation"
+# === 12. Install Claude Code ===
+echo "🔧 Step 11: Claude Code Installation"
 echo
 
 if [[ "$claude_installed" == "true" ]]; then
@@ -462,8 +564,8 @@ fi
 
 echo
 
-# === 12. Install GitHub CLI ===
-echo "🔧 Step 11: GitHub CLI Installation"
+# === 13. Install GitHub CLI ===
+echo "🔧 Step 12: GitHub CLI Installation"
 echo
 
 if [[ "$gh_installed" == "true" ]]; then
@@ -487,8 +589,8 @@ fi
 
 echo
 
-# === 13. Install OpenClaw ===
-echo "🔧 Step 12: OpenClaw Installation"
+# === 14. Install OpenClaw ===
+echo "🔧 Step 13: OpenClaw Installation"
 echo
 
 if [[ "$openclaw_installed" == "true" ]]; then
@@ -512,8 +614,8 @@ fi
 
 echo
 
-# === 14. Install OpenClaw Gateway ===
-echo "🔧 Step 13: OpenClaw Gateway Installation"
+# === 15. Install OpenClaw Gateway ===
+echo "🔧 Step 14: OpenClaw Gateway Installation"
 echo
 
 if [[ "$gateway_installed" == "true" ]]; then
@@ -533,7 +635,7 @@ fi
 
 echo
 
-# === 15. Summary ===
+# === 16. Summary ===
 echo "----------------------------------------------------"
 echo "🎉 OpenClaw Setup Complete!"
 echo
@@ -543,6 +645,7 @@ echo "   • Git: $(git --version 2>/dev/null || echo 'N/A')"
 echo "   • Homebrew: $(brew --version 2>/dev/null | head -n1 || echo 'N/A')"
 echo "   • Sleep Disabled: $(pmset -g 2>/dev/null | grep -q 'sleep.*0' && echo 'Yes' || echo 'No')"
 echo "   • Screen Saver Disabled: $([[ "$(defaults -currentHost read com.apple.screensaver idleTime 2>/dev/null)" == "0" ]] && echo 'Yes' || echo 'No')"
+echo "   • Caffeinate Daemon: $([[ -f '/Library/LaunchDaemons/com.openclaw.caffeinate.plist' ]] && launchctl list 2>/dev/null | grep -q 'com.openclaw.caffeinate' && echo 'Running' || echo 'N/A')"
 echo "   • Dock Cleaned: $(command -v dockutil >/dev/null 2>&1 && ! dockutil --list 2>/dev/null | grep -q 'Messages' && echo 'Yes' || echo 'No')"
 echo "   • Tailscale: $([[ -d '/Applications/Tailscale.app' ]] && echo 'Installed' || echo 'N/A')"
 echo "   • Jira CLI: $(command -v jira >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
@@ -553,8 +656,9 @@ echo "   • OpenClaw: $(command -v openclaw >/dev/null 2>&1 && echo 'Installed'
 echo "   • OpenClaw Gateway: $(openclaw gateway status >/dev/null 2>&1 && echo 'Installed' || echo 'N/A')"
 echo
 echo "💡 Next steps:"
-echo "   • Sleep has been disabled - to restore: sudo pmset -a displaysleep 10 sleep 1 disksleep 10 networkoversleep 0"
+echo "   • Sleep/power-off disabled - to restore: sudo pmset -a displaysleep 10 sleep 1 disksleep 10 standby 1 autopoweroff 1 hibernatemode 3"
 echo "   • Screen saver disabled - to restore: defaults -currentHost write com.apple.screensaver idleTime 300"
+echo "   • Caffeinate daemon running - to stop: sudo launchctl unload /Library/LaunchDaemons/com.openclaw.caffeinate.plist"
 echo "   • Run 'brew doctor' to verify Homebrew setup"
 echo "   • Open Tailscale and sign in to your account"
 echo "   • Run 'jira init' to configure Jira CLI"
