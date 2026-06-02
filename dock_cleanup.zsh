@@ -5,16 +5,19 @@
 # Requirements: brew install dockutil
 
 apps_to_remove=(
-  "Siri"
   "Safari"
+  "Messages"
   "Mail"
-  "Contacts"
   "Maps"
   "Photos"
-  "Messages"
   "FaceTime"
+  "Calendar"
+  "Contacts"
+  "TV"
   "Music"
-  "Books"
+  "Keynote"
+  "Numbers"
+  "Pages"
 )
 
 backup_plist=~/Desktop/com.apple.dock.backup.plist
