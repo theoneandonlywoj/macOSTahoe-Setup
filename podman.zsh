@@ -1,10 +1,10 @@
 #!/bin/zsh
 # === podman.zsh ===
-# Purpose: Install Podman (container engine) on macOS Ventura with Zsh and a working Docker alias
-# Shell: Zsh (default on macOS Ventura)
+# Purpose: Install Podman (container engine) on macOS Tahoe with Zsh and a working Docker alias
+# Shell: Zsh (default on macOS Tahoe)
 # Author: theoneandonlywoj
 
-echo "🚀 Starting Podman installation on macOS Ventura..."
+echo "🚀 Starting Podman installation on macOS Tahoe..."
 echo
 
 # === Configuration ===

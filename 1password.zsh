@@ -1,10 +1,10 @@
 #!/bin/zsh
 # === install_1password.zsh ===
-# Purpose: Install 1Password on macOS Ventura (with optional Dock integration)
+# Purpose: Install 1Password on macOS Tahoe (with optional Dock integration)
 # Shell: Zsh (default)
 # Author: theoneandonlywoj (style inspired)
 
-echo "🚀 Starting 1Password installation on macOS Ventura..."
+echo "🚀 Starting 1Password installation on macOS Tahoe..."
 echo
 
 # === Configuration ===

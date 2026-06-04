@@ -22,22 +22,28 @@ Each script is intended to be run from this repository directory and is safe to 
 From the repository root:
 
 ```zsh
-chmod +x git.sh gh.zsh brew.zsh dock_cleanup.zsh google_chrome.zsh slack.zsh cursor_ide.zsh podman.zsh docker_compose.zsh 1password.zsh mise.zsh elixir_and_erlang.zsh kubectl_and_krew.zsh kafka_cli.zsh
+chmod +x vivaldi_browser.zsh git.zsh gh.zsh brew.zsh dock_cleanup.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh
 
-./git.sh
+./vivaldi_browser.zsh
+./git.zsh
 ./gh.zsh
 ./brew.zsh
 ./dock_cleanup.zsh
 ./google_chrome.zsh
 ./slack.zsh
+./1password.zsh
+./postman.zsh
 ./cursor_ide.zsh
+./vscode_ide.zsh
+./opencode.zsh
 ./podman.zsh
 ./docker_compose.zsh
-./1password.zsh
-./mise.zsh
-./elixir_and_erlang.zsh
 ./kubectl_and_krew.zsh
 ./kafka_cli.zsh
+./mise.zsh
+./elixir_and_erlang.zsh
+./emacs.zsh
+./doom_emacs.zsh
 ```
 
 ## Scripts
@@ -49,8 +55,8 @@ chmod +x git.sh gh.zsh brew.zsh dock_cleanup.zsh google_chrome.zsh slack.zsh cur
 Sets up Git with sensible defaults.
 
 ```zsh
-chmod +x git.sh
-./git.sh
+chmod +x git.zsh
+./git.zsh
 ```
 
 #### GitHub CLI
@@ -91,6 +97,15 @@ chmod +x google_chrome.zsh
 ./google_chrome.zsh
 ```
 
+#### Vivaldi
+
+Installs the Vivaldi browser and adds it to the Dock.
+
+```zsh
+chmod +x vivaldi_browser.zsh
+./vivaldi_browser.zsh
+```
+
 #### Slack
 
 Installs Slack.
@@ -99,6 +114,26 @@ Installs Slack.
 chmod +x slack.zsh
 ./slack.zsh
 ```
+
+#### 1Password
+
+Installs 1Password.
+
+```zsh
+chmod +x 1password.zsh
+./1password.zsh
+```
+
+#### Postman
+
+Installs Postman API client and adds it to the Dock.
+
+```zsh
+chmod +x postman.zsh
+./postman.zsh
+```
+
+### IDEs & editors
 
 #### Cursor IDE
 
@@ -109,13 +144,22 @@ chmod +x cursor_ide.zsh
 ./cursor_ide.zsh
 ```
 
-#### 1Password
+#### Visual Studio Code
 
-Installs 1Password.
+Installs Visual Studio Code and adds it to the Dock.
 
 ```zsh
-chmod +x 1password.zsh
-./1password.zsh
+chmod +x vscode_ide.zsh
+./vscode_ide.zsh
+```
+
+#### OpenCode
+
+Installs OpenCode (open-source AI coding agent) — both CLI and Desktop app — and adds it to the Dock.
+
+```zsh
+chmod +x opencode.zsh
+./opencode.zsh
 ```
 
 ### Containers & Kubernetes
@@ -174,6 +218,24 @@ Installs Elixir and Erlang (typically via Mise / package manager).
 ```zsh
 chmod +x elixir_and_erlang.zsh
 ./elixir_and_erlang.zsh
+```
+
+#### Emacs
+
+Installs Emacs 30 via Homebrew emacs-plus with ImageMagick support. Optionally installs git, ripgrep, and fd.
+
+```zsh
+chmod +x emacs.zsh
+./emacs.zsh
+```
+
+#### Doom Emacs
+
+Sets up Doom Emacs (clones, installs, syncs, installs Markdown and ShellCheck). Requires Emacs to be installed first (run `emacs.zsh`).
+
+```zsh
+chmod +x doom_emacs.zsh
+./doom_emacs.zsh
 ```
 
 ## Notes & troubleshooting

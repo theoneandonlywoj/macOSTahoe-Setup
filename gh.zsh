@@ -1,10 +1,10 @@
 #!/bin/zsh
 # === install_github_cli.zsh ===
-# Purpose: Install GitHub CLI (gh) on macOS Ventura with Zsh
-# Shell: Zsh (default on macOS Ventura)
+# Purpose: Install GitHub CLI (gh) on macOS Tahoe with Zsh
+# Shell: Zsh (default on macOS Tahoe)
 # Author: theoneandonlywoj (style inspired)
 
-echo "🚀 Starting GitHub CLI (gh) installation on macOS Ventura..."
+echo "🚀 Starting GitHub CLI (gh) installation on macOS Tahoe..."
 echo
 
 # === Configuration ===

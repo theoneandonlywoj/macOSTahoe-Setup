@@ -1,20 +1,23 @@
 #!/bin/zsh
 # === dock_cleanup.zsh ===
-# Purpose: Safely remove specific default macOS apps from Dock (Ventura) using dockutil
+# Purpose: Safely remove specific default macOS apps from Dock (macOS Tahoe) using dockutil
 # Author: ChatGPT (polished version)
 # Requirements: brew install dockutil
 
 apps_to_remove=(
-  "Siri"
   "Safari"
+  "Messages"
   "Mail"
-  "Contacts"
   "Maps"
   "Photos"
-  "Messages"
   "FaceTime"
+  "Calendar"
+  "Contacts"
+  "TV"
   "Music"
-  "Books"
+  "Keynote"
+  "Numbers"
+  "Pages"
 )
 
 backup_plist=~/Desktop/com.apple.dock.backup.plist

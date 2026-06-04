@@ -1,10 +1,10 @@
 #!/bin/zsh
 # === brew.zsh ===
-# Purpose: Install Homebrew package manager on macOS Ventura
-# Shell: Zsh (default on macOS Ventura)
+# Purpose: Install Homebrew package manager on macOS Tahoe
+# Shell: Zsh (default on macOS Tahoe)
 # Author: theoneandonlywoj (style inspired)
 
-echo "🚀 Starting Homebrew installation on macOS Ventura..."
+echo "🚀 Starting Homebrew installation on macOS Tahoe..."
 echo "📦 Preparing environment..."
 echo
 

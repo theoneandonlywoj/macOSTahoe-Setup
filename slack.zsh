@@ -1,12 +1,12 @@
 #!/bin/zsh
-# === Slack Installer + Dock Setup for macOS Ventura (Zsh) ===
+# === Slack Installer + Dock Setup for macOS Tahoe (Zsh) ===
 # Author: theoneandonlywoj
 # Description:
 #   Installs Slack via Homebrew or .dmg fallback,
 #   adds Slack to the Dock one position before Notes,
 #   and restarts the Dock to apply changes.
 
-echo "💬 Slack Installer + Dock Setup (macOS Ventura)"
+echo "💬 Slack Installer + Dock Setup (macOS Tahoe)"
 echo "-----------------------------------------------"
 
 # === 1. Check for admin rights ===

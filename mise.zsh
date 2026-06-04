@@ -1,10 +1,10 @@
 #!/bin/zsh
 # === install_mise.zsh ===
-# Purpose: Install Mise (version manager for programming languages) on macOS Ventura
-# Shell: Zsh (default on macOS Ventura)
+# Purpose: Install Mise (version manager for programming languages) on macOS Tahoe
+# Shell: Zsh (default on macOS Tahoe)
 # Author: theoneandonlywoj (style inspired)
 
-echo "🚀 Starting Mise installation on macOS Ventura..."
+echo "🚀 Starting Mise installation on macOS Tahoe..."
 echo
 
 # === Configuration ===
@@ -49,6 +49,15 @@ fi
 echo
 echo "🔧 Setting up Zsh integration for Mise..."
 
+arch_name=$(uname -m)
+if [[ "$arch_name" == "arm64" ]]; then
+  mise_bin_path="/opt/homebrew/bin/mise"
+else
+  mise_bin_path="/usr/local/bin/mise"
+fi
+
+echo "📦 Detected mise path: $mise_bin_path"
+
 # Ensure ~/.zshrc exists
 touch ~/.zshrc
 
@@ -57,18 +66,18 @@ if ! grep -q 'mise activate zsh' ~/.zshrc; then
   echo "💡 Adding Mise activation to ~/.zshrc..."
   echo '' >> ~/.zshrc
   echo '# Initialize Mise (language version manager)' >> ~/.zshrc
-  echo 'eval "$(/usr/local/bin/mise activate zsh)"' >> ~/.zshrc
+  echo "eval \"\$($mise_bin_path activate zsh)\"" >> ~/.zshrc
 else
   echo "✅ Mise already initialized in ~/.zshrc."
   # Update existing activation to use full path if needed
   if grep -q 'eval "$(mise activate zsh)"' ~/.zshrc; then
     echo "💡 Updating Mise activation to use full path..."
-    sed -i '' 's|eval "$(mise activate zsh)"|eval "$(/usr/local/bin/mise activate zsh)"|' ~/.zshrc
+    sed -i '' "s|eval \"(mise activate zsh)\"|eval \"\$($mise_bin_path activate zsh)\"|" ~/.zshrc
   fi
 fi
 
 # Load Mise immediately in this shell
-eval "$(mise activate zsh)"
+eval "$($mise_bin_path activate zsh)"
 
 echo "✅ Mise integrated with Zsh shell."
 

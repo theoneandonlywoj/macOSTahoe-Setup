@@ -1,11 +1,11 @@
 #!/bin/zsh
-# === Google Chrome Installer + Dock Setup for macOS Ventura (Zsh) ===
+# === Google Chrome Installer + Dock Setup for macOS Tahoe (Zsh) ===
 # Author: theoneandonlywoj
 # Description:
 #   Installs Google Chrome via Homebrew or .dmg, adds it to the Dock
 #   right after Calendar, and refreshes the Dock.
 
-echo "🌐 Google Chrome Installer + Dock Setup (macOS Ventura)"
+echo "🌐 Google Chrome Installer + Dock Setup (macOS Tahoe)"
 echo "------------------------------------------------------"
 
 # === 1. Check for admin rights ===
