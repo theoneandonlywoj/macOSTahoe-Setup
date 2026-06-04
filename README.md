@@ -22,12 +22,12 @@ Each script is intended to be run from this repository directory and is safe to 
 From the repository root:
 
 ```zsh
-chmod +x vivaldi_browser.zsh git.zsh gh.zsh brew.zsh dock_cleanup.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh
+chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh dock_cleanup.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh
 
+./brew.zsh
 ./vivaldi_browser.zsh
 ./git.zsh
 ./gh.zsh
-./brew.zsh
 ./dock_cleanup.zsh
 ./google_chrome.zsh
 ./slack.zsh
@@ -50,6 +50,24 @@ chmod +x vivaldi_browser.zsh git.zsh gh.zsh brew.zsh dock_cleanup.zsh google_chr
 
 ### Core tooling
 
+#### Homebrew
+
+Installs Homebrew, the macOS package manager.
+
+```zsh
+chmod +x brew.zsh
+./brew.zsh
+```
+
+#### Vivaldi
+
+Installs the Vivaldi browser and adds it to the Dock.
+
+```zsh
+chmod +x vivaldi_browser.zsh
+./vivaldi_browser.zsh
+```
+
 #### Git
 
 Sets up Git with sensible defaults.
@@ -66,15 +84,6 @@ Installs and configures the GitHub CLI (`gh`).
 ```zsh
 chmod +x gh.zsh
 ./gh.zsh
-```
-
-#### Homebrew
-
-Installs Homebrew, the macOS package manager.
-
-```zsh
-chmod +x brew.zsh
-./brew.zsh
 ```
 
 ### Desktop & productivity
@@ -95,15 +104,6 @@ Installs Google Chrome browser.
 ```zsh
 chmod +x google_chrome.zsh
 ./google_chrome.zsh
-```
-
-#### Vivaldi
-
-Installs the Vivaldi browser and adds it to the Dock.
-
-```zsh
-chmod +x vivaldi_browser.zsh
-./vivaldi_browser.zsh
 ```
 
 #### Slack

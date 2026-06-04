@@ -8,106 +8,95 @@ echo "🚀 Starting installation of Vivaldi browser on macOS Tahoe..."
 echo
 
 # === Configuration ===
-vivaldi_dmg_url="https://downloads.vivaldi.com/stable/Vivaldi.dmg"
-vivaldi_dmg_tmp="/tmp/Vivaldi.dmg"
 vivaldi_app="/Applications/Vivaldi.app"
-dock_add="yes"                                             # set to "yes" to add to Dock
-dock_after_app="Slack"                                     # Dock app after which Vivaldi should appear
-echo "📌 Will download from: $vivaldi_dmg_url"
+dock_add="yes"
+dock_after_app="Slack"
 echo "📂 Target installation path: $vivaldi_app"
 echo "🎯 Add to Dock?   $dock_add (after $dock_after_app)"
 echo
 
-# === 1. Check if Vivaldi is already installed ===
-if [[ -d "$vivaldi_app" ]]; then
-  echo "✅ Vivaldi is already installed at $vivaldi_app"
-else
-  # === 2. Download the DMG installer ===
-  echo "📥 Downloading Vivaldi DMG..."
-  curl -L -o "$vivaldi_dmg_tmp" "$vivaldi_dmg_url"
-  if [[ $? -ne 0 ]]; then
-    echo "❌ Failed to download Vivaldi DMG."
-    exit 1
-  fi
-
-  # === 3. Mount DMG and install ===
-  echo "💿 Mounting DMG installer..."
-  mount_output=$(hdiutil attach "$vivaldi_dmg_tmp" -nobrowse 2>/dev/null)
+# === 1. Install Vivaldi ===
+if command -v brew >/dev/null 2>&1; then
+  echo "🍺 Homebrew detected."
+  echo "📦 Installing Vivaldi via Homebrew Cask..."
+  brew install --cask vivaldi
   if [[ $? -eq 0 ]]; then
-    volume_path=$(echo "$mount_output" | grep -o "/Volumes/[^$]*" | head -n1)
-    echo "📁 Mounted at: $volume_path"
-
-    # Locate Vivaldi.app inside the volume
-    vivaldi_app_source=$(find "$volume_path" -maxdepth 1 -name "Vivaldi.app" -type d | head -n1)
-    if [[ -n "$vivaldi_app_source" ]]; then
-      echo "🧩 Installing Vivaldi from mounted volume..."
-      cp -R "$vivaldi_app_source" /Applications/
-      if [[ $? -ne 0 ]]; then
-        echo "❌ Failed to copy Vivaldi.app into /Applications."
-        hdiutil detach "$volume_path" -quiet
-        rm -f "$vivaldi_dmg_tmp"
-        exit 1
-      fi
-      echo "✅ Vivaldi installed into /Applications"
-    else
-      echo "❌ Could not find Vivaldi.app inside mounted volume."
-      hdiutil detach "$volume_path" -quiet
-      rm -f "$vivaldi_dmg_tmp"
-      exit 1
-    fi
-
-    # === 4. Clean up — unmount and remove DMG ===
-    echo "🧹 Cleaning up..."
-    hdiutil detach "$volume_path" -quiet
-    rm -f "$vivaldi_dmg_tmp"
-    echo "✅ DMG unmounted and installer removed"
+    echo "✅ Vivaldi installed successfully via Homebrew!"
   else
-    echo "❌ Failed to mount Vivaldi DMG."
-    rm -f "$vivaldi_dmg_tmp"
+    echo "❌ Failed to install Vivaldi via Homebrew."
     exit 1
   fi
+else
+  echo "❌ Homebrew not found."
+  echo
+  echo "📋 Please install Homebrew first:"
+  echo "   /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+  echo
+  echo "   Then run this script again."
+  exit 1
 fi
 
-# === 5. Optionally add Vivaldi to Dock after Slack ===
+# === 2. Verify installation ===
+if [[ ! -d "$vivaldi_app" ]]; then
+  echo "❌ Vivaldi installation failed."
+  exit 1
+fi
+
+echo
+echo "🚀 Vivaldi installed at: $vivaldi_app"
+
+# === 3. Optionally add Vivaldi to Dock after Slack ===
 if [[ "$dock_add" = "yes" ]]; then
   echo
   echo "🧭 Configuring Dock to include Vivaldi after $dock_after_app..."
 
-  # Backup current Dock preferences
-  defaults export com.apple.dock - > ~/Desktop/com.apple.dock.backup.vivaldi.plist 2>/dev/null
-  echo "💾 Dock preference backup saved to ~/Desktop/com.apple.dock.backup.vivaldi.plist"
+  if command -v dockutil >/dev/null 2>&1; then
+    echo "⚙️  Using dockutil to manage Dock..."
 
-  # Build new Dock array
-  dock_apps=($(defaults read com.apple.dock persistent-apps | grep _CFURLString | awk -F'"' '{print $2}'))
-  new_dock=()
-  inserted=false
+    dockutil --remove "Vivaldi" --no-restart >/dev/null 2>&1
 
-  for app_path in "${dock_apps[@]}"; do
-    new_dock+=("$app_path")
-    if [[ "$app_path" == *"$dock_after_app.app"* && "$inserted" = false ]]; then
-      new_dock+=("$vivaldi_app")
-      inserted=true
+    if dockutil --find "$dock_after_app" >/dev/null 2>&1; then
+      dockutil --add "$vivaldi_app" --after "$dock_after_app" --no-restart
+    else
+      dockutil --add "$vivaldi_app" --no-restart
+      echo "ℹ️  $dock_after_app not found in Dock. Added Vivaldi at the end."
     fi
-  done
+  else
+    echo "⚠️  dockutil not found. Using built-in Dock modification..."
+    echo "   (You can install dockutil with: brew install dockutil)"
 
-  if [[ "$inserted" = false ]]; then
-    echo "⚠️ Target app ($dock_after_app) not found in Dock. Adding Vivaldi at the end."
-    new_dock+=("$vivaldi_app")
+    defaults export com.apple.dock - > ~/Desktop/com.apple.dock.backup.vivaldi.plist 2>/dev/null
+    echo "💾 Dock preference backup saved to ~/Desktop/com.apple.dock.backup.vivaldi.plist"
+
+    dock_apps=($(defaults read com.apple.dock persistent-apps | grep _CFURLString | awk -F'"' '{print $2}'))
+    new_dock=()
+    inserted=false
+
+    for app_path in "${dock_apps[@]}"; do
+      new_dock+=("$app_path")
+      if [[ "$app_path" == *"$dock_after_app.app"* && "$inserted" = false ]]; then
+        new_dock+=("$vivaldi_app")
+        inserted=true
+      fi
+    done
+
+    if [[ "$inserted" = false ]]; then
+      echo "⚠️ Target app ($dock_after_app) not found in Dock. Adding Vivaldi at the end."
+      new_dock+=("$vivaldi_app")
+    fi
+
+    defaults write com.apple.dock persistent-apps -array
+    for app in "${new_dock[@]}"; do
+      defaults write com.apple.dock persistent-apps -array-add "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>$app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>tile-type</key><string>file-tile</string></dict>"
+    done
   fi
 
-  # Clear existing Dock apps and rewrite
-  defaults write com.apple.dock persistent-apps -array
-  for app in "${new_dock[@]}"; do
-    defaults write com.apple.dock persistent-apps -array-add "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>$app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>tile-type</key><string>file-tile</string></dict>"
-  done
-
-  # Restart Dock
   echo "🔄 Restarting Dock..."
   killall Dock 2>/dev/null
   echo "✅ Dock updated"
 fi
 
-# === 6. Verification and wrap-up ===
+# === 4. Verification and wrap-up ===
 echo
 echo "🧪 Verifying installation..."
 if [[ -d "$vivaldi_app" ]]; then
