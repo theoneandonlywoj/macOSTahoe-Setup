@@ -1,6 +1,6 @@
 #!/bin/zsh
 # === install_1password.zsh ===
-# Purpose: Install 1Password on macOS Tahoe (with optional Dock integration)
+# Purpose: Install 1Password on macOS Tahoe
 # Shell: Zsh (default)
 # Author: theoneandonlywoj (style inspired)
 
@@ -10,10 +10,8 @@ echo
 # === Configuration ===
 brew_path="/opt/homebrew/bin/brew"
 app_path="/Applications/1Password.app"
-dock_add="yes"   # set to "no" if you don’t want to add to Dock
 
 echo "📦 Target application: $app_path"
-echo "🎯 Add to Dock?   $dock_add"
 echo
 
 # === 1. Check and install Homebrew if missing ===
@@ -47,50 +45,7 @@ else
   exit 1
 fi
 
-# === 4. Optionally add to Dock ===
-if [[ "$dock_add" = "yes" ]]; then
-  echo
-  echo "🧭 Adding 1Password to Dock..."
-
-  # Backup Dock preferences
-  defaults export com.apple.dock - > ~/Desktop/com.apple.dock.backup.1password.plist
-  if [[ $? -ne 0 ]]; then
-    echo "⚠️  Failed to backup Dock preferences! You may not be able to restore your previous Dock layout."
-  else
-    echo "💾 Dock backup saved to ~/Desktop/com.apple.dock.backup.1password.plist"
-  fi
-
-  # Construct Dock entry XML snippet
-  dock_entry="<dict>
-    <key>tile-data</key>
-    <dict>
-      <key>file-data</key>
-      <dict>
-        <key>_CFURLString</key>
-        <string>${app_path}</string>
-        <key>_CFURLStringType</key>
-        <integer>0</integer>
-      </dict>
-    </dict>
-    <key>tile-type</key>
-    <string>file-tile</string>
-  </dict>"
-
-  # Check if already in Dock
-  if defaults read com.apple.dock persistent-apps | grep -q "1Password.app"; then
-    echo "ℹ️  1Password is already in the Dock."
-  else
-    echo "➕ Adding 1Password to the end of the Dock..."
-    defaults write com.apple.dock persistent-apps -array-add "$dock_entry"
-  fi
-
-  # Restart Dock to apply changes
-  echo "🔄 Restarting Dock..."
-  killall Dock 2>/dev/null
-  echo "✅ Dock updated."
-fi
-
-# === 5. Post-installation info ===
+# === 4. Post-installation info ===
 echo
 echo "🧪 Verifying..."
 if open -Ra "1Password"; then
@@ -99,7 +54,7 @@ else
   echo "⚠️  Unable to verify app launch. Check installation manually."
 fi
 
-# === 6. Wrap-up ===
+# === 5. Wrap-up ===
 echo
 echo "🎉 1Password installation complete!"
 echo
@@ -107,6 +62,6 @@ echo "💡 Next steps:"
 echo "   • Launch 1Password via Spotlight (⌘ + Space → '1Password')"
 echo "   • Sign in with your 1Password account"
 echo "   • Configure browser extensions or Touch ID if desired"
+echo "   • Run dock_cleanup.zsh to add 1Password to your Dock"
 echo
-echo "🔐 You’re now ready for secure password management."
-
+echo "🔐 You're now ready for secure password management."

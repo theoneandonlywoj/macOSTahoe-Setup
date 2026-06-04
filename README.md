@@ -4,6 +4,8 @@ Automated scripts to bootstrap a fresh macOS development environment: Git, GitHu
 
 Each script is intended to be run from this repository directory and is safe to run individually. You can run everything end-to-end or pick only what you need.
 
+**Important:** Run `dock_cleanup.zsh` **last** — it cleans up the Dock and adds all installed apps in the correct order.
+
 ## Prerequisites
 
 - macOS with Zsh (default on recent macOS versions).
@@ -22,13 +24,12 @@ Each script is intended to be run from this repository directory and is safe to 
 From the repository root:
 
 ```zsh
-chmod +x vivaldi_browser.zsh git.zsh gh.zsh brew.zsh dock_cleanup.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh
+chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh dock_cleanup.zsh
 
+./brew.zsh
 ./vivaldi_browser.zsh
 ./git.zsh
 ./gh.zsh
-./brew.zsh
-./dock_cleanup.zsh
 ./google_chrome.zsh
 ./slack.zsh
 ./1password.zsh
@@ -44,11 +45,30 @@ chmod +x vivaldi_browser.zsh git.zsh gh.zsh brew.zsh dock_cleanup.zsh google_chr
 ./elixir_and_erlang.zsh
 ./emacs.zsh
 ./doom_emacs.zsh
+./dock_cleanup.zsh
 ```
 
 ## Scripts
 
 ### Core tooling
+
+#### Homebrew
+
+Installs Homebrew, the macOS package manager.
+
+```zsh
+chmod +x brew.zsh
+./brew.zsh
+```
+
+#### Vivaldi
+
+Installs the Vivaldi browser.
+
+```zsh
+chmod +x vivaldi_browser.zsh
+./vivaldi_browser.zsh
+```
 
 #### Git
 
@@ -68,25 +88,7 @@ chmod +x gh.zsh
 ./gh.zsh
 ```
 
-#### Homebrew
-
-Installs Homebrew, the macOS package manager.
-
-```zsh
-chmod +x brew.zsh
-./brew.zsh
-```
-
 ### Desktop & productivity
-
-#### Dock cleanup
-
-Cleans up the macOS Dock to a leaner default.
-
-```zsh
-chmod +x dock_cleanup.zsh
-./dock_cleanup.zsh
-```
 
 #### Google Chrome
 
@@ -95,15 +97,6 @@ Installs Google Chrome browser.
 ```zsh
 chmod +x google_chrome.zsh
 ./google_chrome.zsh
-```
-
-#### Vivaldi
-
-Installs the Vivaldi browser and adds it to the Dock.
-
-```zsh
-chmod +x vivaldi_browser.zsh
-./vivaldi_browser.zsh
 ```
 
 #### Slack
@@ -126,7 +119,7 @@ chmod +x 1password.zsh
 
 #### Postman
 
-Installs Postman API client and adds it to the Dock.
+Installs Postman API client.
 
 ```zsh
 chmod +x postman.zsh
@@ -146,7 +139,7 @@ chmod +x cursor_ide.zsh
 
 #### Visual Studio Code
 
-Installs Visual Studio Code and adds it to the Dock.
+Installs Visual Studio Code.
 
 ```zsh
 chmod +x vscode_ide.zsh
@@ -155,7 +148,7 @@ chmod +x vscode_ide.zsh
 
 #### OpenCode
 
-Installs OpenCode (open-source AI coding agent) — both CLI and Desktop app — and adds it to the Dock.
+Installs OpenCode (open-source AI coding agent) — both CLI and Desktop app.
 
 ```zsh
 chmod +x opencode.zsh
@@ -238,11 +231,23 @@ chmod +x doom_emacs.zsh
 ./doom_emacs.zsh
 ```
 
+### Dock setup (run last)
+
+#### Dock cleanup and setup
+
+Removes unwanted macOS default apps from the Dock and adds all installed apps in order: Chrome, Vivaldi, Slack, VSCode, OpenCode, Postman, 1Password. Installs `dockutil` automatically if needed. **Run this script after all app installations are complete.**
+
+```zsh
+chmod +x dock_cleanup.zsh
+./dock_cleanup.zsh
+```
+
 ## Notes & troubleshooting
 
 - You can rerun scripts if something fails; most are designed to be safe to run multiple times.
 - Some scripts may modify your `~/.zshrc`. Open a new terminal or run `source ~/.zshrc` after running them.
-- If GUI apps (Chrome, Slack, 1Password, Cursor) don’t appear immediately, try logging out and back in or restarting.
+- If GUI apps (Chrome, Slack, 1Password, Cursor) don't appear immediately, try logging out and back in or restarting.
+- Run `dock_cleanup.zsh` last — it configures the Dock with all your installed apps in the correct order.
 - For issues with Homebrew or Xcode Command Line Tools, verify:
 
   ```zsh

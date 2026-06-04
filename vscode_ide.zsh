@@ -1,6 +1,6 @@
 #!/bin/zsh
 # === vscode_ide.zsh ===
-# Purpose: Install Visual Studio Code on macOS Tahoe and add to Dock after Slack
+# Purpose: Install Visual Studio Code on macOS Tahoe
 # Shell: Zsh (default on macOS Tahoe)
 # Author: theoneandonlywoj (style inspired)
 
@@ -11,11 +11,8 @@ echo
 vscode_zip_url="https://update.code.visualstudio.com/latest/darwin-universal/stable"
 vscode_zip_tmp="/tmp/VSCode.zip"
 vscode_app="/Applications/Visual Studio Code.app"
-dock_add="yes"                                             # set to "yes" to add to Dock
-dock_after_app="Slack"                                     # Dock app after which VSCode should appear
 echo "📌 Will download from: $vscode_zip_url"
 echo "📂 Target installation path: $vscode_app"
-echo "🎯 Add to Dock?   $dock_add (after $dock_after_app)"
 echo
 
 # === 1. Check if VSCode is already installed ===
@@ -51,53 +48,11 @@ else
   echo "✅ Temporary files removed"
 fi
 
-# === 5. Optionally add VSCode to Dock after Slack ===
-if [[ "$dock_add" = "yes" ]]; then
-  echo
-  echo "🧭 Configuring Dock to include Visual Studio Code after $dock_after_app..."
-
-  # Backup current Dock preferences
-  defaults export com.apple.dock - > ~/Desktop/com.apple.dock.backup.vscode.plist 2>/dev/null
-  echo "💾 Dock preference backup saved to ~/Desktop/com.apple.dock.backup.vscode.plist"
-
-  # Build new Dock array
-  dock_apps=($(defaults read com.apple.dock persistent-apps | grep _CFURLString | awk -F'"' '{print $2}'))
-  new_dock=()
-  inserted=false
-
-  for app_path in "${dock_apps[@]}"; do
-    new_dock+=("$app_path")
-    if [[ "$app_path" == *"$dock_after_app.app"* && "$inserted" = false ]]; then
-      new_dock+=("$vscode_app")
-      inserted=true
-    fi
-  done
-
-  if [[ "$inserted" = false ]]; then
-    echo "⚠️ Target app ($dock_after_app) not found in Dock. Adding Visual Studio Code at the end."
-    new_dock+=("$vscode_app")
-  fi
-
-  # Clear existing Dock apps and rewrite
-  defaults write com.apple.dock persistent-apps -array
-  for app in "${new_dock[@]}"; do
-    defaults write com.apple.dock persistent-apps -array-add "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>$app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>tile-type</key><string>file-tile</string></dict>"
-  done
-
-  # Restart Dock
-  echo "🔄 Restarting Dock..."
-  killall Dock 2>/dev/null
-  echo "✅ Dock updated"
-fi
-
-# === 6. Verification and wrap-up ===
+# === 5. Verification and wrap-up ===
 echo
 echo "🧪 Verifying installation..."
 if [[ -d "$vscode_app" ]]; then
   echo "✅ Visual Studio Code installation confirmed at $vscode_app"
-  if [[ "$dock_add" = "yes" ]]; then
-    echo "📍 Visual Studio Code should now appear in your Dock after $dock_after_app."
-  fi
 else
   echo "❌ Visual Studio Code installation failed. Please check the error logs above."
   exit 1
@@ -109,4 +64,5 @@ echo
 echo "💡 Next steps:"
 echo "   • Launch VSCode via Launchpad or Spotlight (⌘ Space → 'Visual Studio Code')"
 echo "   • Install the 'code' shell command: open VSCode → ⌘⇧P → 'Shell Command: Install code command in PATH'"
+echo "   • Run dock_cleanup.zsh to add VSCode to your Dock"
 echo "   • Enjoy your coding environment!"

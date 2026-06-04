@@ -1,13 +1,12 @@
 #!/bin/zsh
-# === Slack Installer + Dock Setup for macOS Tahoe (Zsh) ===
+# === Slack Installer for macOS Tahoe (Zsh) ===
 # Author: theoneandonlywoj
 # Description:
-#   Installs Slack via Homebrew or .dmg fallback,
-#   adds Slack to the Dock one position before Notes,
-#   and restarts the Dock to apply changes.
+#   Installs Slack via Homebrew or .dmg fallback.
+#   Run dock_cleanup.zsh after all apps are installed to configure the Dock.
 
-echo "💬 Slack Installer + Dock Setup (macOS Tahoe)"
-echo "-----------------------------------------------"
+echo "💬 Slack Installer (macOS Tahoe)"
+echo "---------------------------------"
 
 # === 1. Check for admin rights ===
 if [[ $EUID -ne 0 ]]; then
@@ -65,57 +64,8 @@ fi
 
 echo
 echo "🚀 Slack installed at: /Applications/Slack.app"
-
-# === 4. Add Slack to Dock ===
 echo
-echo "🧭 Adding Slack to Dock one position before Notes..."
-
-slack_path="/Applications/Slack.app"
-notes_name="Notes"
-
-# --- Try using dockutil (preferred) ---
-if command -v dockutil >/dev/null 2>&1; then
-  echo "⚙️  Using dockutil to manage Dock..."
-
-  # Remove any existing Slack icon
-  dockutil --remove "Slack" --no-restart >/dev/null 2>&1
-
-  # Add Slack before Notes if Notes exists
-  if dockutil --find "$notes_name" >/dev/null 2>&1; then
-    dockutil --add "$slack_path" --before "$notes_name" --no-restart
-  else
-    dockutil --add "$slack_path" --no-restart
-    echo "ℹ️  Notes not found in Dock. Added Slack at the end."
-  fi
-
-else
-  # --- Fallback if dockutil isn't installed ---
-  echo "⚠️  dockutil not found. Using fallback method."
-  echo "   (You can install dockutil with: brew install dockutil)"
-
-  # Fallback adds Slack to the end of the Dock
-  defaults write com.apple.dock persistent-apps -array-add "<dict>
-    <key>tile-data</key>
-    <dict>
-      <key>file-data</key>
-      <dict>
-        <key>_CFURLString</key>
-        <string>$slack_path</string>
-        <key>_CFURLStringType</key>
-        <integer>0</integer>
-      </dict>
-    </dict>
-  </dict>"
-fi
-
-# === 5. Restart Dock to apply changes ===
-echo "🔄 Restarting Dock..."
-killall Dock 2>/dev/null
-sleep 2
-
-echo
-echo "🎉 Slack has been installed and added to your Dock!"
-echo "💬 It’s placed just before Notes (if present)."
-echo "🚀 You can launch it anytime with: open -a Slack"
-echo "--------------------------------------------------"
-
+echo "🎉 Slack has been installed!"
+echo "💬 You can launch it anytime with: open -a Slack"
+echo "📌 Run dock_cleanup.zsh to add it to your Dock."
+echo "---------------------------------"

@@ -1,12 +1,12 @@
 #!/bin/zsh
-# === Postman Installer + Dock Setup for macOS Tahoe (Zsh) ===
+# === Postman Installer for macOS Tahoe (Zsh) ===
 # Author: theoneandonlywoj
 # Description:
-#   Installs Postman via Homebrew, adds it to the Dock
-#   right after Calendar, and refreshes the Dock.
+#   Installs Postman via Homebrew.
+#   Run dock_cleanup.zsh after all apps are installed to configure the Dock.
 
-echo "📮 Postman Installer + Dock Setup (macOS Tahoe)"
-echo "------------------------------------------------------"
+echo "📮 Postman Installer (macOS Tahoe)"
+echo "------------------------------------"
 
 # === 1. Check for admin rights ===
 if [[ $EUID -ne 0 ]]; then
@@ -44,54 +44,8 @@ fi
 
 echo
 echo "🚀 Postman installed at: /Applications/Postman.app"
-
-# === 4. Add Postman to Dock ===
 echo
-echo "🧭 Adding Postman to Dock..."
-
-postman_path="/Applications/Postman.app"
-calendar_path="/System/Applications/Calendar.app"
-
-# Method 1: Use dockutil if available (best)
-if command -v dockutil >/dev/null 2>&1; then
-  echo "⚙️  Using dockutil to manage Dock..."
-  
-  # Remove existing Postman icon if present
-  dockutil --remove "Postman" --no-restart >/dev/null 2>&1
-
-  # Insert Postman after Calendar if possible
-  if dockutil --find "Calendar" >/dev/null 2>&1; then
-    dockutil --add "$postman_path" --after "Calendar" --no-restart
-  else
-    dockutil --add "$postman_path" --no-restart
-  fi
-
-else
-  # Method 2: Fallback using defaults (if dockutil not installed)
-  echo "⚠️  dockutil not found. Using built-in Dock modification..."
-  echo "   (You can install dockutil with: brew install dockutil)"
-
-  # Read Dock entries
-  defaults write com.apple.dock persistent-apps -array-add "<dict>
-    <key>tile-data</key>
-    <dict>
-      <key>file-data</key>
-      <dict>
-        <key>_CFURLString</key>
-        <string>$postman_path</string>
-        <key>_CFURLStringType</key>
-        <integer>0</integer>
-      </dict>
-    </dict>
-  </dict>"
-fi
-
-# === 5. Restart Dock to apply changes ===
-echo "🔄 Restarting Dock to apply changes..."
-killall Dock 2>/dev/null
-sleep 2
-
-echo
-echo "🎉 Postman has been installed and added to your Dock!"
+echo "🎉 Postman has been installed!"
 echo "💫 You can launch it anytime with: open -a 'Postman'"
-echo "-----------------------------------------------------------"
+echo "📌 Run dock_cleanup.zsh to add it to your Dock."
+echo "------------------------------------"
