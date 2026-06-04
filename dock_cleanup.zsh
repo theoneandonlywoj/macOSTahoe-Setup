@@ -8,7 +8,7 @@
 #   1. Install dockutil if missing
 #   2. Back up the current Dock plist
 #   3. Remove unwanted default macOS apps from the Dock
-#   4. Add installed apps in order: Chrome, Vivaldi, Slack, VSCode, OpenCode, Postman, 1Password
+#   4. Add installed apps in order: Chrome, Vivaldi, Slack, VSCode, Ghostty, OpenCode, Postman, 1Password
 #   5. Restart the Dock once
 
 # === Apps to remove from Dock (default macOS apps) ===
@@ -35,6 +35,7 @@ apps_to_add=(
   "Vivaldi|/Applications/Vivaldi.app"
   "Slack|/Applications/Slack.app"
   "Visual Studio Code|/Applications/Visual Studio Code.app"
+  "Ghostty|/Applications/Ghostty.app"
   "OpenCode|/Applications/OpenCode.app"
   "Postman|/Applications/Postman.app"
   "1Password|/Applications/1Password.app"
