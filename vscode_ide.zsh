@@ -1,10 +1,10 @@
 #!/bin/zsh
 # === vscode_ide.zsh ===
-# Purpose: Install Visual Studio Code on macOS Ventura and add to Dock after Slack
-# Shell: Zsh (default on macOS Ventura)
+# Purpose: Install Visual Studio Code on macOS Tahoe and add to Dock after Slack
+# Shell: Zsh (default on macOS Tahoe)
 # Author: theoneandonlywoj (style inspired)
 
-echo "🚀 Starting installation of Visual Studio Code on macOS Ventura..."
+echo "🚀 Starting installation of Visual Studio Code on macOS Tahoe..."
 echo
 
 # === Configuration ===

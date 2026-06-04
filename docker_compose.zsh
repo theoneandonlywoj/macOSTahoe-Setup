@@ -1,10 +1,10 @@
 #!/bin/zsh
 # === docker_compose.zsh ===
-# Purpose: Install Docker Compose (v2) on macOS Ventura with Zsh
-# Shell: Zsh (default on macOS Ventura)
+# Purpose: Install Docker Compose (v2) on macOS Tahoe with Zsh
+# Shell: Zsh (default on macOS Tahoe)
 # Author: theoneandonlywoj
 
-echo "🚀 Starting Docker Compose installation on macOS Ventura..."
+echo "🚀 Starting Docker Compose installation on macOS Tahoe..."
 echo
 
 # === Configuration ===
@@ -23,6 +23,23 @@ if ! command -v docker >/dev/null 2>&1 && ! command -v podman >/dev/null 2>&1; t
   echo "⚠️  Neither Docker nor Podman is installed."
   echo "💡 Please install Docker Desktop or Podman before running this script."
   exit 1
+fi
+
+# === 1.5. Ensure jq is available (needed for Docker config modification) ===
+if ! command -v jq >/dev/null 2>&1; then
+  echo "⚙️  jq not found. Installing via Homebrew..."
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "❌ Homebrew is required to install jq. Please install Homebrew first."
+    exit 1
+  fi
+  brew install jq
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Failed to install jq. Please install it manually: brew install jq"
+    exit 1
+  fi
+  echo "✅ jq installed successfully."
+else
+  echo "✅ jq is already installed."
 fi
 
 # === 2. Install Docker Compose plugin via Homebrew ===

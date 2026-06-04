@@ -1,5 +1,5 @@
 #!/bin/zsh
-# === GitHub SSH + Git Config Setup for macOS Ventura (Zsh) ===
+# === GitHub SSH + Git Config Setup for macOS Tahoe (Zsh) ===
 # Author: theoneandonlywoj
 # Description:
 #   Generates an SSH key, starts ssh-agent, copies it to clipboard,
@@ -10,7 +10,7 @@ key_path="$HOME/.ssh/id_ed25519"
 pub_key="$HOME/.ssh/id_ed25519.pub"
 ssh_config="$HOME/.ssh/config"
 
-echo "🔧 GitHub SSH + Git Config Setup (macOS Ventura, Zsh)"
+echo "🔧 GitHub SSH + Git Config Setup (macOS Tahoe, Zsh)"
 echo "----------------------------------------------------"
 
 # === 1. Check if key already exists ===

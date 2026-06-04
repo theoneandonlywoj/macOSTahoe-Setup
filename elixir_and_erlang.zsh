@@ -1,15 +1,15 @@
 #!/bin/zsh
 # === elixir_and_erlang.zsh ===
-# Purpose: Install Erlang and Elixir using Mise on macOS Ventura
+# Purpose: Install Erlang and Elixir using Mise on macOS Tahoe
 # Shell: Zsh (default)
 # Author: theoneandonlywoj
 
-echo "🚀 Starting Erlang + Elixir installation via Mise on macOS Ventura..."
+echo "🚀 Starting Erlang + Elixir installation via Mise on macOS Tahoe..."
 echo
 
 # === 0. Default versions (used if .tool-versions is not present) ===
-DEFAULT_ERLANG="28.1"
-DEFAULT_ELIXIR="1.19.0-otp-28"
+DEFAULT_ERLANG="28.5"
+DEFAULT_ELIXIR="1.20.0-otp-28"
 
 # === 1. Determine versions ===
 if [[ -f ".tool-versions" ]]; then

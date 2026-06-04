@@ -1,11 +1,11 @@
 #!/bin/zsh
-# === Postman Installer + Dock Setup for macOS Ventura (Zsh) ===
+# === Postman Installer + Dock Setup for macOS Tahoe (Zsh) ===
 # Author: theoneandonlywoj
 # Description:
 #   Installs Postman via Homebrew, adds it to the Dock
 #   right after Calendar, and refreshes the Dock.
 
-echo "📮 Postman Installer + Dock Setup (macOS Ventura)"
+echo "📮 Postman Installer + Dock Setup (macOS Tahoe)"
 echo "------------------------------------------------------"
 
 # === 1. Check for admin rights ===

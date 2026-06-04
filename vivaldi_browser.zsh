@@ -1,10 +1,10 @@
 #!/bin/zsh
 # === vivaldi_browser.zsh ===
-# Purpose: Install Vivaldi browser on macOS Ventura and add to Dock after Slack
-# Shell: Zsh (default on macOS Ventura)
+# Purpose: Install Vivaldi browser on macOS Tahoe and add to Dock after Slack
+# Shell: Zsh (default on macOS Tahoe)
 # Author: theoneandonlywoj (style inspired)
 
-echo "🚀 Starting installation of Vivaldi browser on macOS Ventura..."
+echo "🚀 Starting installation of Vivaldi browser on macOS Tahoe..."
 echo
 
 # === Configuration ===

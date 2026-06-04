@@ -1,10 +1,10 @@
 #!/bin/zsh
 # === opencode.zsh ===
-# Purpose: Install OpenCode (open-source AI coding agent) CLI and Desktop on macOS Ventura
-# Shell: Zsh (default on macOS Ventura)
+# Purpose: Install OpenCode (open-source AI coding agent) CLI and Desktop on macOS Tahoe
+# Shell: Zsh (default on macOS Tahoe)
 # Author: theoneandonlywoj (style inspired)
 
-echo "🚀 Starting installation of OpenCode (open-source AI coding agent) on macOS Ventura..."
+echo "🚀 Starting installation of OpenCode (open-source AI coding agent) on macOS Tahoe..."
 echo
 
 # === Configuration ===
