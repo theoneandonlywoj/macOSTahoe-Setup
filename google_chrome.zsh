@@ -1,12 +1,12 @@
 #!/bin/zsh
-# === Google Chrome Installer + Dock Setup for macOS Tahoe (Zsh) ===
+# === Google Chrome Installer for macOS Tahoe (Zsh) ===
 # Author: theoneandonlywoj
 # Description:
-#   Installs Google Chrome via Homebrew or .dmg, adds it to the Dock
-#   right after Calendar, and refreshes the Dock.
+#   Installs Google Chrome via Homebrew or .dmg fallback.
+#   Run dock_cleanup.zsh after all apps are installed to configure the Dock.
 
-echo "🌐 Google Chrome Installer + Dock Setup (macOS Tahoe)"
-echo "------------------------------------------------------"
+echo "🌐 Google Chrome Installer (macOS Tahoe)"
+echo "-----------------------------------------"
 
 # === 1. Check for admin rights ===
 if [[ $EUID -ne 0 ]]; then
@@ -64,55 +64,8 @@ fi
 
 echo
 echo "🚀 Chrome installed at: /Applications/Google Chrome.app"
-
-# === 4. Add Chrome to Dock ===
 echo
-echo "🧭 Adding Google Chrome to Dock..."
-
-chrome_path="/Applications/Google Chrome.app"
-calendar_path="/System/Applications/Calendar.app"
-
-# Method 1: Use dockutil if available (best)
-if command -v dockutil >/dev/null 2>&1; then
-  echo "⚙️  Using dockutil to manage Dock..."
-  
-  # Remove existing Chrome icon if present
-  dockutil --remove "Google Chrome" --no-restart >/dev/null 2>&1
-
-  # Insert Chrome after Calendar if possible
-  if dockutil --find "Calendar" >/dev/null 2>&1; then
-    dockutil --add "$chrome_path" --after "Calendar" --no-restart
-  else
-    dockutil --add "$chrome_path" --no-restart
-  fi
-
-else
-  # Method 2: Fallback using defaults (if dockutil not installed)
-  echo "⚠️  dockutil not found. Using built-in Dock modification..."
-  echo "   (You can install dockutil with: brew install dockutil)"
-
-  # Read Dock entries
-  defaults write com.apple.dock persistent-apps -array-add "<dict>
-    <key>tile-data</key>
-    <dict>
-      <key>file-data</key>
-      <dict>
-        <key>_CFURLString</key>
-        <string>$chrome_path</string>
-        <key>_CFURLStringType</key>
-        <integer>0</integer>
-      </dict>
-    </dict>
-  </dict>"
-fi
-
-# === 5. Restart Dock to apply changes ===
-echo "🔄 Restarting Dock to apply changes..."
-killall Dock 2>/dev/null
-sleep 2
-
-echo
-echo "🎉 Google Chrome has been installed and added to your Dock!"
+echo "🎉 Google Chrome has been installed!"
 echo "💫 You can launch it anytime with: open -a 'Google Chrome'"
-echo "-----------------------------------------------------------"
-
+echo "📌 Run dock_cleanup.zsh to add it to your Dock."
+echo "-----------------------------------------"

@@ -8,10 +8,8 @@ echo "🚀 Starting installation of OpenCode (open-source AI coding agent) on ma
 echo
 
 # === Configuration ===
-install_cli="yes"                                               # set to "yes" to install the CLI
-install_desktop="yes"                                           # set to "yes" to install the Desktop app
-dock_add="yes"                                                  # set to "yes" to add to Dock after target app
-dock_after_app="Cursor"                                         # Dock app after which OpenCode should appear
+install_cli="yes"
+install_desktop="yes"
 opencode_app="/Applications/OpenCode.app"
 opencode_desktop_dmg_url_aarch64="https://opencode.ai/download/stable/darwin-aarch64-dmg"
 opencode_desktop_dmg_url_x64="https://opencode.ai/download/stable/darwin-x64-dmg"
@@ -30,7 +28,6 @@ if [[ "$install_desktop" = "yes" ]]; then
     echo "🔗 Download URL:      $opencode_desktop_dmg_url_x64"
   fi
 fi
-echo "🎯 Add to Dock?        $dock_add (after $dock_after_app)"
 echo
 
 # === 1. Install OpenCode CLI ===
@@ -72,7 +69,6 @@ if [[ "$install_desktop" = "yes" ]]; then
   if [[ -d "$opencode_app" ]]; then
     echo "✅ OpenCode Desktop is already installed at $opencode_app"
   else
-    # Determine download URL based on architecture
     arch=$(uname -m)
     if [[ "$arch" = "arm64" ]]; then
       dmg_url="$opencode_desktop_dmg_url_aarch64"
@@ -138,44 +134,7 @@ if [[ "$install_desktop" = "yes" ]]; then
   echo
 fi
 
-# === 3. Optionally add OpenCode to Dock ===
-if [[ "$dock_add" = "yes" && -d "$opencode_app" ]]; then
-  echo "===== Dock Configuration ====="
-  echo
-  echo "🧭 Configuring Dock to include OpenCode after $dock_after_app..."
-
-  defaults export com.apple.dock - > ~/Desktop/com.apple.dock.backup.opencode.plist 2>/dev/null
-  echo "💾 Dock preference backup saved to ~/Desktop/com.apple.dock.backup.opencode.plist"
-
-  dock_apps=($(defaults read com.apple.dock persistent-apps | grep _CFURLString | awk -F'"' '{print $2}'))
-  new_dock=()
-  inserted=false
-
-  for app_path in "${dock_apps[@]}"; do
-    new_dock+=("$app_path")
-    if [[ "$app_path" == *"$dock_after_app.app"* && "$inserted" = false ]]; then
-      new_dock+=("$opencode_app")
-      inserted=true
-    fi
-  done
-
-  if [[ "$inserted" = false ]]; then
-    echo "⚠️  Target app ($dock_after_app) not found in Dock. Adding OpenCode at the end."
-    new_dock+=("$opencode_app")
-  fi
-
-  defaults write com.apple.dock persistent-apps -array
-  for app in "${new_dock[@]}"; do
-    defaults write com.apple.dock persistent-apps -array-add "<dict><key>tile-data</key><dict><key>file-data</key><dict><key>_CFURLString</key><string>$app</string><key>_CFURLStringType</key><integer>0</integer></dict></dict><key>tile-type</key><string>file-tile</string></dict>"
-  done
-
-  echo "🔄 Restarting Dock..."
-  killall Dock 2>/dev/null
-  echo "✅ Dock updated"
-  echo
-fi
-
-# === 4. Verification and wrap-up ===
+# === 3. Verification and wrap-up ===
 echo "🧪 Verifying installation..."
 echo
 
@@ -209,5 +168,5 @@ echo "💡 Next steps:"
 echo "   • Launch OpenCode Desktop via Spotlight (⌘ Space → 'OpenCode')"
 echo "   • Run OpenCode CLI in any project: cd ~/my-project && opencode"
 echo "   • Configure AI providers: opencode (first run will prompt you)"
+echo "   • Run dock_cleanup.zsh to add OpenCode to your Dock"
 echo "   • Docs: https://opencode.ai/docs"
-echo
