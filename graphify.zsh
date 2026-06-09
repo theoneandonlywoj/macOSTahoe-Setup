@@ -85,6 +85,12 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 echo "✅ Graphify installed via uv."
+
+# Make uv's tool bin directory available for the remainder of this script.
+local_bin="$HOME/.local/bin"
+if [[ ":$PATH:" != *":$local_bin:"* ]]; then
+  export PATH="$local_bin:$PATH"
+fi
 echo
 
 # === 5. Register the Graphify skill with your AI assistant ===
