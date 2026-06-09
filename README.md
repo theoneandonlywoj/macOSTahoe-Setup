@@ -242,6 +242,32 @@ chmod +x dock_cleanup.zsh
 ./dock_cleanup.zsh
 ```
 
+## Makefile commands
+
+This repo includes a Makefile for managing your Doom Emacs configuration. Run `make help` for a quick reference, or see [docs/makefile-commands.md](docs/makefile-commands.md) for full details.
+
+| Command | Description |
+|---|---|
+| `make` / `make all` | Sync Doom Emacs config (back up, copy, run `doom sync`) |
+| `make doom-sync` | Back up existing `~/.doom.d`, copy repo config, run `doom sync` |
+| `make doom-backup` | Move `~/.doom.d` to a timestamped backup |
+| `make doom-restore` | Restore the most recent backup to `~/.doom.d` |
+| `make doom-diff` | Diff repo vs installed Doom config files |
+| `make tmux-sync` | Back up existing `~/.tmux.conf`, copy repo config, reload in tmux |
+| `make tmux-backup` | Copy `~/.tmux.conf` to a timestamped backup |
+| `make tmux-restore` | Restore the most recent tmux backup |
+| `make tmux-diff` | Diff repo vs installed `~/.tmux.conf` |
+| `make sync` | Alias for `doom-sync` |
+| `make backup` | Alias for `doom-backup` |
+| `make restore` | Alias for `doom-restore` |
+| `make diff` | Alias for `doom-diff` |
+| `make tsync` | Alias for `tmux-sync` |
+| `make tbackup` | Alias for `tmux-backup` |
+| `make trestore` | Alias for `tmux-restore` |
+| `make tdiff` | Alias for `tmux-diff` |
+| `make soft-test` | Validate `.zsh` scripts and config files |
+| `make help` | Show available commands |
+
 ## Notes & troubleshooting
 
 - You can rerun scripts if something fails; most are designed to be safe to run multiple times.

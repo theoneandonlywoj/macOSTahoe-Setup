@@ -1,8 +1,12 @@
-# === Makefile for Doom Emacs config sync (macOS Tahoe) ===
-# Moves existing configs to timestamped backups and installs new configs
+# === Makefile for config sync (macOS Tahoe) ===
+# Syncs Doom Emacs and tmux configs between this repo and $HOME
+# Moves existing configs to timestamped backups before installing new ones
 # Supports restore from the most recent backup
 
-.PHONY: all doom-sync doom-backup doom-restore doom-diff soft-test reload-shell help
+.PHONY: all doom-sync doom-backup doom-restore doom-diff \
+        tmux-sync tmux-backup tmux-restore tmux-diff \
+        sync backup restore diff tsync tbackup trestore tdiff \
+        soft-test reload-shell help
 
 # Generate timestamp in format YYYY_mm_dd_hh_MM
 TIMESTAMP := $(shell date +"%Y_%m_%d_%H_%M")
@@ -10,6 +14,10 @@ TIMESTAMP := $(shell date +"%Y_%m_%d_%H_%M")
 # Doom Emacs paths
 DOOM_BACKUP_DIR := $(HOME)/.doom.d_backup_$(TIMESTAMP)
 DOOM_REPO_DIR := ./.doom.d
+
+# tmux paths
+TMUX_BACKUP_FILE := $(HOME)/.tmux.conf.backup_$(TIMESTAMP)
+TMUX_REPO_FILE := ./tmux.conf
 
 # ============================================================
 # DEFAULT TARGET
@@ -75,6 +83,47 @@ doom-diff:
 	@diff -u "$(HOME)/.doom.d/packages.el" "$(DOOM_REPO_DIR)/packages.el" 2>/dev/null || echo "(files differ or missing)"
 
 # ============================================================
+# TMUX CONFIGURATION
+# ============================================================
+
+tmux-sync: tmux-backup
+	@echo "📦 Copying new tmux configuration..."
+	@cp $(TMUX_REPO_FILE) $(HOME)/.tmux.conf
+	@if command -v tmux >/dev/null 2>&1 && [ -n "$$TMUX" ]; then \
+		echo "🔄 Reloading tmux config..."; \
+		tmux source-file $(HOME)/.tmux.conf >/dev/null 2>&1 || true; \
+	fi
+	@echo "✅ New configuration synced to $(HOME)/.tmux.conf"
+
+tmux-backup:
+	@if [ -f "$(HOME)/.tmux.conf" ]; then \
+		echo "💾 Backing up existing ~/.tmux.conf to $(TMUX_BACKUP_FILE)..."; \
+		cp "$(HOME)/.tmux.conf" "$(TMUX_BACKUP_FILE)"; \
+		echo "✅ Backup created at $(TMUX_BACKUP_FILE)"; \
+	else \
+		echo "ℹ️  No existing ~/.tmux.conf found — skipping backup."; \
+	fi
+
+tmux-restore:
+	@echo "♻️  Restoring the most recent tmux backup..."
+	@latest_backup=$$(ls -t $(HOME)/.tmux.conf.backup_* 2>/dev/null | head -n 1); \
+	if [ -z "$$latest_backup" ]; then \
+		echo "❌ No backups found. Cannot restore."; \
+		exit 1; \
+	fi; \
+	echo "♻️  Restoring from $$latest_backup..."; \
+	cp "$$latest_backup" "$(HOME)/.tmux.conf"; \
+	echo "✅ Restore complete from $$latest_backup"; \
+	if command -v tmux >/dev/null 2>&1 && [ -n "$$TMUX" ]; then \
+		echo "🔄 Reloading tmux config..."; \
+		tmux source-file $(HOME)/.tmux.conf >/dev/null 2>&1 || true; \
+	fi
+
+tmux-diff:
+	@echo "📊 Comparing tmux configurations..."
+	@diff -u "$(HOME)/.tmux.conf" "$(TMUX_REPO_FILE)" 2>/dev/null || echo "(files differ or missing)"
+
+# ============================================================
 # CONVENIENCE ALIASES
 # ============================================================
 
@@ -85,6 +134,14 @@ backup: doom-backup
 restore: doom-restore
 
 diff: doom-diff
+
+tsync: tmux-sync
+
+tbackup: tmux-backup
+
+trestore: tmux-restore
+
+tdiff: tmux-diff
 
 # ============================================================
 # TESTING
@@ -200,6 +257,17 @@ soft-test:
 	fi; \
 	echo; \
 	\
+	# Test 6: Check tmux config file \
+	echo "📋 Step 6: Checking tmux config..."; \
+	echo "-----------------------------------"; \
+	if [ -f "$(TMUX_REPO_FILE)" ]; then \
+		echo "✅ tmux.conf found"; \
+	else \
+		echo "❌ tmux.conf missing"; \
+		failed_count=$$((failed_count + 1)); \
+	fi; \
+	echo; \
+	\
 	# Summary \
 	echo "==============================================="; \
 	echo "📊 Testing Summary"; \
@@ -233,27 +301,54 @@ reload-shell:
 # ============================================================
 
 help:
-	@echo "macOS Tahoe Setup - Available Targets"
-	@echo "======================================"
+	@echo "╔══════════════════════════════════════════════════════════════╗"
+	@echo "║          macOS Tahoe Setup — Makefile Commands               ║"
+	@echo "╚══════════════════════════════════════════════════════════════╝"
 	@echo
-	@echo "DOOM EMACS:"
-	@echo "  make              Sync Doom Emacs config (default)"
-	@echo "  make doom-sync    Backup and sync Doom Emacs config"
-	@echo "  make doom-backup  Backup current ~/.doom.d"
-	@echo "  make doom-restore Restore most recent Doom backup"
-	@echo "  make doom-diff    Show differences between repo and installed"
+	@echo "DEFAULT"
+	@echo "  make / make all       Sync Doom Emacs config (back up existing"
+	@echo "                        ~/.doom.d, copy repo config, run doom sync)"
 	@echo
-	@echo "SHORTCUTS:"
-	@echo "  make sync         Alias for doom-sync"
-	@echo "  make backup       Alias for doom-backup"
-	@echo "  make restore      Alias for doom-restore"
-	@echo "  make diff         Alias for doom-diff"
+	@echo "DOOM EMACS"
+	@echo "  make doom-sync        Back up existing config, then copy .doom.d"
+	@echo "                        from repo to ~/.doom.d and run doom sync"
+	@echo "  make doom-backup      Move existing ~/.doom.d to a timestamped"
+	@echo "                        backup directory (~/.doom.d_backup_YYYY_MM_DD_HH_MM)"
+	@echo "  make doom-restore     Restore the most recent backup by moving it"
+	@echo "                        back to ~/.doom.d (deletes current config first)"
+	@echo "  make doom-diff        Diff the three core Doom config files"
+	@echo "                        (config.el, init.el, packages.el) between"
+	@echo "                        the installed ~/.doom.d and the repo copy"
 	@echo
-	@echo "TESTING:"
-	@echo "  make soft-test    Validate Zsh scripts (syntax, structure)"
+	@echo "TMUX"
+	@echo "  make tmux-sync        Back up existing config, then copy tmux.conf"
+	@echo "                        from repo to ~/.tmux.conf and reload if in tmux"
+	@echo "  make tmux-backup      Copy existing ~/.tmux.conf to a timestamped"
+	@echo "                        backup (~/.tmux.conf.backup_YYYY_MM_DD_HH_MM)"
+	@echo "  make tmux-restore     Restore the most recent tmux backup"
+	@echo "                        (reloads config if inside a tmux session)"
+	@echo "  make tmux-diff        Diff the installed ~/.tmux.conf vs repo copy"
 	@echo
-	@echo "SHELL:"
-	@echo "  make reload-shell  Reload shell (restart with .zshrc)"
+@echo "SHORTCUTS"
+	@echo "  make sync             Alias for doom-sync"
+	@echo "  make backup           Alias for doom-backup"
+	@echo "  make restore          Alias for doom-restore"
+	@echo "  make diff             Alias for doom-diff"
+	@echo "  make tsync            Alias for tmux-sync"
+	@echo "  make tbackup          Alias for tmux-backup"
+	@echo "  make trestore         Alias for tmux-restore"
+	@echo "  make tdiff            Alias for tmux-diff"
 	@echo
-	@echo "HELP:"
-	@echo "  make help         Show this help message"
+	@echo "TESTING"
+	@echo "  make soft-test        Validate all .zsh scripts in the repo:"
+	@echo "                        shebang lines, Zsh syntax, file permissions,"
+	@echo "                        script structure (Purpose, Author, echo),"
+	@echo "                        and Doom/tmux config file presence"
+	@echo
+	@echo "SHELL"
+	@echo "  make reload-shell     Reload shell (restart with .zshrc)"
+	@echo
+	@echo "HELP"
+	@echo "  make help             Show this help message"
+	@echo
+	@echo "See docs/makefile-commands.md for full documentation."
