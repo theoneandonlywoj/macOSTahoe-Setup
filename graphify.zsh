@@ -42,8 +42,20 @@ fi
 # === 3. Ensure uv is installed ===
 # uv provisions its own managed Python (3.10+ required by Graphify), so we don't
 # need to install Python separately here.
+# Prefer mise if it's available (see mise.zsh); otherwise fall back to Homebrew.
 if command -v uv >/dev/null 2>&1; then
   echo "✅ uv is already available."
+elif command -v mise >/dev/null 2>&1; then
+  echo "📥 Installing uv via mise..."
+  mise use -g uv@latest
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Failed to install uv via mise."
+    echo "⚠️  Try running manually: mise use -g uv@latest"
+    exit 1
+  fi
+  # Activate mise in this session so the uv shim resolves immediately.
+  eval "$(mise activate zsh)"
+  echo "✅ uv installed via mise."
 else
   echo "📥 Installing uv via Homebrew..."
   brew install uv
@@ -52,7 +64,14 @@ else
     echo "⚠️  Try running manually: brew install uv"
     exit 1
   fi
-  echo "✅ uv installed."
+  echo "✅ uv installed via Homebrew."
+fi
+
+# Final guard: make sure uv is actually resolvable before we use it.
+if ! command -v uv >/dev/null 2>&1; then
+  echo "❌ uv was installed but is not on your PATH yet."
+  echo "   Restart your shell (or run: exec zsh) and re-run this script."
+  exit 1
 fi
 echo
 
