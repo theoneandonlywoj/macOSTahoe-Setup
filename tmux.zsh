@@ -9,6 +9,8 @@ echo
 
 # === Configuration ===
 brew_path="/opt/homebrew/bin/brew"
+tpm_dir="$HOME/.tmux/plugins/tpm"
+tmux_conf="$HOME/.tmux.conf"
 
 arch_name=$(uname -m)
 if [[ "$arch_name" == "arm64" ]]; then
@@ -76,13 +78,13 @@ fi
 echo
 echo "🔧 Setting up tmux configuration..."
 
-tmux_conf="$HOME/.tmux.conf"
-
 if [[ -f "$tmux_conf" ]]; then
-  echo "✅ ~/.tmux.conf already exists. Skipping config creation."
-else
-  echo "💡 Creating starter ~/.tmux.conf..."
-  cat > "$tmux_conf" <<'EOF'
+  echo "💡 Existing ~/.tmux.conf found. Backing up and replacing..."
+  mv "$tmux_conf" "${tmux_conf}.backup.$(date +%Y%m%d%H%M%S)"
+fi
+
+echo "💡 Creating starter ~/.tmux.conf..."
+cat > "$tmux_conf" <<'EOF'
 # === tmux.conf ===
 # Starter configuration for tmux on macOS Tahoe
 
@@ -126,18 +128,81 @@ bind -n C-Down select-pane -D
 # Reload config file
 bind r source-file ~/.tmux.conf \; display "Config reloaded!"
 
-# Clipboard integration (macOS)
-bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "pbcopy"
-bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "pbcopy"
-
 # Status bar
 set -g status-position top
 set -g status-style fg=white,bg=black
+
+# === Plugins (tpm) ===
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'tmux-plugins/tmux-pain-control'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'tmux-plugins/tmux-copycat'
+set -g @plugin 'tmux-plugins/tmux-open'
+set -g @plugin 'tmux-plugins/tmux-fzf'
+
+# === Plugin settings ===
+# Resurrect: restore Elixir/Phoenix/Nerves processes
+set -g @resurrect-processes ':iex :mix :node :erl :npm :docker'
+set -g @resurrect-capture-pane-contents 'on'
+
+# Continuum: auto-save every 15 min, auto-restore on start
+set -g @continuum-save-interval '15'
+set -g @continuum-restore 'on'
+
+# Initialize tpm (must be last line)
+run '~/.tmux/plugins/tpm/tpm'
 EOF
-  echo "✅ ~/.tmux.conf created."
+echo "✅ ~/.tmux.conf created."
+
+# === 6. Install tpm and plugins ===
+echo
+echo "🔌 Installing Tmux Plugin Manager (tpm)..."
+
+if [[ -d "$tpm_dir" ]]; then
+  echo "💡 tpm already installed. Updating..."
+  git -C "$tpm_dir" pull
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Failed to update tpm."
+    exit 1
+  fi
+  echo "✅ tpm updated."
+else
+  echo "📥 Cloning tpm..."
+  git clone --depth 1 https://github.com/tmux-plugins/tpm "$tpm_dir"
+  if [[ $? -ne 0 ]]; then
+    echo "❌ Failed to clone tpm."
+    exit 1
+  fi
+  echo "✅ tpm cloned."
 fi
 
-# === 6. Post-installation checks ===
+echo
+echo "📦 Installing tmux plugins..."
+export TMUX_PLUGIN_MANAGER_PATH="$HOME/.tmux/plugins/"
+
+tmux new-session -d -s __tmux_setup 2>/dev/null || true
+sleep 1
+tmux source-file "$tmux_conf" 2>/dev/null || true
+sleep 1
+
+"$tpm_dir/bin/install_plugins"
+install_status=$?
+
+tmux kill-session -t __tmux_setup 2>/dev/null || true
+
+if [[ $install_status -ne 0 ]]; then
+  echo "⚠️  Plugin installation via script had issues (this is often normal on first run)."
+  echo "💡  Press Ctrl+a I inside tmux to finalize plugin installation."
+  echo "✅ tmux setup complete (plugins will install on first tmux session)."
+else
+  echo "✅ tmux plugins installed."
+fi
+
+unset TMUX_PLUGIN_MANAGER_PATH
+
+# === 7. Post-installation checks ===
 echo
 echo "🧪 Verifying setup..."
 tmux -V >/dev/null 2>&1
@@ -148,7 +213,7 @@ else
   echo '   source ~/.zshrc'
 fi
 
-# === 7. Tips ===
+# === 8. Tips ===
 echo
 echo "🎉 tmux installation complete!"
 echo
@@ -220,3 +285,17 @@ echo "💡 Tips:"
 echo "   - Use tmux for long-running tasks (survives disconnects)"
 echo "   - Edit ~/.tmux.conf for custom key bindings and themes"
 echo "   - Reload config inside tmux: Ctrl+a r"
+echo
+echo "💡 Plugin management (tpm):"
+echo "   Ctrl+a I         Install plugins (after adding to ~/.tmux.conf)"
+echo "   Ctrl+a U         Update plugins"
+echo "   Ctrl+a alt+u     Remove plugins not in ~/.tmux.conf"
+echo
+echo "💡 Installed plugins:"
+echo "   tmux-resurrect     Save/restore sessions across restarts"
+echo "   tmux-continuum      Auto-save every 15 min, auto-restore on start"
+echo "   tmux-pain-control   Better pane management bindings"
+echo "   tmux-yank           Copy to macOS clipboard"
+echo "   tmux-copycat        Search across pane content (great for stacktraces)"
+echo "   tmux-open           Open file:line from tmux in \$EDITOR"
+echo "   tmux-fzf            FZF-powered session/window switcher"
