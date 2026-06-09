@@ -61,6 +61,16 @@ echo "📦 Detected mise path: $mise_bin_path"
 # Ensure ~/.zshrc exists
 touch ~/.zshrc
 
+# Add Zsh completion system if not already present (required for mise completions)
+if ! grep -q 'compinit' ~/.zshrc; then
+  echo "💡 Adding Zsh completion system to ~/.zshrc..."
+  echo '' >> ~/.zshrc
+  echo '# Initialize Zsh completion system' >> ~/.zshrc
+  echo 'autoload -Uz compinit && compinit' >> ~/.zshrc
+else
+  echo "✅ Zsh completion system already initialized in ~/.zshrc."
+fi
+
 # Add Mise initialization lines if not already present
 if ! grep -q 'mise activate zsh' ~/.zshrc; then
   echo "💡 Adding Mise activation to ~/.zshrc..."
