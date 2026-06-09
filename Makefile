@@ -6,7 +6,7 @@
 .PHONY: all doom-sync doom-backup doom-restore doom-diff \
         tmux-sync tmux-backup tmux-restore tmux-diff \
         sync backup restore diff tsync tbackup trestore tdiff \
-        soft-test help
+        soft-test reload-shell help
 
 # Generate timestamp in format YYYY_mm_dd_hh_MM
 TIMESTAMP := $(shell date +"%Y_%m_%d_%H_%M")
@@ -289,6 +289,14 @@ soft-test:
 	fi
 
 # ============================================================
+# SHELL
+# ============================================================
+
+reload-shell:
+	@echo "🔄 Reloading shell configuration..."
+	@exec $$SHELL -l
+
+# ============================================================
 # HELP
 # ============================================================
 
@@ -321,7 +329,7 @@ help:
 	@echo "                        (reloads config if inside a tmux session)"
 	@echo "  make tmux-diff        Diff the installed ~/.tmux.conf vs repo copy"
 	@echo
-	@echo "SHORTCUTS"
+@echo "SHORTCUTS"
 	@echo "  make sync             Alias for doom-sync"
 	@echo "  make backup           Alias for doom-backup"
 	@echo "  make restore          Alias for doom-restore"
@@ -336,6 +344,9 @@ help:
 	@echo "                        shebang lines, Zsh syntax, file permissions,"
 	@echo "                        script structure (Purpose, Author, echo),"
 	@echo "                        and Doom/tmux config file presence"
+	@echo
+	@echo "SHELL"
+	@echo "  make reload-shell     Reload shell (restart with .zshrc)"
 	@echo
 	@echo "HELP"
 	@echo "  make help             Show this help message"
