@@ -2,7 +2,7 @@
 # Moves existing configs to timestamped backups and installs new configs
 # Supports restore from the most recent backup
 
-.PHONY: all doom-sync doom-backup doom-restore doom-diff soft-test help
+.PHONY: all doom-sync doom-backup doom-restore doom-diff soft-test reload-shell help
 
 # Generate timestamp in format YYYY_mm_dd_hh_MM
 TIMESTAMP := $(shell date +"%Y_%m_%d_%H_%M")
@@ -221,6 +221,14 @@ soft-test:
 	fi
 
 # ============================================================
+# SHELL
+# ============================================================
+
+reload-shell:
+	@echo "🔄 Reloading shell configuration..."
+	@exec $$SHELL -l
+
+# ============================================================
 # HELP
 # ============================================================
 
@@ -243,6 +251,9 @@ help:
 	@echo
 	@echo "TESTING:"
 	@echo "  make soft-test    Validate Zsh scripts (syntax, structure)"
+	@echo
+	@echo "SHELL:"
+	@echo "  make reload-shell  Reload shell (restart with .zshrc)"
 	@echo
 	@echo "HELP:"
 	@echo "  make help         Show this help message"
