@@ -218,7 +218,19 @@ Our config opens new panes in the same directory as the current pane.
 | Zoom pane (fullscreen)     | `Ctrl+a z`            |
 | Swap pane with previous    | `Ctrl+a {`            |
 | Swap pane with next        | `Ctrl+a }`            |
+| Break pane into window     | `Ctrl+a @`            |
 | Kill current pane          | `Ctrl+a x`            |
+
+### Deleting / Killing
+
+| Action                       | Key / Command              |
+|------------------------------|----------------------------|
+| Kill current pane            | `Ctrl+a x`                 |
+| Kill pane (no confirmation)  | `Ctrl+a X` (uppercase)     |
+| Kill current window          | `Ctrl+a &`                 |
+| Last window closes session   | Kill the last window or run `Ctrl+a :kill-session` |
+
+> Press `y` to confirm when prompted after `Ctrl+a x` or `Ctrl+a &`. Use `Ctrl+a X` (uppercase, from pain-control) to skip the confirmation dialog.
 
 ---
 
@@ -590,8 +602,10 @@ All commands start with `Ctrl+a` (press and release, then press the command key)
 | Resize pane                | `Ctrl+a H/J/K/L`      |
 | Zoom (fullscreen toggle)   | `Ctrl+a z`             |
 | Swap pane                  | `Ctrl+a {` / `Ctrl+a }` |
+| Break pane into window     | `Ctrl+a @`             |
 | Show pane numbers          | `Ctrl+a q`             |
 | Kill pane                  | `Ctrl+a x`             |
+| Kill pane (no confirm)     | `Ctrl+a X` (uppercase) |
 
 ### Copy mode
 
