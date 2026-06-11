@@ -24,7 +24,7 @@ Each script is intended to be run from this repository directory and is safe to 
 From the repository root:
 
 ```zsh
-chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh dock_cleanup.zsh
+chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh tidewave.zsh emacs.zsh doom_emacs.zsh dock_cleanup.zsh
 
 ./brew.zsh
 ./vivaldi_browser.zsh
@@ -43,6 +43,7 @@ chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh
 ./kafka_cli.zsh
 ./mise.zsh
 ./elixir_and_erlang.zsh
+./tidewave.zsh
 ./emacs.zsh
 ./doom_emacs.zsh
 ./dock_cleanup.zsh
@@ -211,6 +212,15 @@ Installs Elixir and Erlang (typically via Mise / package manager).
 ```zsh
 chmod +x elixir_and_erlang.zsh
 ./elixir_and_erlang.zsh
+```
+
+#### Tidewave
+
+Installs Tidewave Desktop and CLI for Apple chips / Apple Silicon Macs, with an Intel fallback. Prints Phoenix and Phoenix umbrella setup guides.
+
+```zsh
+chmod +x tidewave.zsh
+./tidewave.zsh
 ```
 
 #### Emacs
