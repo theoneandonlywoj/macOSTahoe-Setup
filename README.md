@@ -318,6 +318,7 @@ make skills-sync
 | `/commit` | `.claude/skills/commit/`, `.config/opencode/commands/commit.md` | Generate a Conventional Commits message from staged changes and **print a ready-to-run `git commit -m ...` command** (no commit). |
 | `/pr` | `.claude/skills/pr/`, `.config/opencode/commands/pr.md` | Fill `.github/PULL_REQUEST_TEMPLATE.md` from the `main..HEAD` diff, create/overwrite `PR.md`, verify `gh auth status`, then create or update the GitHub PR title/body via `gh`. |
 | `/graphify` | `.claude/skills/graphify/` | Turn any folder/URL into a navigable knowledge graph (imported verbatim from the global skill). |
+| `/guide` | `.claude/skills/guide/`, `.config/opencode/commands/guide.md` | Create or improve a step-by-step guide under `docs/` with a `guide_*.md` filename, concrete examples, verification checks, and Mermaid diagrams when useful. |
 | `/create-skill` | `.claude/skills/create-skill/`, `.config/opencode/commands/create-skill.md` | Create, eval, and iterate new skills. Bundles its own eval toolchain (`scripts/`, `eval-viewer/`, `agents/`, `references/`, `assets/`). |
 
 ### PR template
