@@ -545,7 +545,7 @@ help:
 	@echo "  make claude-sync      Back up existing ~/.claude/skills, then copy repo"
 	@echo "                        skills there (repo is source of truth). Moves the"
 	@echo "                        entire skills dir, so all skills must live in the repo"
-	@echo "                        (commit, pr, graphify, create-skill) to survive sync."
+	@echo "                        (commit, pr, graphify, guide, create-skill) to survive sync."
 	@echo "  make claude-backup    Move existing skills to a timestamped"
 	@echo "                        backup (~/.claude/skills_backup_YYYY_MM_DD_HH_MM)"
 	@echo "  make claude-restore   Restore the most recent skills backup"
