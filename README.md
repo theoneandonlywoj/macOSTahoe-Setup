@@ -252,10 +252,12 @@ This repo includes a Makefile for managing Doom Emacs, tmux, OpenCode commands, 
 | `make doom-sync` | Back up existing `~/.doom.d`, copy repo config, run `doom sync` |
 | `make doom-backup` | Move `~/.doom.d` to a timestamped backup |
 | `make doom-restore` | Restore the most recent backup to `~/.doom.d` |
+| `make clean-backup-doom` | Delete Doom backups after accepting current `~/.doom.d` as source of truth |
 | `make doom-diff` | Diff repo vs installed Doom config files |
 | `make tmux-sync` | Back up existing `~/.tmux.conf`, copy repo config, reload in tmux |
 | `make tmux-backup` | Copy `~/.tmux.conf` to a timestamped backup |
 | `make tmux-restore` | Restore the most recent tmux backup |
+| `make clean-backup-tmux` | Delete tmux backups after accepting current `~/.tmux.conf` as source of truth |
 | `make tmux-diff` | Diff repo vs installed `~/.tmux.conf` |
 | `make sync` | Alias for `doom-sync` |
 | `make backup` | Alias for `doom-backup` |
@@ -268,12 +270,16 @@ This repo includes a Makefile for managing Doom Emacs, tmux, OpenCode commands, 
 | `make opencode-sync` | Back up existing `~/.config/opencode/commands`, copy repo commands there |
 | `make opencode-backup` | Move `~/.config/opencode/commands` to a timestamped backup |
 | `make opencode-restore` | Restore the most recent OpenCode commands backup |
+| `make clean-backup-opencode` | Delete OpenCode command backups after accepting current commands as source of truth |
 | `make opencode-diff` | Diff repo vs installed OpenCode commands (recursive) |
 | `make claude-sync` | Back up existing `~/.claude/skills`, copy repo skills there |
 | `make claude-backup` | Move `~/.claude/skills` to a timestamped backup |
 | `make claude-restore` | Restore the most recent Claude skills backup |
+| `make clean-backup-claude` | Delete Claude skill backups after accepting current skills as source of truth |
 | `make claude-diff` | Diff repo vs installed Claude skills (recursive) |
 | `make skills-sync` | Run `opencode-sync` + `claude-sync` in one go |
+| `make clean-backup-skills` | Delete OpenCode + Claude skill backups |
+| `make clean-backup-all` | Delete all known config backups |
 | `make osync` / `obackup` / `orestore` / `odiff` | Aliases for the OpenCode targets |
 | `make csync` / `cbackup` / `crestore` / `cdiff` | Aliases for the Claude targets |
 | `make ssync` | Alias for `skills-sync` |

@@ -1,13 +1,15 @@
 # === Makefile for config sync (macOS Tahoe) ===
 # Syncs Doom Emacs, tmux, OpenCode commands, and Claude skills between this repo and $HOME
 # Moves existing configs to timestamped backups before installing new ones
-# Supports restore from the most recent backup
+# Supports restore from the most recent backup and cleanup of accepted backups
 
 .PHONY: all doom-sync doom-backup doom-restore doom-diff \
         tmux-sync tmux-backup tmux-restore tmux-diff \
         sync backup restore diff tsync tbackup trestore tdiff \
         opencode-sync opencode-backup opencode-restore opencode-diff \
         claude-sync claude-backup claude-restore claude-diff \
+        clean-backup-doom clean-backup-tmux clean-backup-opencode clean-backup-claude \
+        clean-backup-skills clean-backup-all \
         skills-sync osync obackup orestore odiff csync cbackup crestore cdiff ssync \
         soft-test reload-shell help
 
@@ -220,6 +222,84 @@ skills-sync: opencode-sync claude-sync
 	@echo "✅ All AI coding skills synced (OpenCode commands + Claude skills)"
 
 # ============================================================
+# BACKUP CLEANUP
+# ============================================================
+
+clean-backup-doom:
+	@echo "🧹 Removing Doom Emacs backups..."
+	@echo "⚠️  Current ~/.doom.d is now treated as the source of truth."
+	@found=false; \
+	for backup in "$(HOME)"/.doom.d_backup_*; do \
+		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
+			found=true; \
+			echo "🗑  $$backup"; \
+			rm -rf "$$backup"; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "ℹ️  No Doom Emacs backups found."; \
+	else \
+		echo "✅ Removed Doom Emacs backups."; \
+	fi
+
+clean-backup-tmux:
+	@echo "🧹 Removing tmux backups..."
+	@echo "⚠️  Current ~/.tmux.conf is now treated as the source of truth."
+	@found=false; \
+	for backup in "$(HOME)"/.tmux.conf.backup_*; do \
+		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
+			found=true; \
+			echo "🗑  $$backup"; \
+			rm -rf "$$backup"; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "ℹ️  No tmux backups found."; \
+	else \
+		echo "✅ Removed tmux backups."; \
+	fi
+
+clean-backup-opencode:
+	@echo "🧹 Removing OpenCode command backups..."
+	@echo "⚠️  Current $(OPENCODE_HOME_CMDS) is now treated as the source of truth."
+	@found=false; \
+	for backup in "$(HOME)"/.config/opencode/commands_backup_*; do \
+		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
+			found=true; \
+			echo "🗑  $$backup"; \
+			rm -rf "$$backup"; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "ℹ️  No OpenCode command backups found."; \
+	else \
+		echo "✅ Removed OpenCode command backups."; \
+	fi
+
+clean-backup-claude:
+	@echo "🧹 Removing Claude skill backups..."
+	@echo "⚠️  Current $(CLAUDE_HOME_SKILLS) is now treated as the source of truth."
+	@found=false; \
+	for backup in "$(HOME)"/.claude/skills_backup_*; do \
+		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
+			found=true; \
+			echo "🗑  $$backup"; \
+			rm -rf "$$backup"; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "ℹ️  No Claude skill backups found."; \
+	else \
+		echo "✅ Removed Claude skill backups."; \
+	fi
+
+clean-backup-skills: clean-backup-opencode clean-backup-claude
+	@echo "✅ Removed AI coding skill backups."
+
+clean-backup-all: clean-backup-doom clean-backup-tmux clean-backup-skills
+	@echo "✅ Removed all known config backups."
+
+# ============================================================
 # CONVENIENCE ALIASES
 # ============================================================
 
@@ -430,6 +510,9 @@ help:
 	@echo "                        backup directory (~/.doom.d_backup_YYYY_MM_DD_HH_MM)"
 	@echo "  make doom-restore     Restore the most recent backup by moving it"
 	@echo "                        back to ~/.doom.d (deletes current config first)"
+	@echo "  make clean-backup-doom"
+	@echo "                        Delete all ~/.doom.d_backup_* backups"
+	@echo "                        (current ~/.doom.d becomes source of truth)"
 	@echo "  make doom-diff        Diff the three core Doom config files"
 	@echo "                        (config.el, init.el, packages.el) between"
 	@echo "                        the installed ~/.doom.d and the repo copy"
@@ -441,6 +524,9 @@ help:
 	@echo "                        backup (~/.tmux.conf.backup_YYYY_MM_DD_HH_MM)"
 	@echo "  make tmux-restore     Restore the most recent tmux backup"
 	@echo "                        (reloads config if inside a tmux session)"
+	@echo "  make clean-backup-tmux"
+	@echo "                        Delete all ~/.tmux.conf.backup_* backups"
+	@echo "                        (current ~/.tmux.conf becomes source of truth)"
 	@echo "  make tmux-diff        Diff the installed ~/.tmux.conf vs repo copy"
 	@echo
 	@echo "OPENCODE COMMANDS"
@@ -450,6 +536,9 @@ help:
 	@echo "                        backup (~/.config/opencode/commands_backup_YYYY_MM_DD_HH_MM)"
 	@echo "  make opencode-restore Restore the most recent commands backup"
 	@echo "                        (deletes current commands first)"
+	@echo "  make clean-backup-opencode"
+	@echo "                        Delete all OpenCode command backups"
+	@echo "                        (current commands become source of truth)"
 	@echo "  make opencode-diff    Diff installed vs repo OpenCode commands (recursive)"
 	@echo
 	@echo "CLAUDE SKILLS"
@@ -461,10 +550,17 @@ help:
 	@echo "                        backup (~/.claude/skills_backup_YYYY_MM_DD_HH_MM)"
 	@echo "  make claude-restore   Restore the most recent skills backup"
 	@echo "                        (deletes current skills first)"
+	@echo "  make clean-backup-claude"
+	@echo "                        Delete all Claude skill backups"
+	@echo "                        (current skills become source of truth)"
 	@echo "  make claude-diff      Diff installed vs repo Claude skills (recursive)"
 	@echo
 	@echo "COMBINED"
 	@echo "  make skills-sync      Run opencode-sync + claude-sync in one go"
+	@echo "  make clean-backup-skills"
+	@echo "                        Delete OpenCode + Claude skill backups"
+	@echo "  make clean-backup-all"
+	@echo "                        Delete all known config backups"
 	@echo
 	@echo "SHORTCUTS"
 	@echo "  make sync             Alias for doom-sync"
