@@ -1,11 +1,14 @@
 # === Makefile for config sync (macOS Tahoe) ===
-# Syncs Doom Emacs and tmux configs between this repo and $HOME
+# Syncs Doom Emacs, tmux, OpenCode commands, and Claude skills between this repo and $HOME
 # Moves existing configs to timestamped backups before installing new ones
 # Supports restore from the most recent backup
 
 .PHONY: all doom-sync doom-backup doom-restore doom-diff \
         tmux-sync tmux-backup tmux-restore tmux-diff \
         sync backup restore diff tsync tbackup trestore tdiff \
+        opencode-sync opencode-backup opencode-restore opencode-diff \
+        claude-sync claude-backup claude-restore claude-diff \
+        skills-sync osync obackup orestore odiff csync cbackup crestore cdiff ssync \
         soft-test reload-shell help
 
 # Generate timestamp in format YYYY_mm_dd_hh_MM
@@ -18,6 +21,16 @@ DOOM_REPO_DIR := ./.doom.d
 # tmux paths
 TMUX_BACKUP_FILE := $(HOME)/.tmux.conf.backup_$(TIMESTAMP)
 TMUX_REPO_FILE := ./tmux.conf
+
+# OpenCode (commands) paths — scoped to the commands/ subdir only
+OPENCODE_REPO_CMDS  := ./.config/opencode/commands
+OPENCODE_HOME_CMDS  := $(HOME)/.config/opencode/commands
+OPENCODE_BACKUP_DIR := $(HOME)/.config/opencode/commands_backup_$(TIMESTAMP)
+
+# Claude (skills) paths — scoped to the skills/ subdir only
+CLAUDE_REPO_SKILLS  := ./.claude/skills
+CLAUDE_HOME_SKILLS  := $(HOME)/.claude/skills
+CLAUDE_BACKUP_DIR   := $(HOME)/.claude/skills_backup_$(TIMESTAMP)
 
 # ============================================================
 # DEFAULT TARGET
@@ -124,6 +137,89 @@ tmux-diff:
 	@diff -u "$(HOME)/.tmux.conf" "$(TMUX_REPO_FILE)" 2>/dev/null || echo "(files differ or missing)"
 
 # ============================================================
+# OPENCODE COMMANDS
+# ============================================================
+
+opencode-sync: opencode-backup
+	@echo "📦 Copying new OpenCode commands..."
+	@mkdir -p $(HOME)/.config/opencode
+	@cp -r $(OPENCODE_REPO_CMDS) $(OPENCODE_HOME_CMDS)
+	@echo "✅ New commands synced to $(OPENCODE_HOME_CMDS)"
+
+opencode-backup:
+	@if [ -d "$(OPENCODE_HOME_CMDS)" ]; then \
+		echo "💾 Backing up existing $(OPENCODE_HOME_CMDS) to $(OPENCODE_BACKUP_DIR)..."; \
+		mv "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_BACKUP_DIR)"; \
+		echo "✅ Backup created at $(OPENCODE_BACKUP_DIR)"; \
+	else \
+		echo "ℹ️  No existing $(OPENCODE_HOME_CMDS) found — skipping backup."; \
+	fi
+
+opencode-restore:
+	@echo "♻️  Restoring the most recent OpenCode commands backup..."
+	@latest_backup=$$(ls -d $(HOME)/.config/opencode/commands_backup_* 2>/dev/null | sort -r | head -n 1); \
+	if [ -z "$$latest_backup" ]; then \
+		echo "❌ No backups found. Cannot restore."; \
+		exit 1; \
+	fi; \
+	if [ -d "$(OPENCODE_HOME_CMDS)" ]; then \
+		echo "🗑  Removing current $(OPENCODE_HOME_CMDS) before restore..."; \
+		rm -rf "$(OPENCODE_HOME_CMDS)"; \
+	fi; \
+	echo "♻️  Restoring from $$latest_backup..."; \
+	mv "$$latest_backup" "$(OPENCODE_HOME_CMDS)"; \
+	echo "✅ Restore complete from $$latest_backup"
+
+opencode-diff:
+	@echo "📊 Comparing OpenCode commands..."
+	@diff -ru "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_REPO_CMDS)" 2>/dev/null || echo "(files differ or missing)"
+
+# ============================================================
+# CLAUDE SKILLS
+# ============================================================
+
+claude-sync: claude-backup
+	@echo "📦 Copying new Claude skills..."
+	@mkdir -p $(HOME)/.claude
+	@cp -r $(CLAUDE_REPO_SKILLS) $(CLAUDE_HOME_SKILLS)
+	@echo "✅ New skills synced to $(CLAUDE_HOME_SKILLS)"
+
+claude-backup:
+	@if [ -d "$(CLAUDE_HOME_SKILLS)" ]; then \
+		echo "💾 Backing up existing $(CLAUDE_HOME_SKILLS) to $(CLAUDE_BACKUP_DIR)..."; \
+		mv "$(CLAUDE_HOME_SKILLS)" "$(CLAUDE_BACKUP_DIR)"; \
+		echo "✅ Backup created at $(CLAUDE_BACKUP_DIR)"; \
+	else \
+		echo "ℹ️  No existing $(CLAUDE_HOME_SKILLS) found — skipping backup."; \
+	fi
+
+claude-restore:
+	@echo "♻️  Restoring the most recent Claude skills backup..."
+	@latest_backup=$$(ls -d $(HOME)/.claude/skills_backup_* 2>/dev/null | sort -r | head -n 1); \
+	if [ -z "$$latest_backup" ]; then \
+		echo "❌ No backups found. Cannot restore."; \
+		exit 1; \
+	fi; \
+	if [ -d "$(CLAUDE_HOME_SKILLS)" ]; then \
+		echo "🗑  Removing current $(CLAUDE_HOME_SKILLS) before restore..."; \
+		rm -rf "$(CLAUDE_HOME_SKILLS)"; \
+	fi; \
+	echo "♻️  Restoring from $$latest_backup..."; \
+	mv "$$latest_backup" "$(CLAUDE_HOME_SKILLS)"; \
+	echo "✅ Restore complete from $$latest_backup"
+
+claude-diff:
+	@echo "📊 Comparing Claude skills..."
+	@diff -ru "$(CLAUDE_HOME_SKILLS)" "$(CLAUDE_REPO_SKILLS)" 2>/dev/null || echo "(files differ or missing)"
+
+# ============================================================
+# COMBINED SKILLS SYNC
+# ============================================================
+
+skills-sync: opencode-sync claude-sync
+	@echo "✅ All AI coding skills synced (OpenCode commands + Claude skills)"
+
+# ============================================================
 # CONVENIENCE ALIASES
 # ============================================================
 
@@ -142,6 +238,24 @@ tbackup: tmux-backup
 trestore: tmux-restore
 
 tdiff: tmux-diff
+
+osync: opencode-sync
+
+obackup: opencode-backup
+
+orestore: opencode-restore
+
+odiff: opencode-diff
+
+csync: claude-sync
+
+cbackup: claude-backup
+
+crestore: claude-restore
+
+cdiff: claude-diff
+
+ssync: skills-sync
 
 # ============================================================
 # TESTING
@@ -329,6 +443,29 @@ help:
 	@echo "                        (reloads config if inside a tmux session)"
 	@echo "  make tmux-diff        Diff the installed ~/.tmux.conf vs repo copy"
 	@echo
+	@echo "OPENCODE COMMANDS"
+	@echo "  make opencode-sync    Back up existing ~/.config/opencode/commands, then"
+	@echo "                        copy repo commands there (repo is source of truth)"
+	@echo "  make opencode-backup  Move existing commands to a timestamped"
+	@echo "                        backup (~/.config/opencode/commands_backup_YYYY_MM_DD_HH_MM)"
+	@echo "  make opencode-restore Restore the most recent commands backup"
+	@echo "                        (deletes current commands first)"
+	@echo "  make opencode-diff    Diff installed vs repo OpenCode commands (recursive)"
+	@echo
+	@echo "CLAUDE SKILLS"
+	@echo "  make claude-sync      Back up existing ~/.claude/skills, then copy repo"
+	@echo "                        skills there (repo is source of truth). Moves the"
+	@echo "                        entire skills dir, so all skills must live in the repo"
+	@echo "                        (commit, pr, graphify, create-skill) to survive sync."
+	@echo "  make claude-backup    Move existing skills to a timestamped"
+	@echo "                        backup (~/.claude/skills_backup_YYYY_MM_DD_HH_MM)"
+	@echo "  make claude-restore   Restore the most recent skills backup"
+	@echo "                        (deletes current skills first)"
+	@echo "  make claude-diff      Diff installed vs repo Claude skills (recursive)"
+	@echo
+	@echo "COMBINED"
+	@echo "  make skills-sync      Run opencode-sync + claude-sync in one go"
+	@echo
 	@echo "SHORTCUTS"
 	@echo "  make sync             Alias for doom-sync"
 	@echo "  make backup           Alias for doom-backup"
@@ -338,6 +475,15 @@ help:
 	@echo "  make tbackup          Alias for tmux-backup"
 	@echo "  make trestore         Alias for tmux-restore"
 	@echo "  make tdiff            Alias for tmux-diff"
+	@echo "  make osync            Alias for opencode-sync"
+	@echo "  make obackup          Alias for opencode-backup"
+	@echo "  make orestore         Alias for opencode-restore"
+	@echo "  make odiff            Alias for opencode-diff"
+	@echo "  make csync            Alias for claude-sync"
+	@echo "  make cbackup          Alias for claude-backup"
+	@echo "  make crestore         Alias for claude-restore"
+	@echo "  make cdiff            Alias for claude-diff"
+	@echo "  make ssync            Alias for skills-sync"
 	@echo
 	@echo "TESTING"
 	@echo "  make soft-test        Validate all .zsh scripts in the repo:"
