@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "Generate a pull request description by filling the repo's PR template from the branch diff against main, then create or overwrite PR.md in the repo root. Use whenever the user asks for a PR description, PR body, pull request summary, wants to 'write the PR', or says 'describe this branch'/'what changed since main' — even if they don't explicitly mention a template. Never opens or creates the PR via gh."
+description: "Generate a pull request description by filling the repo's PR template from the branch diff against main, then create or overwrite PR.md in the repo root and ask whether to create or update the GitHub PR with a title and body based on PR.md. Use whenever the user asks for a PR description, PR body, pull request summary, wants to 'write the PR', or says 'describe this branch'/'what changed since main' — even if they don't explicitly mention a template. Ask-before-run: never runs gh pr create or gh pr edit until explicit confirmation."
 user-invocable: true
 disable-model-invocation: false
 allowed-tools: ["Bash", "Read", "Write"]
@@ -8,11 +8,11 @@ allowed-tools: ["Bash", "Read", "Write"]
 
 # /pr
 
-Generate a pull request description by filling in the repository's PR template (`.github/PULL_REQUEST_TEMPLATE.md`) based on the diff and commit log between the current branch and `main`. **Write** the result to `PR.md` in the repo root (creating or overwriting it), then print the path. Do not run `gh pr create`.
+Generate a pull request description by filling in the repository's PR template (`.github/PULL_REQUEST_TEMPLATE.md`) based on the diff and commit log between the current branch and `main`. **Write** the result to `PR.md` in the repo root (creating or overwriting it), draft a concise PR title from that content, then ask whether to create or update the GitHub PR with that title and `PR.md` as the body. Do not run `gh pr create` or `gh pr edit` unless the user explicitly confirms.
 
 ## Why write to PR.md
 
-The user wants a reviewable artifact they can open, edit, and paste into the PR. Writing `PR.md` (overwriting any existing one) gives them that. If the user then explicitly asks to open the PR, you may run `gh pr create --body-file PR.md` — but only after confirmation.
+The user wants a reviewable artifact before anything changes on GitHub. Writing `PR.md` (overwriting any existing one) gives them that. Updating GitHub is useful, but it should be explicit and reviewable: print the proposed title and the exact `gh` command, then ask before running it.
 
 ## Workflow
 
@@ -30,7 +30,13 @@ The user wants a reviewable artifact they can open, edit, and paste into the PR.
    - **Type of change** — pick the dominant Conventional Commits type (`feat`/`fix`/`docs`/`refactor`/`chore`/`test`/`perf`/`build`/`ci`), plus a `BREAKING` flag if the diff removes/renames public surface.
    - **Checklist** — leave the template's checkboxes for the user to tick, but pre-check the ones clearly satisfied by the diff (e.g. if tests were added, check "tests added").
 4. **Preserve template structure.** Keep the template's headings, order, and checkbox syntax (`- [ ]`/`- [x]`) exactly. Only fill in content under each heading — don't rewrite the template.
-5. **Write** the filled-in description to `PR.md` in the repo root, creating or overwriting that file. Then print `PR.md` as the output path and stop.
+5. **Write** the filled-in description to `PR.md` in the repo root, creating or overwriting that file.
+6. **Draft a title** from the PR body and branch diff. Keep it concise and imperative or noun-phrase style, e.g. `Add AI coding skills and sync targets`. Do not use markdown in the title.
+7. **Check for an existing PR** for the current branch with `gh pr view --json number,url,title`.
+   - If one exists, prepare: `gh pr edit <number> --title "<title>" --body-file PR.md`.
+   - If none exists, prepare: `gh pr create --base <base> --head <current-branch> --title "<title>" --body-file PR.md`.
+   - If `gh` is unavailable or the user is not authenticated, stop after writing `PR.md` and tell the user what command would have run.
+8. **Ask before running gh.** Print `PR.md`, the proposed title, and the exact `gh` command in a fenced `bash` block. Ask: `Create/update this GitHub PR?` Only run the printed command if the user explicitly confirms.
 
 ## Standard fallback structure
 
@@ -61,3 +67,4 @@ Use this only when no `.github/PULL_REQUEST_TEMPLATE.md` is found:
 - If the branch is a single commit, the description can be short — don't pad.
 - If the branch mixes many unrelated changes, say so and suggest splitting.
 - Keep it honest: don't claim tests were added if the diff doesn't show them.
+- Never create or update a GitHub PR without explicit confirmation after showing the title and exact `gh` command.

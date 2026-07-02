@@ -1,5 +1,5 @@
 ---
-description: Generate a PR description by filling the repo's PR template from the branch diff vs main and write PR.md
+description: Generate a PR description from the branch diff, write PR.md, then ask whether to create or update the GitHub PR with that body and title
 ---
 
 Current branch commits since main:
@@ -20,5 +20,10 @@ Rules:
 - **Type of change**: dominant Conventional Commits type (`feat`/`fix`/`docs`/`refactor`/`chore`/`test`/`perf`/`build`/`ci`), plus `BREAKING` if public surface changed.
 - Preserve the template's headings, order, and `- [ ]` checkbox syntax exactly; only fill content under each heading.
 - Create or overwrite `PR.md` in the repo root with the filled description.
-- Do not run `gh pr create`.
-- After writing the file, print only the path `PR.md` and a one-line confirmation.
+- Draft a concise PR title from the PR body and branch diff. Keep it plain text, no markdown.
+- Check whether the current branch already has a GitHub PR with `gh pr view --json number,url,title`.
+- If a PR exists, prepare `gh pr edit <number> --title "<title>" --body-file PR.md`.
+- If no PR exists, prepare `gh pr create --base main --head <current-branch> --title "<title>" --body-file PR.md`.
+- If `main` is not the base branch, use the same base branch used for the diff.
+- Print the path `PR.md`, the proposed title, and the exact `gh` command in a fenced `bash` block.
+- Ask `Create/update this GitHub PR?` Do not run `gh pr create` or `gh pr edit` unless the user explicitly confirms.
