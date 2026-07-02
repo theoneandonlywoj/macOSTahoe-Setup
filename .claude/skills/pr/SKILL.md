@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "Generate a pull request description by filling the repo's PR template from the branch diff against main, then create or overwrite PR.md in the repo root and ask whether to create or update the GitHub PR with a title and body based on PR.md. Use whenever the user asks for a PR description, PR body, pull request summary, wants to 'write the PR', or says 'describe this branch'/'what changed since main' — even if they don't explicitly mention a template. Ask-before-run: never runs gh pr create or gh pr edit until explicit confirmation."
+description: "Generate a GitHub pull request title and description from the branch diff, write the description to PR.md, then create or update the GitHub PR when the user invokes /pr or explicitly asks to create/update/open a PR. Use whenever the user asks for a PR description, PR body, pull request summary, wants to 'write the PR', or says 'describe this branch'/'what changed since main' — even if they don't explicitly mention a template. Description-only requests stop at PR.md unless the user confirms GitHub updates."
 user-invocable: true
 disable-model-invocation: false
 allowed-tools: ["Bash", "Read", "Write"]
@@ -8,11 +8,11 @@ allowed-tools: ["Bash", "Read", "Write"]
 
 # /pr
 
-Generate a pull request description by filling in the repository's PR template (`.github/PULL_REQUEST_TEMPLATE.md`) based on the diff and commit log between the current branch and `main`. **Write** the result to `PR.md` in the repo root (creating or overwriting it), draft a concise PR title from that content, then ask whether to create or update the GitHub PR with that title and `PR.md` as the body. Do not run `gh pr create` or `gh pr edit` unless the user explicitly confirms.
+Generate a GitHub pull request title and description from the current branch diff. Fill the repository's PR template (`.github/PULL_REQUEST_TEMPLATE.md`), **write** the description to `PR.md` in the repo root (creating or overwriting it), then create or update the GitHub PR with that title and `PR.md` as the body when the user invoked `/pr` or explicitly asked for GitHub PR creation/update.
 
 ## Why write to PR.md
 
-The user wants a reviewable artifact before anything changes on GitHub. Writing `PR.md` (overwriting any existing one) gives them that. Updating GitHub is useful, but it should be explicit and reviewable: print the proposed title and the exact `gh` command, then ask before running it.
+The user needs a reviewable PR body and a repeatable GitHub update path. Writing `PR.md` (overwriting any existing one) gives them a local artifact, while `gh pr create`/`gh pr edit` publishes the same title and body to GitHub when requested. For description-only prompts, keep GitHub side effects behind an explicit confirmation.
 
 ## Workflow
 
@@ -32,11 +32,14 @@ The user wants a reviewable artifact before anything changes on GitHub. Writing 
 4. **Preserve template structure.** Keep the template's headings, order, and checkbox syntax (`- [ ]`/`- [x]`) exactly. Only fill in content under each heading — don't rewrite the template.
 5. **Write** the filled-in description to `PR.md` in the repo root, creating or overwriting that file.
 6. **Draft a title** from the PR body and branch diff. Keep it concise and imperative or noun-phrase style, e.g. `Add AI coding skills and sync targets`. Do not use markdown in the title.
-7. **Check for an existing PR** for the current branch with `gh pr view --json number,url,title`.
-   - If one exists, prepare: `gh pr edit <number> --title "<title>" --body-file PR.md`.
-   - If none exists, prepare: `gh pr create --base <base> --head <current-branch> --title "<title>" --body-file PR.md`.
-   - If `gh` is unavailable or the user is not authenticated, stop after writing `PR.md` and tell the user what command would have run.
-8. **Ask before running gh.** Print `PR.md`, the proposed title, and the exact `gh` command in a fenced `bash` block. Ask: `Create/update this GitHub PR?` Only run the printed command if the user explicitly confirms.
+7. **Decide whether to touch GitHub.** Invoking `/pr` or asking to create/update/open/publish the PR counts as explicit permission to run `gh`. If the user only asked for a description, body, summary, or `PR.md`, print `PR.md`, the proposed title, and the exact `gh` command you would run, then ask before continuing.
+8. **Create or update the GitHub PR when permitted.**
+   - Require GitHub CLI authentication first: run `gh auth status`. If it fails, tell the user to run `gh auth login` and stop without creating or updating the PR.
+   - Check for an existing PR for the current branch with `gh pr view --json number,url,title`. A "no pull requests found" result means create a new PR; authentication, network, and repository errors are failures.
+   - If one exists, run `gh pr edit <number> --title "<title>" --body-file PR.md`, then get the URL with `gh pr view <number> --json url --jq .url`.
+   - If none exists, run `gh pr create --base <base> --head <current-branch> --title "<title>" --body-file PR.md` and capture the URL printed by `gh`.
+   - If `gh` is unavailable, `gh auth status` fails, the branch cannot be pushed, or the command fails, stop and report the failed command plus the local `PR.md` path. Do not claim the PR was created or updated unless `gh` succeeds.
+9. **Report the result.** Print the `PR.md` path, the title used, whether the PR was created or updated, and the GitHub PR URL when available.
 
 ## Standard fallback structure
 
@@ -67,4 +70,5 @@ Use this only when no `.github/PULL_REQUEST_TEMPLATE.md` is found:
 - If the branch is a single commit, the description can be short — don't pad.
 - If the branch mixes many unrelated changes, say so and suggest splitting.
 - Keep it honest: don't claim tests were added if the diff doesn't show them.
-- Never create or update a GitHub PR without explicit confirmation after showing the title and exact `gh` command.
+- The user must be authenticated with GitHub CLI via `gh auth login` before the skill can create or update a PR.
+- Treat `/pr` and explicit create/update/open/publish requests as permission to run `gh pr create` or `gh pr edit`; for description-only requests, ask before touching GitHub.

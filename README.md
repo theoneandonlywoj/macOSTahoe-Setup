@@ -316,13 +316,13 @@ make skills-sync
 | Skill | Where | Description |
 |---|---|---|
 | `/commit` | `.claude/skills/commit/`, `.config/opencode/commands/commit.md` | Generate a Conventional Commits message from staged changes and **print a ready-to-run `git commit -m ...` command** (no commit). |
-| `/pr` | `.claude/skills/pr/`, `.config/opencode/commands/pr.md` | Fill `.github/PULL_REQUEST_TEMPLATE.md` from the `main..HEAD` diff, create/overwrite `PR.md`, then ask before creating or updating the GitHub PR title/body via `gh`. |
+| `/pr` | `.claude/skills/pr/`, `.config/opencode/commands/pr.md` | Fill `.github/PULL_REQUEST_TEMPLATE.md` from the `main..HEAD` diff, create/overwrite `PR.md`, verify `gh auth status`, then create or update the GitHub PR title/body via `gh`. |
 | `/graphify` | `.claude/skills/graphify/` | Turn any folder/URL into a navigable knowledge graph (imported verbatim from the global skill). |
 | `/create-skill` | `.claude/skills/create-skill/`, `.config/opencode/commands/create-skill.md` | Create, eval, and iterate new skills. Bundles its own eval toolchain (`scripts/`, `eval-viewer/`, `agents/`, `references/`, `assets/`). |
 
 ### PR template
 
-`.github/PULL_REQUEST_TEMPLATE.md` is the example template the `/pr` skill fills in (Summary, Motivation, Changes, Type of change, Checklist). The generated PR body is written to `PR.md`; the skill then asks before using `gh` to create or update the GitHub PR title/body from that file. GitHub also auto-loads the template in the web PR editor.
+`.github/PULL_REQUEST_TEMPLATE.md` is the example template the `/pr` skill fills in (Summary, Motivation, Changes, Type of change, Checklist). The generated PR body is written to `PR.md`; `/pr` then requires GitHub CLI authentication via `gh auth login` and uses `gh` to create or update the GitHub PR title/body from that file. GitHub also auto-loads the template in the web PR editor.
 
 ### Verifying a sync
 
