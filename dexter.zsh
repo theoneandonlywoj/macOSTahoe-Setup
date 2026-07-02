@@ -40,7 +40,39 @@ if [[ -n "$dexter_version" ]]; then
   echo "📌 Version: $dexter_version"
 fi
 
-# === 4. Wrap-up ===
+# === 4. Ensure Mise shims are on PATH (so GUI-launched editors can spawn dexter) ===
+echo
+echo "🔗 Ensuring Mise is activated on PATH for shell sessions..."
+
+activate_line='eval "$(mise activate zsh)"'
+
+ensure_in_rc() {
+  local rc="$1"
+  [[ -f "$rc" ]] || return 1
+  if ! grep -qF 'mise activate zsh' "$rc" 2>/dev/null; then
+    printf '\n# Added by dexter.zsh — make mise-managed tools (e.g. dexter) discoverable\n%s\n' "$activate_line" >> "$rc"
+    echo "✅ Added mise activation to $rc"
+  else
+    echo "✅ $rc already activates mise."
+  fi
+}
+
+ensure_in_rc "$HOME/.zshrc"
+
+# Activate mise in the current shell so this session can resolve dexter immediately
+if ! eval "$activate_line" 2>/dev/null; then
+  echo "⚠️  Could not activate mise in the current shell."
+fi
+
+# Sanity check: is dexter resolvable on PATH now (not just via mise exec)?
+if command -v dexter >/dev/null 2>&1; then
+  echo "📌 dexter on PATH: $(command -v dexter)"
+else
+  echo "⚠️  dexter still not on PATH in this shell. Open a new terminal, or run: eval \"\$(mise activate zsh)\""
+  echo "   (GUI editors may need a full restart to inherit the updated PATH.)"
+fi
+
+# === 5. Wrap-up ===
 echo
 echo "✅ Dexter installed successfully!"
 echo
