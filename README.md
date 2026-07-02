@@ -244,7 +244,7 @@ chmod +x dock_cleanup.zsh
 
 ## Makefile commands
 
-This repo includes a Makefile for managing your Doom Emacs configuration. Run `make help` for a quick reference, or see [docs/makefile-commands.md](docs/makefile-commands.md) for full details.
+This repo includes a Makefile for managing Doom Emacs, tmux, OpenCode commands, and Claude skills. Run `make help` for a quick reference, or see [docs/makefile-commands.md](docs/makefile-commands.md) for full details.
 
 | Command | Description |
 |---|---|
@@ -252,10 +252,12 @@ This repo includes a Makefile for managing your Doom Emacs configuration. Run `m
 | `make doom-sync` | Back up existing `~/.doom.d`, copy repo config, run `doom sync` |
 | `make doom-backup` | Move `~/.doom.d` to a timestamped backup |
 | `make doom-restore` | Restore the most recent backup to `~/.doom.d` |
+| `make clean-backup-doom` | Delete Doom backups after accepting current `~/.doom.d` as source of truth |
 | `make doom-diff` | Diff repo vs installed Doom config files |
 | `make tmux-sync` | Back up existing `~/.tmux.conf`, copy repo config, reload in tmux |
 | `make tmux-backup` | Copy `~/.tmux.conf` to a timestamped backup |
 | `make tmux-restore` | Restore the most recent tmux backup |
+| `make clean-backup-tmux` | Delete tmux backups after accepting current `~/.tmux.conf` as source of truth |
 | `make tmux-diff` | Diff repo vs installed `~/.tmux.conf` |
 | `make sync` | Alias for `doom-sync` |
 | `make backup` | Alias for `doom-backup` |
@@ -265,6 +267,22 @@ This repo includes a Makefile for managing your Doom Emacs configuration. Run `m
 | `make tbackup` | Alias for `tmux-backup` |
 | `make trestore` | Alias for `tmux-restore` |
 | `make tdiff` | Alias for `tmux-diff` |
+| `make opencode-sync` | Back up existing `~/.config/opencode/commands`, copy repo commands there |
+| `make opencode-backup` | Move `~/.config/opencode/commands` to a timestamped backup |
+| `make opencode-restore` | Restore the most recent OpenCode commands backup |
+| `make clean-backup-opencode` | Delete OpenCode command backups after accepting current commands as source of truth |
+| `make opencode-diff` | Diff repo vs installed OpenCode commands (recursive) |
+| `make claude-sync` | Back up existing `~/.claude/skills`, copy repo skills there |
+| `make claude-backup` | Move `~/.claude/skills` to a timestamped backup |
+| `make claude-restore` | Restore the most recent Claude skills backup |
+| `make clean-backup-claude` | Delete Claude skill backups after accepting current skills as source of truth |
+| `make claude-diff` | Diff repo vs installed Claude skills (recursive) |
+| `make skills-sync` | Run `opencode-sync` + `claude-sync` in one go |
+| `make clean-backup-skills` | Delete OpenCode + Claude skill backups |
+| `make clean-backup-all` | Delete all known config backups |
+| `make osync` / `obackup` / `orestore` / `odiff` | Aliases for the OpenCode targets |
+| `make csync` / `cbackup` / `crestore` / `cdiff` | Aliases for the Claude targets |
+| `make ssync` | Alias for `skills-sync` |
 | `make soft-test` | Validate `.zsh` scripts and config files |
 | `make help` | Show available commands |
 
@@ -280,3 +298,35 @@ This repo includes a Makefile for managing your Doom Emacs configuration. Run `m
   xcode-select -p
   brew doctor
   ```
+
+## AI coding skills
+
+This repo is the **source of truth** for global AI coding-assistant skills. The skills live in `.claude/skills/` (Claude Code) and `.config/opencode/commands/` (OpenCode) and are deployed to `~/.claude/skills/` and `~/.config/opencode/commands/` via the Makefile.
+
+Deploy everything in one go:
+
+```zsh
+make skills-sync
+```
+
+`claude-sync` is **destructive**: it moves the entire `~/.claude/skills` directory to a timestamped backup before copying the repo skills over. So every skill you want to keep must live in this repo — that's why `graphify` (originally installed globally) is checked in here too. Restore a bad sync with `make claude-restore`.
+
+### Skills included
+
+| Skill | Where | Description |
+|---|---|---|
+| `/commit` | `.claude/skills/commit/`, `.config/opencode/commands/commit.md` | Generate a Conventional Commits message from staged changes and **print a ready-to-run `git commit -m ...` command** (no commit). |
+| `/pr` | `.claude/skills/pr/`, `.config/opencode/commands/pr.md` | Fill `.github/PULL_REQUEST_TEMPLATE.md` from the `main..HEAD` diff, create/overwrite `PR.md`, verify `gh auth status`, then create or update the GitHub PR title/body via `gh`. |
+| `/graphify` | `.claude/skills/graphify/` | Turn any folder/URL into a navigable knowledge graph (imported verbatim from the global skill). |
+| `/create-skill` | `.claude/skills/create-skill/`, `.config/opencode/commands/create-skill.md` | Create, eval, and iterate new skills. Bundles its own eval toolchain (`scripts/`, `eval-viewer/`, `agents/`, `references/`, `assets/`). |
+
+### PR template
+
+`.github/PULL_REQUEST_TEMPLATE.md` is the example template the `/pr` skill fills in (Summary, Motivation, Changes, Type of change, Checklist). The generated PR body is written to `PR.md`; `/pr` then requires GitHub CLI authentication via `gh auth login` and uses `gh` to create or update the GitHub PR title/body from that file. GitHub also auto-loads the template in the web PR editor.
+
+### Verifying a sync
+
+```zsh
+make opencode-diff   # should show no differences after opencode-sync
+make claude-diff     # should show no differences after claude-sync
+```

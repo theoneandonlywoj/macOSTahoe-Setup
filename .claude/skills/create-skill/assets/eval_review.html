@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Trigger Eval Review — __SKILL_NAME_PLACEHOLDER__</title>
+<style>
+  body { font-family: -apple-system, sans-serif; margin: 1.5rem; max-width: 900px; }
+  .desc { background:#f4f4f4; padding:.5rem; font-family:ui-monospace,monospace; white-space:pre-wrap; }
+  .item { border-top:1px solid #ccc; padding:.8rem 0; }
+  textarea { width:100%; }
+  label { font-weight:600; }
+  .meta { color:#666; font-size:.9rem; }
+  button { padding:.5rem 1rem; cursor:pointer; }
+</style>
+</head>
+<body>
+<h2>Trigger eval review — <code>__SKILL_NAME_PLACEHOLDER__</code></h2>
+<p class="meta">Current description:</p>
+<div class="desc" id="current-desc">__SKILL_DESCRIPTION_PLACEHOLDER__</div>
+<p>Edit queries, toggle should-trigger, add/remove entries, then click <b>Export Eval Set</b>. The file downloads as <code>eval_set.json</code>.</p>
+<div id="items"></div>
+<button onclick="addRow()">+ Add entry</button>
+<button onclick="exportSet()">Export Eval Set</button>
+<div id="status"></div>
+
+<script>
+const INITIAL = __EVAL_DATA_PLACEHOLDER__;
+let items = (INITIAL && INITIAL.length) ? INITIAL.map(Object.assign({}, {open:true})) : [];
+
+function render() {
+  const root = document.getElementById('items');
+  root.innerHTML = '';
+  items.forEach((it, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <div class="meta">#${i+1}</div>
+      <textarea rows="2" data-i="${i}" data-f="query">${escapeHtml(it.query||'')}</textarea>
+      <label><input type="checkbox" data-i="${i}" data-f="should_trigger" ${it.should_trigger?'checked':''}/> should trigger</label>
+      <button onclick="removeRow(${i})">remove</button>
+    `;
+    root.appendChild(div);
+  });
+  document.querySelectorAll('[data-f]').forEach(el => {
+    el.addEventListener('input', e => {
+      const i = +e.target.dataset.i, f = e.target.dataset.f;
+      items[i][f] = f === 'should_trigger' ? e.target.checked : e.target.value;
+    });
+  });
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function addRow(){ items.push({query:'', should_trigger:false}); render(); }
+function removeRow(i){ items.splice(i,1); render(); }
+function exportSet(){
+  const data = JSON.stringify(items.map(({query,should_trigger})=>({query,should_trigger})), null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'eval_set.json'; a.click();
+  document.getElementById('status').textContent = 'Downloaded eval_set.json';
+}
+render();
+</script>
+</body>
+</html>
