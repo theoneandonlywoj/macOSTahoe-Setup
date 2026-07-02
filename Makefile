@@ -329,7 +329,7 @@ help:
 	@echo "                        (reloads config if inside a tmux session)"
 	@echo "  make tmux-diff        Diff the installed ~/.tmux.conf vs repo copy"
 	@echo
-@echo "SHORTCUTS"
+	@echo "SHORTCUTS"
 	@echo "  make sync             Alias for doom-sync"
 	@echo "  make backup           Alias for doom-backup"
 	@echo "  make restore          Alias for doom-restore"
