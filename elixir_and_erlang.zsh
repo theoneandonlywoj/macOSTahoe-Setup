@@ -8,8 +8,8 @@ echo "🚀 Starting Erlang + Elixir installation via Mise on macOS Tahoe..."
 echo
 
 # === 0. Default versions (used if .tool-versions is not present) ===
-DEFAULT_ERLANG="28.5"
-DEFAULT_ELIXIR="1.20.0-otp-28"
+DEFAULT_ERLANG="28"
+DEFAULT_ELIXIR="1.19.3-otp-28"
 
 # === 1. Determine versions ===
 if [[ -f ".tool-versions" ]]; then
@@ -49,8 +49,8 @@ if [[ $? -ne 0 ]]; then
   echo "❌ Failed to install Erlang $ERLANG_VER"
   exit 1
 fi
-mise use erlang@"$ERLANG_VER"
-echo "✅ Erlang $ERLANG_VER installed and activated."
+mise use -g erlang@"$ERLANG_VER"
+echo "✅ Erlang $ERLANG_VER installed and activated globally."
 
 # === 4. Install Elixir ===
 echo
@@ -60,8 +60,8 @@ if [[ $? -ne 0 ]]; then
   echo "❌ Failed to install Elixir $ELIXIR_VER"
   exit 1
 fi
-mise use elixir@"$ELIXIR_VER"
-echo "✅ Elixir $ELIXIR_VER installed and activated."
+mise use -g elixir@"$ELIXIR_VER"
+echo "✅ Elixir $ELIXIR_VER installed and activated globally."
 
 # === 5. Verify installations ===
 echo
