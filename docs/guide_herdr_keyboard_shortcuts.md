@@ -32,7 +32,7 @@ A complete keyboard reference for Herdr (terminal agent multiplexer, [herdr.dev]
   ./herdr.zsh
   ```
 
-  It installs Herdr via Homebrew, seeds `~/.config/herdr/config.toml`, and offers to install integrations for the coding-agent CLIs it detects (Claude Code, Codex, Cursor, OpenCode, ...).
+  It installs Herdr via Homebrew, seeds `~/.config/herdr/config.toml`, offers to install integrations for the coding-agent CLIs it detects (Claude Code, Codex, Cursor, OpenCode, ...), and prompts for optional developer plugins.
 
 - A running Herdr session: `herdr` (attaches, starting the server if needed) or `brew services start herdr` for a background server.
 
@@ -160,10 +160,12 @@ Workspaces are top-level projects; each has its own working directory. Herdr can
 | New workspace                   | `prefix+shift+n`   |
 | New git worktree                | `prefix+shift+g`   |
 | Rename workspace                | `prefix+shift+w`   |
-| Close workspace                 | `prefix+shift+d`   |
+| Close workspace                 | `prefix+ctrl+x`    |
 | Toggle sidebar                  | `prefix+b`         |
 
-Unbound by default (available to map yourself): `previous_workspace`, `next_workspace`, `switch_workspace` (indexed `prefix+shift+1..9` style), `open_worktree`, `remove_worktree`.
+Unbound by default (available to map yourself): `previous_workspace`, `next_workspace`, `switch_workspace` (indexed `prefix+1..9` style), `open_worktree`, `remove_worktree`.
+
+To close the current workspace, press `prefix+ctrl+x`, then confirm the prompt if `confirm_close` is enabled. This closes the workspace and its panes; use `prefix+x` for only the focused pane, `prefix+shift+x` for only the current tab, and `prefix+q` when you only want to detach from Herdr while keeping the session running.
 
 ---
 
@@ -216,7 +218,7 @@ Herdr auto-detects coding agents (Claude Code, Codex, OpenCode, ...) running in 
 |--------------------------------------------|--------------------|
 | Open the pane that raised a notification   | `prefix+o`         |
 | Previous / next agent in sidebar           | `prefix+shift+up` / `prefix+shift+down` |
-| Jump to agent 1-9                          | `prefix+alt+1..9` or `prefix+ctrl+1..9` |
+| Jump to agent 1-9                          | `prefix+ctrl+1..9` |
 | Create 3-tab command workspace             | `prefix+ctrl+w`    |
 | Detach from the session (keeps running)    | `prefix+q`         |
 | Reload config                              | `prefix+shift+r`   |
@@ -224,7 +226,7 @@ Herdr auto-detects coding agents (Claude Code, Codex, OpenCode, ...) running in 
 
 Agent navigation is unbound by Herdr defaults, but this setup maps `previous_agent`, `next_agent`, and indexed `focus_agent` with prefix-only shortcuts so they do not collide with agent TUIs such as OpenCode.
 
-There is no separate `agent_picker` action like `workspace_picker` (`prefix+w`) in Herdr 0.7/0.8. For picker-style navigation, use `prefix+g` to open the session navigator, then move through workspaces and panes. For agent-specific movement, use `prefix+shift+up` / `prefix+shift+down` to step through agents in the sidebar, `prefix+alt+1..9` or `prefix+ctrl+1..9` to jump directly to agent N, or `prefix+o` when a notification points at an agent that needs attention.
+There is no separate `agent_picker` action like `workspace_picker` (`prefix+w`) in Herdr 0.7/0.8. For picker-style navigation, use `prefix+g` to open the session navigator, then move through workspaces and panes. For agent-specific movement, use `prefix+shift+up` / `prefix+shift+down` to step through agents in the sidebar, `prefix+ctrl+1..9` to jump directly to agent N, or `prefix+o` when a notification points at an agent that needs attention.
 
 This setup also adds `prefix+ctrl+w`, which runs `~/.config/herdr/scripts/new-workspace-3-tabs.zsh`. It greets you using your Git user name, creates a new workspace, creates three tabs, and runs one command in each tab. By default, the tabs are `agent` (`opencode` when detected, otherwise `claude`), `git` (`lazygit`), and `status` (location, branch, and workspace details). Customize it by creating `~/.config/herdr/three-tab-workspace.env`:
 
@@ -238,6 +240,31 @@ HERDR_3TAB_TAB3_LABEL="status"
 
 Only set `HERDR_3TAB_CMD1`, `HERDR_3TAB_CMD2`, or `HERDR_3TAB_CMD3` if you want to replace the defaults.
 
+### Optional developer plugins
+
+`./herdr.zsh` also offers recommended Herdr plugins for developer workflows. The prompt accepts one number, multiple comma/space-separated numbers, `0` for all, or Enter to skip:
+
+```text
+0) Install all recommended plugins
+1) reviewr — persiyanov/herdr-reviewr
+2) Sessionizer — andrewchng/herdr-sessionizer
+3) Browser — ogulcancelik/herdr-browser
+4) Focus Notify — yankewei/herdr-focus-notify
+
+Select plugins to install (0 for all, comma/space-separated numbers, Enter to skip): 1, 2, 3
+```
+
+The installer runs `herdr plugin install <owner/repo>` for each selected plugin, lets Herdr show its install preview, skips already installed plugins, and appends keybindings only for plugins that are installed successfully or already present.
+
+| Plugin | Purpose | Added keys |
+|--------|---------|------------|
+| `persiyanov/herdr-reviewr` | Review agent-written diffs beside the chat | `prefix+alt+r` toggles reviewr |
+| `andrewchng/herdr-sessionizer` | Fuzzy-open projects and Git worktrees | `prefix+alt+s` opens Sessionizer; `prefix+alt+w` opens the worktree picker |
+| `ogulcancelik/herdr-browser` | Open localhost pages in a Herdr browser pane | `prefix+alt+b` opens localhost in Herdr Browser |
+| `yankewei/herdr-focus-notify` | Clickable macOS notifications that focus agent panes | `prefix+alt+n` sends a test focus notification |
+
+Check what is installed with `herdr plugin list`. After new plugin keybindings are added, reload Herdr with `herdr server reload-config` or `prefix+shift+r`, then confirm them in `prefix+?`.
+
 `ctrl+click` opens links in panes (OSC 8 hyperlinks and visible URLs) when mouse capture is enabled.
 
 ---
@@ -249,7 +276,7 @@ All bindings live in `~/.config/herdr/config.toml` under `[keys]`. Two binding s
 - `"prefix+n"` — requires the prefix first.
 - `"ctrl+alt+n"` — a **direct chord**: fires immediately, no prefix.
 
-On macOS, `alt` means the **Option** key (`⌥`) physically, but Herdr config still spells the modifier as `alt`, not `option`. Some terminals use Option for typing special characters instead of sending Alt/Meta key events; if an `alt+...` binding does nothing, check your terminal keyboard settings and enable the option that treats Option as Meta/Alt. This setup also maps agent jumps to `prefix+ctrl+1..9` as a fallback because `Option+1` commonly becomes a special character on macOS layouts.
+On macOS, `alt` means the **Option** key (`⌥`) physically, but Herdr config still spells the modifier as `alt`, not `option`. Some terminals use Option for typing special characters instead of sending Alt/Meta key events; if an `alt+...` binding does nothing, check your terminal keyboard settings and enable the option that treats Option as Meta/Alt. This setup avoids active `alt` bindings for core navigation because `Option+1` commonly becomes a special character on macOS layouts.
 
 ### Example: bind the unbound actions
 
@@ -257,18 +284,53 @@ On macOS, `alt` means the **Option** key (`⌥`) physically, but Herdr config st
 [keys]
 prefix = "ctrl+b"
 last_pane = "prefix+backtick"          # jump between two panes
-previous_workspace = "prefix+shift+left"
-next_workspace = "prefix+shift+right"
-switch_workspace = "prefix+shift+1..9" # jump straight to workspace 1-9
+previous_workspace = "prefix+left"
+next_workspace = "prefix+right"
+switch_workspace = ""                  # use prefix+g or previous/next workspace
+close_workspace = "prefix+ctrl+x"       # close the current workspace after confirmation
 previous_agent = "prefix+shift+up"
 next_agent = "prefix+shift+down"
-focus_agent = ["prefix+alt+1..9", "prefix+ctrl+1..9"] # jump straight to agent 1-9
+focus_agent = "prefix+ctrl+1..9"        # jump straight to agent 1-9
 
 [[keys.command]]
 key = "prefix+ctrl+w"
 type = "shell"
 command = "~/.config/herdr/scripts/new-workspace-3-tabs.zsh"
 description = "create workspace with 3 command tabs"
+```
+
+If you install the optional developer plugins through `./herdr.zsh`, the installer appends matching `plugin_action` bindings for the plugins you selected:
+
+```toml
+[[keys.command]]
+key = "prefix+alt+r"
+type = "plugin_action"
+command = "persiyanov.reviewr.toggle"
+description = "toggle reviewr"
+
+[[keys.command]]
+key = "prefix+alt+s"
+type = "plugin_action"
+command = "sessionizer.open"
+description = "open sessionizer"
+
+[[keys.command]]
+key = "prefix+alt+w"
+type = "plugin_action"
+command = "sessionizer.worktree-open"
+description = "open sessionizer worktree picker"
+
+[[keys.command]]
+key = "prefix+alt+b"
+type = "plugin_action"
+command = "official.browser.open-localhost"
+description = "open localhost in Herdr browser"
+
+[[keys.command]]
+key = "prefix+alt+n"
+type = "plugin_action"
+command = "herdr-focus-notify.test"
+description = "send test focus notification"
 ```
 
 Apply with `herdr server reload-config` (or `prefix+shift+r`), then confirm in `prefix+?`.
@@ -309,9 +371,19 @@ type = "pane"         # temporary zoomed pane, closes when the command exits
 command = "just test"
 
 [[keys.command]]
-key = "prefix+alt+b"
+key = "prefix+alt+m"
 type = "shell"        # runs detached in the background
 command = "just build"
+```
+
+For installed plugins, use `type = "plugin_action"` and the plugin action id from `herdr plugin action list`:
+
+```toml
+[[keys.command]]
+key = "prefix+alt+r"
+type = "plugin_action"
+command = "persiyanov.reviewr.toggle"
+description = "toggle reviewr"
 ```
 
 ### Indexed shortcuts (legacy)
@@ -350,12 +422,17 @@ Still parsed for compatibility — prefer `switch_tab`, `switch_workspace`, and 
 | `prefix+g`              | Goto picker (navigate mode)     |
 | `prefix+shift+n`        | New workspace                   |
 | `prefix+shift+g`        | New git worktree                |
-| `prefix+shift+w` / `prefix+shift+d` | Rename / close workspace |
+| `prefix+shift+w` / `prefix+ctrl+x` | Rename / close workspace |
 | `prefix+b`              | Toggle sidebar                  |
 | `prefix+o`              | Open notification target        |
 | `prefix+shift+up` / `prefix+shift+down` | Previous / next agent  |
-| `prefix+alt+1..9` / `prefix+ctrl+1..9` | Jump to agent N     |
+| `prefix+ctrl+1..9`    | Jump to agent N                 |
 | `prefix+ctrl+w`        | Create 3-tab command workspace  |
+| `prefix+alt+r`         | Toggle reviewr (optional plugin) |
+| `prefix+alt+s`         | Open Sessionizer (optional plugin) |
+| `prefix+alt+w`         | Open Sessionizer worktree picker (optional plugin) |
+| `prefix+alt+b`         | Open localhost in Herdr Browser (optional plugin) |
+| `prefix+alt+n`         | Send Focus Notify test notification (optional plugin) |
 | `prefix+s`              | Settings                        |
 | `prefix+shift+r`        | Reload config                   |
 | `prefix+q`              | Detach (session keeps running)  |
@@ -380,10 +457,14 @@ The prefix window applies to the *next* keypress only. Press the prefix again �
 **Changed the config but nothing happened.**
 Reload is not automatic: `herdr server reload-config` from any shell, or `prefix+shift+r` from inside Herdr.
 
+**An optional plugin shortcut appears but does nothing.**
+Confirm the plugin is installed with `herdr plugin list`, then check its actions with `herdr plugin action list`. If the plugin was installed after Herdr started, reload config with `prefix+shift+r`. If `prefix+?` does not show the binding, rerun `./herdr.zsh` and select the plugin again, or uncomment the matching suggested binding in `~/.config/herdr/config.toml`.
+
 ---
 
 ## Next Steps
 
-- Run `./herdr.zsh` to install Herdr and set up agent integrations (this repo).
+- Run `./herdr.zsh` to install Herdr, set up agent integrations, and optionally install recommended developer plugins (this repo).
 - Read `herdr agent --help` for scripting agents from the CLI (`herdr agent prompt`, `herdr agent wait`, ...).
+- Read `herdr plugin --help` and `herdr plugin action list` for installed plugin actions.
 - Official docs: [herdr.dev/docs/keyboard](https://herdr.dev/docs/keyboard/) and [herdr.dev/docs/configuration](https://herdr.dev/docs/configuration/).
