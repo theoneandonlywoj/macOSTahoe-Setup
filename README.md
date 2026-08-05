@@ -24,7 +24,7 @@ Each script is intended to be run from this repository directory and is safe to 
 From the repository root:
 
 ```zsh
-chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh dock_cleanup.zsh
+chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh herdr.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh dock_cleanup.zsh
 
 ./brew.zsh
 ./vivaldi_browser.zsh
@@ -37,6 +37,7 @@ chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh
 ./cursor_ide.zsh
 ./vscode_ide.zsh
 ./opencode.zsh
+./herdr.zsh
 ./podman.zsh
 ./docker_compose.zsh
 ./kubectl_and_krew.zsh
@@ -154,6 +155,17 @@ Installs OpenCode (open-source AI coding agent) — both CLI and Desktop app.
 chmod +x opencode.zsh
 ./opencode.zsh
 ```
+
+#### Herdr
+
+Installs Herdr (terminal multiplexer for AI coding agents), seeds its default config, and detects installed coding-agent CLIs (Claude Code, Codex, Cursor, OpenCode, ...) — asking before installing the Herdr integration for each. Safe to rerun after installing a new agent.
+
+```zsh
+chmod +x herdr.zsh
+./herdr.zsh
+```
+
+See [docs/guide_herdr_keyboard_shortcuts.md](docs/guide_herdr_keyboard_shortcuts.md) for an extensive keyboard shortcuts guide (prefix key, panes, tabs, workspaces, copy mode, custom bindings).
 
 ### Containers & Kubernetes
 
