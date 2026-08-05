@@ -6,35 +6,68 @@ A complete keyboard reference for Herdr (terminal agent multiplexer, [herdr.dev]
 
 ## Table of Contents
 
-1. [Prerequisites](#prerequisites)
-2. [Core Concepts](#core-concepts)
-3. [The Prefix Key](#the-prefix-key)
-4. [Getting Help In-App](#getting-help-in-app)
-5. [Panes](#panes)
-6. [Tabs](#tabs)
-7. [Workspaces & Worktrees](#workspaces--worktrees)
-8. [Navigate Mode (Goto)](#navigate-mode-goto)
-9. [Copy Mode & Scrollback](#copy-mode--scrollback)
-10. [Agents, Notifications & Session Control](#agents-notifications--session-control)
-11. [Customizing Keybindings](#customizing-keybindings)
-12. [Quick Reference](#quick-reference)
-13. [Troubleshooting](#troubleshooting)
-14. [Next Steps](#next-steps)
+1. [What is Herdr?](#what-is-herdr)
+2. [Installation](#installation)
+3. [Core Concepts](#core-concepts)
+4. [The Prefix Key](#the-prefix-key)
+5. [Getting Help In-App](#getting-help-in-app)
+6. [Panes](#panes)
+7. [Tabs](#tabs)
+8. [Workspaces & Worktrees](#workspaces--worktrees)
+9. [Navigate Mode (Goto)](#navigate-mode-goto)
+10. [Copy Mode & Scrollback](#copy-mode--scrollback)
+11. [Agents, Notifications & Session Control](#agents-notifications--session-control)
+12. [Customizing Keybindings](#customizing-keybindings)
+13. [Quick Reference](#quick-reference)
+14. [Troubleshooting](#troubleshooting)
+15. [Next Steps](#next-steps)
 
 ---
 
-## Prerequisites
+## What is Herdr?
 
-- Herdr installed — run the automated installer from this repository:
+**Herdr** is a terminal agent multiplexer. It organizes shells and coding-agent CLIs into persistent workspaces with panes, tabs, keyboard shortcuts, mouse controls, notifications, and git worktree support.
 
-  ```zsh
-  chmod +x herdr.zsh
-  ./herdr.zsh
-  ```
+Think of it as tmux-style terminal layout management built for running multiple coding agents side by side.
 
-  It installs Herdr via Homebrew, seeds `~/.config/herdr/config.toml`, offers to install integrations for the coding-agent CLIs it detects (Claude Code, Codex, Cursor, OpenCode, ...), and prompts for optional developer plugins.
+**Why you need it:**
 
-- A running Herdr session: `herdr` (attaches, starting the server if needed) or `brew services start herdr` for a background server.
+- Run OpenCode, Claude Code, Codex, shells, git tools, and status panes in one workspace
+- Keep agent sessions organized by project, tab, and pane
+- Jump to agents that need attention from notifications or sidebar shortcuts
+- Create isolated git worktrees so agents can work in parallel
+- Use either keyboard shortcuts or mouse controls for every core layout action
+
+---
+
+## Installation
+
+Run the automated installer from this repository:
+
+```zsh
+chmod +x herdr.zsh
+./herdr.zsh
+```
+
+The installer will:
+
+1. **Install Herdr** via Homebrew
+2. **Seed** `~/.config/herdr/config.toml`
+3. **Offer integrations** for detected coding-agent CLIs such as Claude Code, Codex, Cursor, and OpenCode
+4. **Prompt for optional developer plugins**
+5. **Add project-specific helper bindings**, including the 3-tab command workspace shortcut described later
+
+Start Herdr:
+
+```zsh
+herdr
+```
+
+Or run the server in the background:
+
+```zsh
+brew services start herdr
+```
 
 **Keyboard is optional.** Herdr is fully mouse-drivable — click panes, drag borders, split and switch from right-click menus. This guide is for when you want to keep your hands on the keyboard.
 
