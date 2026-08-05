@@ -215,11 +215,28 @@ Herdr auto-detects coding agents (Claude Code, Codex, OpenCode, ...) running in 
 | Action                                    | Keys               |
 |--------------------------------------------|--------------------|
 | Open the pane that raised a notification   | `prefix+o`         |
+| Previous / next agent in sidebar           | `prefix+shift+up` / `prefix+shift+down` |
+| Jump to agent 1-9                          | `prefix+alt+1..9` or `prefix+ctrl+1..9` |
+| Create 3-tab command workspace             | `prefix+ctrl+w`    |
 | Detach from the session (keeps running)    | `prefix+q`         |
 | Reload config                              | `prefix+shift+r`   |
 | Open settings                              | `prefix+s`         |
 
-Unbound by default (map them if you herd many agents): `previous_agent`, `next_agent`, `focus_agent` (indexed, e.g. `prefix+alt+1..9` to jump straight to agent N).
+Agent navigation is unbound by Herdr defaults, but this setup maps `previous_agent`, `next_agent`, and indexed `focus_agent` with prefix-only shortcuts so they do not collide with agent TUIs such as OpenCode.
+
+There is no separate `agent_picker` action like `workspace_picker` (`prefix+w`) in Herdr 0.7/0.8. For picker-style navigation, use `prefix+g` to open the session navigator, then move through workspaces and panes. For agent-specific movement, use `prefix+shift+up` / `prefix+shift+down` to step through agents in the sidebar, `prefix+alt+1..9` or `prefix+ctrl+1..9` to jump directly to agent N, or `prefix+o` when a notification points at an agent that needs attention.
+
+This setup also adds `prefix+ctrl+w`, which runs `~/.config/herdr/scripts/new-workspace-3-tabs.zsh`. It greets you using your Git user name, creates a new workspace, creates three tabs, and runs one command in each tab. By default, the tabs are `agent` (`opencode` when detected, otherwise `claude`), `git` (`lazygit`), and `status` (location, branch, and workspace details). Customize it by creating `~/.config/herdr/three-tab-workspace.env`:
+
+```zsh
+HERDR_3TAB_WORKSPACE_LABEL="project-agents"
+HERDR_3TAB_CWD="$HOME/project"
+HERDR_3TAB_TAB1_LABEL="agent"
+HERDR_3TAB_TAB2_LABEL="git"
+HERDR_3TAB_TAB3_LABEL="status"
+```
+
+Only set `HERDR_3TAB_CMD1`, `HERDR_3TAB_CMD2`, or `HERDR_3TAB_CMD3` if you want to replace the defaults.
 
 `ctrl+click` opens links in panes (OSC 8 hyperlinks and visible URLs) when mouse capture is enabled.
 
@@ -232,36 +249,47 @@ All bindings live in `~/.config/herdr/config.toml` under `[keys]`. Two binding s
 - `"prefix+n"` — requires the prefix first.
 - `"ctrl+alt+n"` — a **direct chord**: fires immediately, no prefix.
 
+On macOS, `alt` means the **Option** key (`⌥`) physically, but Herdr config still spells the modifier as `alt`, not `option`. Some terminals use Option for typing special characters instead of sending Alt/Meta key events; if an `alt+...` binding does nothing, check your terminal keyboard settings and enable the option that treats Option as Meta/Alt. This setup also maps agent jumps to `prefix+ctrl+1..9` as a fallback because `Option+1` commonly becomes a special character on macOS layouts.
+
 ### Example: bind the unbound actions
 
 ```toml
 [keys]
 prefix = "ctrl+b"
-last_pane = "prefix+backtick"        # jump between two panes
-next_workspace = "prefix+shift+n"    # careful: default new_workspace uses this
-previous_workspace = "prefix+shift+p"
-focus_agent = "prefix+alt+1..9"      # jump straight to agent 1-9
+last_pane = "prefix+backtick"          # jump between two panes
+previous_workspace = "prefix+shift+left"
+next_workspace = "prefix+shift+right"
+switch_workspace = "prefix+shift+1..9" # jump straight to workspace 1-9
+previous_agent = "prefix+shift+up"
+next_agent = "prefix+shift+down"
+focus_agent = ["prefix+alt+1..9", "prefix+ctrl+1..9"] # jump straight to agent 1-9
+
+[[keys.command]]
+key = "prefix+ctrl+w"
+type = "shell"
+command = "~/.config/herdr/scripts/new-workspace-3-tabs.zsh"
+description = "create workspace with 3 command tabs"
 ```
 
 Apply with `herdr server reload-config` (or `prefix+shift+r`), then confirm in `prefix+?`.
 
 ### Direct (prefix-free) chords
 
-The `ctrl+alt` family is the most reliable across terminals:
+Prefix bindings are safest when running OpenCode inside Herdr because they do not steal keys from the OpenCode TUI. If you still want direct pane movement, choose chords that do not overlap OpenCode's defaults:
 
 ```toml
 [keys]
 focus_pane_left  = "ctrl+alt+h"
 focus_pane_down  = "ctrl+alt+j"
-focus_pane_up    = "ctrl+alt+k"
+focus_pane_up    = "ctrl+alt+i"
 focus_pane_right = "ctrl+alt+l"
-next_tab         = "ctrl+alt+]"
-previous_tab     = "ctrl+alt+["
 new_tab          = "ctrl+alt+c"
 zoom             = "ctrl+alt+z"
 ```
 
 Avoid system-owned chords: `ctrl+alt` + arrows, `t`, `l`, `a`, `s`, `u`, and `f1`–`f12`. In general, `ctrl+letter`, function keys, and explicit modified chords are the most reliable; `alt+...`, `cmd`/`super`, and punctuation-with-modifiers depend on your terminal (and on tmux, if Herdr runs inside it).
+
+Do not map Herdr actions to OpenCode's default direct shortcuts: `ctrl+alt+k`, `ctrl+alt+[`, `ctrl+alt+]`, `ctrl+alt+b`, `ctrl+alt+f`, `ctrl+alt+d`, `ctrl+alt+u`, `ctrl+alt+e`, `ctrl+alt+g`, or `ctrl+alt+y`.
 
 ### Custom commands on keys
 
@@ -325,6 +353,9 @@ Still parsed for compatibility — prefer `switch_tab`, `switch_workspace`, and 
 | `prefix+shift+w` / `prefix+shift+d` | Rename / close workspace |
 | `prefix+b`              | Toggle sidebar                  |
 | `prefix+o`              | Open notification target        |
+| `prefix+shift+up` / `prefix+shift+down` | Previous / next agent  |
+| `prefix+alt+1..9` / `prefix+ctrl+1..9` | Jump to agent N     |
+| `prefix+ctrl+w`        | Create 3-tab command workspace  |
 | `prefix+s`              | Settings                        |
 | `prefix+shift+r`        | Reload config                   |
 | `prefix+q`              | Detach (session keeps running)  |

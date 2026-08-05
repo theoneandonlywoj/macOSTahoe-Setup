@@ -5,13 +5,14 @@
 
 .PHONY: all doom-sync doom-backup doom-restore doom-diff \
         tmux-sync tmux-backup tmux-restore tmux-diff \
+        herdr-sync herdr-backup herdr-restore herdr-diff \
         sync backup restore diff tsync tbackup trestore tdiff \
         opencode-sync opencode-backup opencode-restore opencode-diff \
         claude-sync claude-backup claude-restore claude-diff \
-        clean-backup-doom clean-backup-tmux clean-backup-opencode clean-backup-claude \
+        clean-backup-doom clean-backup-tmux clean-backup-herdr clean-backup-opencode clean-backup-claude \
         clean-backup-skills clean-backup-all \
         skills-sync osync obackup orestore odiff csync cbackup crestore cdiff ssync \
-        soft-test reload-shell help
+        hsync hbackup hrestore hdiff soft-test reload-shell help
 
 # Generate timestamp in format YYYY_mm_dd_hh_MM
 TIMESTAMP := $(shell date +"%Y_%m_%d_%H_%M")
@@ -23,6 +24,13 @@ DOOM_REPO_DIR := ./.doom.d
 # tmux paths
 TMUX_BACKUP_FILE := $(HOME)/.tmux.conf.backup_$(TIMESTAMP)
 TMUX_REPO_FILE := ./tmux.conf
+
+# Herdr paths — scoped to this repo's managed keybinding additions only
+HERDR_REPO_DIR := ./.config/herdr
+HERDR_HOME_DIR := $(HOME)/.config/herdr
+HERDR_REPO_CONFIG := ./.config/herdr/config.toml
+HERDR_HOME_CONFIG := $(HOME)/.config/herdr/config.toml
+HERDR_BACKUP_FILE := $(HOME)/.config/herdr/config.toml.backup_$(TIMESTAMP)
 
 # OpenCode paths
 OPENCODE_REPO_DIR       := ./.config/opencode
@@ -142,6 +150,53 @@ tmux-restore:
 tmux-diff:
 	@echo "📊 Comparing tmux configurations..."
 	@diff -u "$(HOME)/.tmux.conf" "$(TMUX_REPO_FILE)" 2>/dev/null || echo "(files differ or missing)"
+
+# ============================================================
+# HERDR CONFIGURATION
+# ============================================================
+
+herdr-sync: herdr-backup
+	@echo "📦 Copying Herdr keybinding additions and scripts..."
+	@mkdir -p "$(HERDR_HOME_DIR)"
+	@cp "$(HERDR_REPO_CONFIG)" "$(HERDR_HOME_CONFIG)"
+	@if [ -d "$(HERDR_REPO_DIR)/scripts" ]; then \
+		mkdir -p "$(HERDR_HOME_DIR)/scripts"; \
+		cp "$(HERDR_REPO_DIR)"/scripts/* "$(HERDR_HOME_DIR)/scripts/"; \
+		chmod +x "$(HERDR_HOME_DIR)"/scripts/*; \
+	fi
+	@if command -v herdr >/dev/null 2>&1; then \
+		echo "🔄 Reloading Herdr config..."; \
+		herdr server reload-config >/dev/null 2>&1 || true; \
+	fi
+	@echo "✅ Herdr keybinding additions synced to $(HERDR_HOME_CONFIG)"
+
+herdr-backup:
+	@if [ -f "$(HERDR_HOME_CONFIG)" ]; then \
+		echo "💾 Backing up existing $(HERDR_HOME_CONFIG) to $(HERDR_BACKUP_FILE)..."; \
+		cp "$(HERDR_HOME_CONFIG)" "$(HERDR_BACKUP_FILE)"; \
+		echo "✅ Backup created at $(HERDR_BACKUP_FILE)"; \
+	else \
+		echo "ℹ️  No existing $(HERDR_HOME_CONFIG) found — skipping backup."; \
+	fi
+
+herdr-restore:
+	@echo "♻️  Restoring the most recent Herdr backup..."
+	@latest_backup=$$(ls -t $(HOME)/.config/herdr/config.toml.backup_* 2>/dev/null | head -n 1); \
+	if [ -z "$$latest_backup" ]; then \
+		echo "❌ No backups found. Cannot restore."; \
+		exit 1; \
+	fi; \
+	echo "♻️  Restoring from $$latest_backup..."; \
+	cp "$$latest_backup" "$(HERDR_HOME_CONFIG)"; \
+	echo "✅ Restore complete from $$latest_backup"; \
+	if command -v herdr >/dev/null 2>&1; then \
+		echo "🔄 Reloading Herdr config..."; \
+		herdr server reload-config >/dev/null 2>&1 || true; \
+	fi
+
+herdr-diff:
+	@echo "📊 Comparing Herdr managed keybindings..."
+	@diff -u "$(HERDR_HOME_CONFIG)" "$(HERDR_REPO_CONFIG)" 2>/dev/null || echo "(files differ or missing)"
 
 # ============================================================
 # OPENCODE COMMANDS
@@ -284,6 +339,23 @@ clean-backup-tmux:
 		echo "✅ Removed tmux backups."; \
 	fi
 
+clean-backup-herdr:
+	@echo "🧹 Removing Herdr backups..."
+	@echo "⚠️  Current $(HERDR_HOME_CONFIG) is now treated as the source of truth."
+	@found=false; \
+	for backup in "$(HOME)"/.config/herdr/config.toml.backup_*; do \
+		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
+			found=true; \
+			echo "🗑  $$backup"; \
+			rm -f "$$backup"; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "ℹ️  No Herdr backups found."; \
+	else \
+		echo "✅ Removed Herdr backups."; \
+	fi
+
 clean-backup-opencode:
 	@echo "🧹 Removing OpenCode backups..."
 	@echo "⚠️  Current $(OPENCODE_HOME_DIR) is now treated as the source of truth."
@@ -332,7 +404,7 @@ clean-backup-claude:
 clean-backup-skills: clean-backup-opencode clean-backup-claude
 	@echo "✅ Removed AI coding skill backups."
 
-clean-backup-all: clean-backup-doom clean-backup-tmux clean-backup-skills
+clean-backup-all: clean-backup-doom clean-backup-tmux clean-backup-herdr clean-backup-skills
 	@echo "✅ Removed all known config backups."
 
 # ============================================================
@@ -354,6 +426,14 @@ tbackup: tmux-backup
 trestore: tmux-restore
 
 tdiff: tmux-diff
+
+hsync: herdr-sync
+
+hbackup: herdr-backup
+
+hrestore: herdr-restore
+
+hdiff: herdr-diff
 
 osync: opencode-sync
 
@@ -565,6 +645,19 @@ help:
 	@echo "                        (current ~/.tmux.conf becomes source of truth)"
 	@echo "  make tmux-diff        Diff the installed ~/.tmux.conf vs repo copy"
 	@echo
+	@echo "HERDR"
+	@echo "  make herdr-sync       Back up existing ~/.config/herdr/config.toml, then"
+	@echo "                        copy repo Herdr keybinding additions/scripts and reload"
+	@echo "  make herdr-backup     Copy existing Herdr config to a timestamped"
+	@echo "                        backup (~/.config/herdr/config.toml.backup_YYYY_MM_DD_HH_MM)"
+	@echo "  make herdr-restore    Restore the most recent Herdr config backup"
+	@echo "                        (reloads Herdr config when herdr is installed)"
+	@echo "  make clean-backup-herdr"
+	@echo "                        Delete all Herdr config backups"
+	@echo "                        (current Herdr config becomes source of truth)"
+	@echo "  make herdr-diff       Diff installed vs repo Herdr keybinding config"
+	@echo
+
 	@echo "OPENCODE"
 	@echo "  make opencode-sync    Back up existing OpenCode config and commands, then"
 	@echo "                        copy repo config to ~/.config/opencode"
@@ -607,6 +700,10 @@ help:
 	@echo "  make tbackup          Alias for tmux-backup"
 	@echo "  make trestore         Alias for tmux-restore"
 	@echo "  make tdiff            Alias for tmux-diff"
+	@echo "  make hsync            Alias for herdr-sync"
+	@echo "  make hbackup          Alias for herdr-backup"
+	@echo "  make hrestore         Alias for herdr-restore"
+	@echo "  make hdiff            Alias for herdr-diff"
 	@echo "  make osync            Alias for opencode-sync"
 	@echo "  make obackup          Alias for opencode-backup"
 	@echo "  make orestore         Alias for opencode-restore"

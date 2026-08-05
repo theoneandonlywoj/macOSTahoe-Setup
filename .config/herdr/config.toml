@@ -1,0 +1,18 @@
+[keys]
+# Prefix-only additions avoid intercepting OpenCode TUI shortcuts in panes.
+# On macOS, Herdr config still uses "alt" for the physical Option key.
+previous_workspace = "prefix+shift+left"
+next_workspace = "prefix+shift+right"
+switch_workspace = "prefix+shift+1..9"
+last_pane = "prefix+backtick"
+previous_agent = "prefix+shift+up"
+next_agent = "prefix+shift+down"
+focus_agent = ["prefix+alt+1..9", "prefix+ctrl+1..9"]
+open_worktree = "prefix+alt+o"
+remove_worktree = "prefix+alt+d"
+
+[[keys.command]]
+key = "prefix+ctrl+w"
+type = "shell"
+command = "~/.config/herdr/scripts/new-workspace-3-tabs.zsh"
+description = "create workspace with 3 command tabs"
