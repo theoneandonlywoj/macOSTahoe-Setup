@@ -24,10 +24,15 @@ DOOM_REPO_DIR := ./.doom.d
 TMUX_BACKUP_FILE := $(HOME)/.tmux.conf.backup_$(TIMESTAMP)
 TMUX_REPO_FILE := ./tmux.conf
 
-# OpenCode (commands) paths — scoped to the commands/ subdir only
-OPENCODE_REPO_CMDS  := ./.config/opencode/commands
-OPENCODE_HOME_CMDS  := $(HOME)/.config/opencode/commands
-OPENCODE_BACKUP_DIR := $(HOME)/.config/opencode/commands_backup_$(TIMESTAMP)
+# OpenCode paths
+OPENCODE_REPO_DIR       := ./.config/opencode
+OPENCODE_HOME_DIR       := $(HOME)/.config/opencode
+OPENCODE_REPO_CONFIG    := $(OPENCODE_REPO_DIR)/opencode.jsonc
+OPENCODE_HOME_CONFIG    := $(OPENCODE_HOME_DIR)/opencode.jsonc
+OPENCODE_CONFIG_BACKUP  := $(OPENCODE_HOME_CONFIG).backup_$(TIMESTAMP)
+OPENCODE_REPO_CMDS      := $(OPENCODE_REPO_DIR)/commands
+OPENCODE_HOME_CMDS      := $(OPENCODE_HOME_DIR)/commands
+OPENCODE_BACKUP_DIR     := $(OPENCODE_HOME_DIR)/commands_backup_$(TIMESTAMP)
 
 # Claude (skills) paths — scoped to the skills/ subdir only
 CLAUDE_REPO_SKILLS  := ./.claude/skills
@@ -143,12 +148,20 @@ tmux-diff:
 # ============================================================
 
 opencode-sync: opencode-backup
-	@echo "📦 Copying new OpenCode commands..."
-	@mkdir -p $(HOME)/.config/opencode
+	@echo "📦 Copying new OpenCode configuration..."
+	@mkdir -p $(OPENCODE_HOME_DIR)
+	@cp $(OPENCODE_REPO_CONFIG) $(OPENCODE_HOME_CONFIG)
 	@cp -r $(OPENCODE_REPO_CMDS) $(OPENCODE_HOME_CMDS)
-	@echo "✅ New commands synced to $(OPENCODE_HOME_CMDS)"
+	@echo "✅ New OpenCode configuration synced to $(OPENCODE_HOME_DIR)"
 
 opencode-backup:
+	@if [ -f "$(OPENCODE_HOME_CONFIG)" ]; then \
+		echo "💾 Backing up existing $(OPENCODE_HOME_CONFIG) to $(OPENCODE_CONFIG_BACKUP)..."; \
+		cp "$(OPENCODE_HOME_CONFIG)" "$(OPENCODE_CONFIG_BACKUP)"; \
+		echo "✅ Backup created at $(OPENCODE_CONFIG_BACKUP)"; \
+	else \
+		echo "ℹ️  No existing $(OPENCODE_HOME_CONFIG) found — skipping backup."; \
+	fi
 	@if [ -d "$(OPENCODE_HOME_CMDS)" ]; then \
 		echo "💾 Backing up existing $(OPENCODE_HOME_CMDS) to $(OPENCODE_BACKUP_DIR)..."; \
 		mv "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_BACKUP_DIR)"; \
@@ -158,6 +171,15 @@ opencode-backup:
 	fi
 
 opencode-restore:
+	@echo "♻️  Restoring the most recent OpenCode configuration backup..."
+	@latest_config_backup=$$(ls -t $(OPENCODE_HOME_CONFIG).backup_* 2>/dev/null | head -n 1); \
+	if [ -n "$$latest_config_backup" ]; then \
+		echo "♻️  Restoring config from $$latest_config_backup..."; \
+		cp "$$latest_config_backup" "$(OPENCODE_HOME_CONFIG)"; \
+		echo "✅ Config restore complete from $$latest_config_backup"; \
+	else \
+		echo "ℹ️  No OpenCode config backup found — skipping config restore."; \
+	fi
 	@echo "♻️  Restoring the most recent OpenCode commands backup..."
 	@latest_backup=$$(ls -d $(HOME)/.config/opencode/commands_backup_* 2>/dev/null | sort -r | head -n 1); \
 	if [ -z "$$latest_backup" ]; then \
@@ -173,6 +195,9 @@ opencode-restore:
 	echo "✅ Restore complete from $$latest_backup"
 
 opencode-diff:
+	@echo "📊 Comparing OpenCode config..."
+	@diff -u "$(OPENCODE_HOME_CONFIG)" "$(OPENCODE_REPO_CONFIG)" 2>/dev/null || echo "(files differ or missing)"
+	@echo
 	@echo "📊 Comparing OpenCode commands..."
 	@diff -ru "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_REPO_CMDS)" 2>/dev/null || echo "(files differ or missing)"
 
@@ -260,8 +285,19 @@ clean-backup-tmux:
 	fi
 
 clean-backup-opencode:
-	@echo "🧹 Removing OpenCode command backups..."
-	@echo "⚠️  Current $(OPENCODE_HOME_CMDS) is now treated as the source of truth."
+	@echo "🧹 Removing OpenCode backups..."
+	@echo "⚠️  Current $(OPENCODE_HOME_DIR) is now treated as the source of truth."
+	@found_config=false; \
+	for backup in "$(OPENCODE_HOME_CONFIG)".backup_*; do \
+		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
+			found_config=true; \
+			echo "🗑  $$backup"; \
+			rm -f "$$backup"; \
+		fi; \
+	done; \
+	if [ "$$found_config" = false ]; then \
+		echo "ℹ️  No OpenCode config backups found."; \
+	fi
 	@found=false; \
 	for backup in "$(HOME)"/.config/opencode/commands_backup_*; do \
 		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
@@ -529,17 +565,17 @@ help:
 	@echo "                        (current ~/.tmux.conf becomes source of truth)"
 	@echo "  make tmux-diff        Diff the installed ~/.tmux.conf vs repo copy"
 	@echo
-	@echo "OPENCODE COMMANDS"
-	@echo "  make opencode-sync    Back up existing ~/.config/opencode/commands, then"
-	@echo "                        copy repo commands there (repo is source of truth)"
-	@echo "  make opencode-backup  Move existing commands to a timestamped"
-	@echo "                        backup (~/.config/opencode/commands_backup_YYYY_MM_DD_HH_MM)"
-	@echo "  make opencode-restore Restore the most recent commands backup"
+	@echo "OPENCODE"
+	@echo "  make opencode-sync    Back up existing OpenCode config and commands, then"
+	@echo "                        copy repo config to ~/.config/opencode"
+	@echo "  make opencode-backup  Back up opencode.jsonc and move existing commands"
+	@echo "                        to a timestamped commands backup"
+	@echo "  make opencode-restore Restore the most recent config and commands backup"
 	@echo "                        (deletes current commands first)"
 	@echo "  make clean-backup-opencode"
-	@echo "                        Delete all OpenCode command backups"
-	@echo "                        (current commands become source of truth)"
-	@echo "  make opencode-diff    Diff installed vs repo OpenCode commands (recursive)"
+	@echo "                        Delete all OpenCode config and command backups"
+	@echo "                        (current config and commands become source of truth)"
+	@echo "  make opencode-diff    Diff installed vs repo OpenCode config and commands"
 	@echo
 	@echo "CLAUDE SKILLS"
 	@echo "  make claude-sync      Back up existing ~/.claude/skills, then copy repo"
