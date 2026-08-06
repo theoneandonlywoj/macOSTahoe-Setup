@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(zsh -n *)",
+      "Bash(herdr --version)",
+      "Bash(herdr --default-config*)",
+      "Bash(herdr integration status)",
+      "WebFetch(domain:api.github.com)"
+    ]
+  }
+}
