@@ -323,6 +323,17 @@ make skills-sync
 
 `claude-sync` is **destructive**: it moves the entire `~/.claude/skills` directory to a timestamped backup before copying the repo skills over. So every skill you want to keep must live in this repo — that's why `graphify` (originally installed globally) is checked in here too. Restore a bad sync with `make claude-restore`.
 
+### Superpowers skills
+
+`skills/superpowers.zsh` installs the [Superpowers](https://github.com/obra/superpowers) skill pack (brainstorming, TDD, systematic-debugging, and more) into Claude Code (`~/.claude/skills`) and/or Codex (`~/.codex/skills`), with manual setup instructions printed for OpenCode. Safe to rerun — existing skill folders are left untouched.
+
+```zsh
+chmod +x skills/superpowers.zsh
+./skills/superpowers.zsh
+```
+
+See [docs/guide_superpowers.md](docs/guide_superpowers.md) for a full walkthrough of the install workflow.
+
 ### Skills included
 
 | Skill | Where | Description |
