@@ -11,11 +11,16 @@ next_agent = "prefix+shift+down"
 focus_agent = "prefix+ctrl+1..9"
 open_worktree = "prefix+ctrl+o"
 remove_worktree = "prefix+ctrl+d"
+# Jump straight to the agent/pane that raised the most recent notification.
+# Closest equivalent to auto-focus: Herdr has no setting that focuses a pane
+# automatically when a notification fires, so this is a manual follow-up keypress.
+open_notification_target = "prefix+o"
 
 [ui]
-# Attention-first ordering: agents needing input or just finished float to the top,
-# instead of staying grouped under their workspace.
-agent_panel_sort = "priority"
+# Group agents by their workspace/space, in the same order as the spaces
+# themselves, instead of a priority queue that reshuffles as state changes.
+# This already matches Herdr's own default; pinned here so it stays explicit.
+agent_panel_sort = "spaces"
 # Label pane borders with the detected agent kind, so panes are identifiable
 # without opening the sidebar.
 show_agent_labels_on_pane_borders = true

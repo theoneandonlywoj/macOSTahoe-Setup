@@ -257,15 +257,15 @@ Herdr auto-detects coding agents (Claude Code, Codex, OpenCode, ...) running in 
 | Reload config                              | `prefix+shift+r`   |
 | Open settings                              | `prefix+s`         |
 
-Agent navigation is unbound by Herdr defaults, but this setup maps `previous_agent`, `next_agent`, and indexed `focus_agent` with prefix-only shortcuts so they do not collide with agent TUIs such as OpenCode. `focus_agent` only accepts the literal `1..9` range — Herdr does not support narrowing it to fewer slots.
+Agent navigation is unbound by Herdr defaults, but this setup maps `previous_agent`, `next_agent`, and indexed `focus_agent` with prefix-only shortcuts so they do not collide with agent TUIs such as OpenCode. `focus_agent` only accepts the literal `1..9` range — Herdr does not support narrowing it to fewer slots. `open_notification_target` is pinned explicitly to `prefix+o` as well, even though it matches Herdr's own default — Herdr has no setting that focuses a pane automatically when a notification fires, so this manual follow-up keypress is the closest available equivalent to "auto-focus on notification."
 
 There is no separate `agent_picker` action like `workspace_picker` (`prefix+w`) in Herdr 0.7/0.8. For picker-style navigation, use `prefix+g` to open the session navigator, then move through workspaces and panes. For agent-specific movement, use `prefix+shift+up` / `prefix+shift+down` to step through agents in the sidebar, `prefix+ctrl+1..9` to jump directly to agent N, or `prefix+o` when a notification points at an agent that needs attention.
 
-Each sidebar agent row shows its work status explicitly via `[ui.sidebar.agents]`, sorted attention-first, plus a native notification when something changes in the background:
+Each sidebar agent row shows its work status explicitly via `[ui.sidebar.agents]`, plus a native notification when something changes in the background. `agent_panel_sort = "spaces"` keeps agents grouped by workspace, in the same order as the spaces themselves, rather than sorting by priority — so agents don't shuffle position as their state changes:
 
 ```toml
 [ui]
-agent_panel_sort = "priority"                   # agents needing input or just finished float to the top
+agent_panel_sort = "spaces"                     # group by workspace, in space order; no reshuffling on state change
 show_agent_labels_on_pane_borders = true        # label each pane border with its detected agent kind
 
 [ui.sidebar.agents]
