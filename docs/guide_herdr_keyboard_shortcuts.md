@@ -245,7 +245,7 @@ Related:
 
 ## Agents, Notifications & Session Control
 
-Herdr auto-detects coding agents (Claude Code, Codex, OpenCode, ...) running in panes and tracks their state (idle / working / blocked):
+Herdr auto-detects coding agents (Claude Code, Codex, OpenCode, ...) running in panes and tracks their state (idle / working / blocked / done):
 
 | Action                                    | Keys               |
 |--------------------------------------------|--------------------|
@@ -257,9 +257,32 @@ Herdr auto-detects coding agents (Claude Code, Codex, OpenCode, ...) running in 
 | Reload config                              | `prefix+shift+r`   |
 | Open settings                              | `prefix+s`         |
 
-Agent navigation is unbound by Herdr defaults, but this setup maps `previous_agent`, `next_agent`, and indexed `focus_agent` with prefix-only shortcuts so they do not collide with agent TUIs such as OpenCode.
+Agent navigation is unbound by Herdr defaults, but this setup maps `previous_agent`, `next_agent`, and indexed `focus_agent` with prefix-only shortcuts so they do not collide with agent TUIs such as OpenCode. `focus_agent` only accepts the literal `1..9` range — Herdr does not support narrowing it to fewer slots.
 
 There is no separate `agent_picker` action like `workspace_picker` (`prefix+w`) in Herdr 0.7/0.8. For picker-style navigation, use `prefix+g` to open the session navigator, then move through workspaces and panes. For agent-specific movement, use `prefix+shift+up` / `prefix+shift+down` to step through agents in the sidebar, `prefix+ctrl+1..9` to jump directly to agent N, or `prefix+o` when a notification points at an agent that needs attention.
+
+Each sidebar agent row shows its work status explicitly via `[ui.sidebar.agents]`, sorted attention-first, plus a native notification when something changes in the background:
+
+```toml
+[ui]
+agent_panel_sort = "priority"                   # agents needing input or just finished float to the top
+show_agent_labels_on_pane_borders = true        # label each pane border with its detected agent kind
+
+[ui.sidebar.agents]
+rows = [["state_icon", "state_text", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+
+[ui.sidebar.spaces]
+rows = [["state_icon", "workspace"], ["branch", "git_status"]]  # mirror agent rows with per-workspace git state
+
+[ui.toast]
+delivery = "system"             # macOS notification when a background agent finishes or needs input
+```
+
+`state_icon` and `state_text` together spell out idle/working/blocked/done per agent instead of relying on the icon alone. `terminal_title_stripped` adds a 3rd row with the agent's live task/tool context, since most agent CLIs set their terminal title to reflect what they're currently doing. `rows` only nests two levels deep — each top-level entry is one stacked visual row of tokens, but a row's own elements cannot themselves be arrays (Herdr rejects that as an invalid sidebar token).
+
+`[ui.sidebar.spaces]` applies the same idea to workspaces: branch and dirty/clean git status show alongside each workspace's icon, so project state sits right next to agent state. `show_agent_labels_on_pane_borders` complements both by putting the agent kind directly on the pane border — useful once several agents are split across panes in one tab and you want to tell them apart without opening the sidebar.
+
+The first `system`-delivered notification may prompt macOS to grant your terminal app notification permission — allow it in System Settings → Notifications, or switch `delivery` to `"herdr"` for an in-app-only toast instead.
 
 This setup also adds `prefix+ctrl+w`, which runs `~/.config/herdr/scripts/new-workspace-3-tabs.zsh`. It greets you using your Git user name, creates a new workspace, creates three tabs, and runs one command in each tab. By default, the tabs are `agent` (`opencode` when detected, otherwise `claude`), `git` (`lazygit`), and `status` (location, branch, and workspace details). Customize it by creating `~/.config/herdr/three-tab-workspace.env`:
 

@@ -12,6 +12,29 @@ focus_agent = "prefix+ctrl+1..9"
 open_worktree = "prefix+ctrl+o"
 remove_worktree = "prefix+ctrl+d"
 
+[ui]
+# Attention-first ordering: agents needing input or just finished float to the top,
+# instead of staying grouped under their workspace.
+agent_panel_sort = "priority"
+# Label pane borders with the detected agent kind, so panes are identifiable
+# without opening the sidebar.
+show_agent_labels_on_pane_borders = true
+
+[ui.sidebar.agents]
+# Surface each agent's work status (idle/working/blocked/done) alongside
+# its icon, plus workspace/tab context, so the fleet's state is visible at a glance.
+# terminal_title_stripped adds a 3rd line with the agent's live task/tool context.
+rows = [["state_icon", "state_text", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+
+[ui.sidebar.spaces]
+# Mirror the agent rows: show each workspace's git branch and dirty/clean state
+# alongside its icon, so project state is visible next to agent state.
+rows = [["state_icon", "workspace"], ["branch", "git_status"]]
+
+[ui.toast]
+# Native macOS notification when a background agent finishes or needs input.
+delivery = "system"
+
 [[keys.command]]
 key = "prefix+ctrl+w"
 type = "shell"
