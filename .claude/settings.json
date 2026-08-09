@@ -1,5 +1,7 @@
 {
+  "theme": "dark",
   "permissions": {
+    "defaultMode": "acceptEdits",
     "allow": [
       "Bash(zsh -n *)",
       "Bash(herdr --version)",
