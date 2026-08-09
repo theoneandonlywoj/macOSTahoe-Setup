@@ -108,7 +108,48 @@ fi
 echo
 echo "💡 Next steps:"
 echo "   • Launch OpenCode Desktop via Spotlight (⌘ Space → 'OpenCode')"
-echo "   • Run OpenCode CLI in any project: cd ~/my-project && opencode"
 echo "   • Configure AI providers: opencode (first run will prompt you)"
 echo "   • Run dock_cleanup.zsh to add OpenCode to your Dock"
+echo
+echo "🚀 Starting the OpenCode CLI:"
+echo
+echo "   • Start the TUI in any project:"
+echo "       cd ~/my-project && opencode"
+echo "       opencode /path/to/project"
+echo
+echo "   • Choose a model (provider/model):"
+echo "       opencode --model anthropic/claude-sonnet-4"
+echo "       opencode --model openai/gpt-5"
+echo "       opencode --model deepseek/deepseek-chat"
+echo "       opencode -m <provider/model>              # short flag"
+echo "     List available models: opencode models"
+echo
+echo "   • Pick a model variant (reasoning effort):"
+echo "       opencode run \"...\" --variant high        # more reasoning"
+echo "       opencode run \"...\" --variant low         # faster/cheaper"
+echo "     In the TUI, press ctrl+t to cycle variants for the current model"
+echo
+echo "   • Choose a mode — Build (all tools, default) or Plan (read-only analysis):"
+echo "       opencode --agent build                    # full dev work"
+echo "       opencode --agent plan                     # analyze without changing files"
+echo "     In the TUI, press Tab to switch between Build and Plan"
+echo
+echo "   • Run a one-off prompt without the TUI:"
+echo "       opencode run \"Explain how closures work in Go\""
+echo "       opencode run --model openai/gpt-5 \"Review this PR\"" 
+echo "       opencode run --agent plan --model anthropic/claude-haiku \"Outline a migration plan\""
+echo
+echo "   • Work with sessions:"
+echo "       opencode --continue                        # resume last session"
+echo "       opencode --session <id>                    # continue a specific session"
+echo "       opencode --session <id> --fork             # fork a session"
+echo "       opencode session list                      # list sessions"
+echo
+echo "   • Other useful options:"
+echo "       opencode --auto                            # auto-approve permissions"
+echo "       opencode --port 4096 --hostname 0.0.0.0    # web/mobile access"
+echo "       opencode auth login                        # add a provider/API key"
+echo "       opencode upgrade                           # update to latest version"
+echo
 echo "   • Docs: https://opencode.ai/docs"
+echo "   • CLI reference: https://opencode.ai/docs/cli"
