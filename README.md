@@ -339,14 +339,14 @@ See [docs/guide_superpowers.md](docs/guide_superpowers.md) for a full walkthroug
 | Skill | Where | Description |
 |---|---|---|
 | `/commit` | `.claude/skills/commit/`, `.config/opencode/commands/commit.md` | Generate a Conventional Commits message from staged changes and **print a ready-to-run `git commit -m ...` command** (no commit). |
-| `/pr` | `.claude/skills/pr/`, `.config/opencode/commands/pr.md` | Fill `.github/PULL_REQUEST_TEMPLATE.md` from the `main..HEAD` diff, create/overwrite `PR.md`, verify `gh auth status`, then create or update the GitHub PR title/body via `gh`. |
+| `/pr-gh` | `.claude/skills/pr-gh/`, `.config/opencode/commands/pr-gh.md` | Create or update the GitHub PR directly from the `main..HEAD` diff (no `PR.md`): fill `.github/PULL_REQUEST_TEMPLATE.md`, or infer the structure from the repo's recently merged PRs, verify `gh auth status`, then create or update the GitHub PR title/body via `gh`. |
 | `/graphify` | `.claude/skills/graphify/` | Turn any folder/URL into a navigable knowledge graph (imported verbatim from the global skill). |
 | `/guide` | `.claude/skills/guide/`, `.config/opencode/commands/guide.md` | Create or improve a step-by-step guide under `docs/` with a `guide_*.md` filename, concrete examples, verification checks, and Mermaid diagrams when useful. |
 | `/create-skill` | `.claude/skills/create-skill/`, `.config/opencode/commands/create-skill.md` | Create, eval, and iterate new skills. Bundles its own eval toolchain (`scripts/`, `eval-viewer/`, `agents/`, `references/`, `assets/`). |
 
 ### PR template
 
-`.github/PULL_REQUEST_TEMPLATE.md` is the example template the `/pr` skill fills in (Summary, Motivation, Changes, Type of change, Checklist). The generated PR body is written to `PR.md`; `/pr` then requires GitHub CLI authentication via `gh auth login` and uses `gh` to create or update the GitHub PR title/body from that file. GitHub also auto-loads the template in the web PR editor.
+`.github/PULL_REQUEST_TEMPLATE.md` is the example template the `/pr-gh` skill fills in (Summary, Motivation, Changes, Type of change, Checklist). `/pr-gh` generates the body into a temp file (no `PR.md`), requires GitHub CLI authentication via `gh auth login`, and uses `gh` to create or update the GitHub PR title/body from that file. If no template exists, `/pr-gh` infers the body structure from the repo's recently merged PRs. GitHub also auto-loads the template in the web PR editor.
 
 ### Verifying a sync
 

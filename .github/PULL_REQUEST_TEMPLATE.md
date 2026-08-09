@@ -1,6 +1,6 @@
 <!--
   Pull Request template for macOSTahoe-Setup.
-  The /pr skill reads this file and fills each section from the branch diff vs main.
+  The /pr-gh skill reads this file and fills each section from the branch diff vs main.
   Keep headings and checkbox syntax stable so the skill can populate them reliably.
 -->
 
@@ -15,7 +15,7 @@
 -
 
 ## Type of change
-<!-- Check one. The /pr skill will pre-select the dominant type. -->
+<!-- Check one. The /pr-gh skill will pre-select the dominant type. -->
 - [ ] feat — new feature
 - [ ] fix — bug fix
 - [ ] docs — documentation only

@@ -21,6 +21,10 @@
 
       "gh auth status": "allow",
       "gh pr view *": "allow",
+      "gh pr list *": "allow",
+      "gh pr create *": "allow",
+      "gh pr edit *": "allow",
+      "git push *": "allow",
 
       "mix compile": "allow",
       "mix compile *": "allow",

@@ -43,8 +43,8 @@ delivery = "system"
 [[keys.command]]
 key = "prefix+ctrl+w"
 type = "shell"
-command = "~/.config/herdr/scripts/new-workspace-3-tabs.zsh"
-description = "create workspace with 3 command tabs"
+command = "~/.config/herdr/scripts/new-workspace-4-tabs.zsh"
+description = "create workspace with 4 command tabs (agent-high, git, shell, agent-low)"
 
 # Suggested keybindings for optional developer plugins installed by herdr.zsh.
 # The installer appends active bindings for plugins you select successfully.

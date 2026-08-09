@@ -11,8 +11,9 @@ A step-by-step walkthrough of `skills/superpowers.zsh`: what it installs, how th
 3. [Core Concepts](#core-concepts)
 4. [The Installation Workflow](#the-installation-workflow)
 5. [Updating Skills](#updating-skills)
-6. [Quick Reference](#quick-reference)
-7. [Troubleshooting](#troubleshooting)
+6. [Wiping Skills](#wiping-skills)
+7. [Quick Reference](#quick-reference)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -147,6 +148,64 @@ The script never overwrites an existing skill folder, so "update" means removing
 3. Select the same CLI again — the now-missing folder gets copied fresh from a new clone.
 
 To refresh everything, remove all skill folders under `~/.claude/skills` (or `~/.codex/skills`) and rerun instead of deleting one at a time.
+
+---
+
+## Wiping Skills
+
+`skills/wipe-skills.zsh` (and the `make skills-wipe` / `make wipe` targets) **permanently deletes** installed skills — for Claude Code, Codex, and/or OpenCode. There is **no backup** of skill folders, so treat it as a one-way door. The single exception is `opencode.jsonc`, which is copied to a timestamped backup before the Superpowers plugin line is removed.
+
+```zsh
+chmod +x skills/wipe-skills.zsh
+./skills/wipe-skills.zsh
+```
+
+Run with no flags and it:
+1. Detects which CLIs (`claude`, `codex`, `opencode`) exist on `PATH`.
+2. Lists every installed skill grouped by CLI, then asks which ones to delete.
+3. Shows each `cli|name → path` and asks for a final `y/N` confirmation before deleting anything.
+
+### Flags
+
+| Flag | Effect |
+|---|---|
+| `--claude` / `--codex` / `--opencode` | Scope the wipe to that CLI only (repeatable) |
+| `--all` | Wipe every detected skill for every detected CLI |
+| `--no-<skill>` | Keep a skill by name, e.g. `--no-graphify` |
+| `--no-superpowers` | Keep the whole Superpowers bundle, including the OpenCode plugin line |
+| `--force` | Skip the final confirmation prompt |
+| `-h`, `--help` | Print usage |
+
+Passing a scope flag (`--claude`, `--codex`, `--opencode`, or `--all`) skips the numbered menu and deletes everything that matches after a single confirmation. The confirmation only happens unless you also pass `--force`.
+
+Examples:
+
+```zsh
+./skills/wipe-skills.zsh --all --no-graphify
+./skills/wipe-skills.zsh --claude --codex --no-superpowers --force
+make skills-wipe ARGS="--all --no-graphify"
+make wipe
+```
+
+### What gets wiped per CLI
+
+- **Claude Code** — each skill subdir under `~/.claude/skills` that contains a `SKILL.md` (hidden dot-dirs are skipped). Skills named after the Superpowers bundle (e.g. `brainstorming`, `systematic-debugging`) are classified as `superpowers`; everything else is `custom`.
+- **Codex** — same rules under `~/.codex/skills`.
+- **OpenCode** — OpenCode has no local skills dir. Wiping it removes the `superpowers@*` package cache under `~/.cache/opencode/packages/` and strips the `superpowers@git` plugin line from `~/.config/opencode/opencode.jsonc` (backed up first).
+
+### Safety guarantees
+
+- Deletion is confined to the detected list — every path must contain a `SKILL.md` and sit under `~/.claude/skills/*`, `~/.codex/skills/*`, or `~/.cache/opencode/packages/superpowers@*`.
+- Skill names are validated before removal: anything containing `/` or `..`, or starting with `.`, is rejected.
+- `wipe_dir` resolves the real path and refuses to delete `/`, `$HOME`, empty paths, or anything that doesn't resolve under its known base.
+- The OpenCode cache is only ever removed via the `superpowers@*` glob — never `packages/` itself.
+- `wipe_opencode_plugin` refuses to write an empty `opencode.jsonc` (the backup is preserved if that would happen).
+
+### Restoring after a wipe
+
+- **Claude:** `make csync` re-syncs the repo's skills to `~/.claude/skills`.
+- **Superpowers:** `./skills/superpowers.zsh` reinstalls the bundle.
+- **OpenCode:** re-add the `superpowers@git` plugin line to `opencode.jsonc` (your timestamped backup is at `~/.config/opencode/opencode.jsonc.backup_*`) and restart OpenCode.
 
 ---
 

@@ -55,7 +55,7 @@ The installer will:
 2. **Seed** `~/.config/herdr/config.toml`
 3. **Offer integrations** for detected coding-agent CLIs such as Claude Code, Codex, Cursor, and OpenCode
 4. **Prompt for optional developer plugins**
-5. **Add project-specific helper bindings**, including the 3-tab command workspace shortcut described later
+5. **Add project-specific helper bindings**, including the 4-tab command workspace shortcut described later
 
 Start Herdr:
 
@@ -252,7 +252,7 @@ Herdr auto-detects coding agents (Claude Code, Codex, OpenCode, ...) running in 
 | Open the pane that raised a notification   | `prefix+o`         |
 | Previous / next agent in sidebar           | `prefix+shift+up` / `prefix+shift+down` |
 | Jump to agent 1-9                          | `prefix+ctrl+1..9` |
-| Create 3-tab command workspace             | `prefix+ctrl+w`    |
+| Create 4-tab command workspace             | `prefix+ctrl+w`    |
 | Detach from the session (keeps running)    | `prefix+q`         |
 | Reload config                              | `prefix+shift+r`   |
 | Open settings                              | `prefix+s`         |
@@ -284,17 +284,31 @@ delivery = "system"             # macOS notification when a background agent fin
 
 The first `system`-delivered notification may prompt macOS to grant your terminal app notification permission — allow it in System Settings → Notifications, or switch `delivery` to `"herdr"` for an in-app-only toast instead.
 
-This setup also adds `prefix+ctrl+w`, which runs `~/.config/herdr/scripts/new-workspace-3-tabs.zsh`. It greets you using your Git user name, creates a new workspace, creates three tabs, and runs one command in each tab. By default, the tabs are `agent` (`opencode` when detected, otherwise `claude`), `git` (`lazygit`), and `status` (location, branch, and workspace details). Customize it by creating `~/.config/herdr/three-tab-workspace.env`:
+This setup also adds `prefix+ctrl+w`, which runs `~/.config/herdr/scripts/new-workspace-4-tabs.zsh`. It greets you using your Git user name, creates a new workspace with four tabs: `agent-high` (auto-accepting edits with the most capable, high-thinking model), `git` (a plain shell), `shell` (a plain shell), and `agent-low` (auto-accepting edits with a small-task model for commit messages and PR descriptions).
+
+The agent tabs launch the first harness from `HERDR_4TAB_HARNESS_ORDER` that is installed. By default that order is `claude codex opencode`, so Claude Code is preferred, then Codex, then OpenCode. The launch command for each harness and thinking level lives in the env file read by the script: `~/.config/herdr/scripts/.env` if present, otherwise the checked-in template `~/.config/herdr/scripts/.env.example`, otherwise built-in defaults. Values are read with grep, and same-named shell environment variables override the file. The `.env.example` template ships with these defaults:
 
 ```zsh
-HERDR_3TAB_WORKSPACE_LABEL="project-agents"
-HERDR_3TAB_CWD="$HOME/project"
-HERDR_3TAB_TAB1_LABEL="agent"
-HERDR_3TAB_TAB2_LABEL="git"
-HERDR_3TAB_TAB3_LABEL="status"
+HERDR_4TAB_HARNESS_ORDER="claude codex opencode"
+HERDR_4TAB_CLAUDE_HIGH="claude --permission-mode acceptEdits --model opus --effort max"
+HERDR_4TAB_CODEX_HIGH="codex --approve-for-me -m gpt-5.6-sol -c model_reasoning_effort=high"
+HERDR_4TAB_OPENCODE_HIGH="opencode --auto --variant high -m opencode-go/gpt-5.6-sol"
+HERDR_4TAB_CLAUDE_LOW="claude --permission-mode acceptEdits --model haiku"
+HERDR_4TAB_CODEX_LOW="codex --approve-for-me -m gpt-5.4-mini"
+HERDR_4TAB_OPENCODE_LOW="opencode --auto -m opencode/deepseek-v4-flash-free"
 ```
 
-Only set `HERDR_3TAB_CMD1`, `HERDR_3TAB_CMD2`, or `HERDR_3TAB_CMD3` if you want to replace the defaults.
+Customize the workspace labels, cwd, harness priority, or agent commands by copying the template to `~/.config/herdr/scripts/.env` and editing it there (`.env` is git-ignored; `make herdr-sync` seeds it from `.env.example` on first sync):
+
+```zsh
+HERDR_4TAB_HARNESS_ORDER="codex opencode claude"
+HERDR_4TAB_WORKSPACE_LABEL="project-agents"
+HERDR_4TAB_CWD="$HOME/project"
+HERDR_4TAB_TAB1_LABEL="agent-high"
+HERDR_4TAB_TAB2_LABEL="git"
+HERDR_4TAB_TAB3_LABEL="shell"
+HERDR_4TAB_TAB4_LABEL="agent-low"
+```
 
 ### Optional developer plugins
 
@@ -351,7 +365,7 @@ focus_agent = "prefix+ctrl+1..9"        # jump straight to agent 1-9
 [[keys.command]]
 key = "prefix+ctrl+w"
 type = "shell"
-command = "~/.config/herdr/scripts/new-workspace-3-tabs.zsh"
+command = "~/.config/herdr/scripts/new-workspace-4-tabs.zsh"
 description = "create workspace with 3 command tabs"
 ```
 
@@ -483,7 +497,7 @@ Still parsed for compatibility — prefer `switch_tab`, `switch_workspace`, and 
 | `prefix+o`              | Open notification target        |
 | `prefix+shift+up` / `prefix+shift+down` | Previous / next agent  |
 | `prefix+ctrl+1..9`    | Jump to agent N                 |
-| `prefix+ctrl+w`        | Create 3-tab command workspace  |
+| `prefix+ctrl+w`        | Create 4-tab command workspace  |
 | `prefix+alt+r`         | Toggle reviewr (optional plugin) |
 | `prefix+alt+s`         | Open Sessionizer (optional plugin) |
 | `prefix+alt+w`         | Open Sessionizer worktree picker (optional plugin) |

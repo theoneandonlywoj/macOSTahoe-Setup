@@ -12,7 +12,8 @@
         clean-backup-doom clean-backup-tmux clean-backup-herdr clean-backup-opencode clean-backup-claude \
         clean-backup-skills clean-backup-all \
         skills-sync osync obackup orestore odiff csync cbackup crestore cdiff ssync \
-        hsync hbackup hrestore hdiff soft-test reload-shell help
+        hsync hbackup hrestore hdiff soft-test reload-shell help \
+        skills-wipe wipe
 
 # Generate timestamp in format YYYY_mm_dd_hh_MM
 TIMESTAMP := $(shell date +"%Y_%m_%d_%H_%M")
@@ -177,6 +178,13 @@ herdr-sync: herdr-backup
 		mkdir -p "$(HERDR_HOME_DIR)/scripts"; \
 		cp "$(HERDR_REPO_DIR)"/scripts/* "$(HERDR_HOME_DIR)/scripts/"; \
 		chmod +x "$(HERDR_HOME_DIR)"/scripts/*; \
+	fi
+	@if [ -f "$(HERDR_REPO_DIR)/scripts/.env.example" ]; then \
+		cp "$(HERDR_REPO_DIR)/scripts/.env.example" "$(HERDR_HOME_DIR)/scripts/.env.example"; \
+		if [ ! -f "$(HERDR_HOME_DIR)/scripts/.env" ]; then \
+			cp "$(HERDR_REPO_DIR)/scripts/.env.example" "$(HERDR_HOME_DIR)/scripts/.env"; \
+			echo "✅ Seeded $(HERDR_HOME_DIR)/scripts/.env from .env.example"; \
+		fi; \
 	fi
 	@if command -v herdr >/dev/null 2>&1; then \
 		echo "🔄 Reloading Herdr config..."; \
@@ -348,6 +356,15 @@ claude-diff:
 
 skills-sync: opencode-sync claude-sync
 	@echo "✅ All AI coding skills synced (OpenCode commands + Claude skills)"
+
+# ============================================================
+# SKILLS WIPE
+# ============================================================
+
+skills-wipe:
+	@zsh skills/wipe-skills.zsh $(ARGS)
+
+wipe: skills-wipe
 
 # ============================================================
 # BACKUP CLEANUP
@@ -733,7 +750,7 @@ help:
 	@echo "  make claude-sync      Back up existing ~/.claude/skills and settings.json, then"
 	@echo "                        copy repo skills and settings there (repo is source of"
 	@echo "                        truth). Moves the entire skills dir, so all skills must"
-	@echo "                        live in the repo (commit, pr, graphify, guide, create-skill)"
+	@echo "                        live in the repo (commit, pr-gh, graphify, guide, create-skill)"
 	@echo "                        to survive sync."
 	@echo "  make claude-backup    Move existing skills to a timestamped"
 	@echo "                        backup (~/.claude/skills_backup_YYYY_MM_DD_HH_MM) and copy"
@@ -746,6 +763,16 @@ help:
 	@echo "                        (current ~/.claude becomes source of truth)"
 	@echo "  make claude-diff      Diff installed vs repo Claude skills (recursive)"
 	@echo "                        and settings.json"
+	@echo
+	@echo "SKILLS WIPE"
+	@echo "  make skills-wipe      Permanently delete installed AI coding skills for"
+	@echo "                        Claude Code, Codex and/or OpenCode (interactive by"
+	@echo "                        default). Pass ARGS through to skills/wipe-skills.zsh:"
+	@echo "                          make skills-wipe ARGS=\"--all --no-graphify\""
+	@echo "                          make skills-wipe ARGS=\"--claude --force\""
+	@echo "                        Flags: --claude/--codex/--opencode, --all,"
+	@echo "                        --no-<skill>, --no-superpowers, --force, -h/--help"
+	@echo "  make wipe             Alias for skills-wipe"
 	@echo
 	@echo "COMBINED"
 	@echo "  make skills-sync      Run opencode-sync + claude-sync in one go"
