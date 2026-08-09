@@ -90,8 +90,48 @@ echo
 echo "💡 Next steps:"
 echo "   • Authenticate: run claude          (first launch will prompt sign-in)"
 echo "   • Or use an API key: claude          (set ANTHROPIC_API_KEY first)"
-echo "   • Start it in any project: cd ~/my-project && claude"
-echo "   • Start with edits auto-accepted: claude --permission-mode acceptEdits"
-echo "     (auto-approves file edits and common fs commands; still asks for other bash)"
+echo
+echo "🚀 Starting the Claude Code CLI:"
+echo
+echo "   • Start the TUI in any project:"
+echo "       cd ~/my-project && claude"
+echo
+echo "   • Choose a model (alias or full ID):"
+echo "       claude --model sonnet                 # fast, capable (default)"
+echo "       claude --model opus                   # most capable, best for complex tasks"
+echo "       claude --model haiku                  # fastest / cheapest"
+echo "       claude --model claude-sonnet-4-6      # exact model ID"
+echo "     In-session: /model"
+echo
+echo "   • Set reasoning effort (variant):"
+echo "       claude --effort high                  # deeper reasoning"
+echo "       claude --effort low                   # faster/cheaper"
+echo "       claude --effort max                   # max thinking budget"
+echo "     In-session: Option+T toggles thinking"
+echo
+echo "   • Choose a mode — Build (edit) or Plan (read-only analysis):"
+echo "       claude                              # default: build with manual approvals"
+echo "       claude --permission-mode acceptEdits    # build: auto-accept file edits"
+echo "       claude --permission-mode plan           # plan: read-only, no edits"
+echo "       claude --permission-mode auto           # autonomous, fewer prompts"
+echo "     In-session: Shift+Tab cycles modes, or type /plan"
+echo
+echo "   • Run a one-off prompt without the TUI:"
+echo "       claude -p \"Explain how closures work in Go\""
+echo "       claude -p \"Review this PR\" --model opus"
+echo "       git diff | claude -p \"review these changes\""
+echo
+echo "   • Work with sessions:"
+echo "       claude --continue                    # resume most recent session"
+echo "       claude --resume <id>                 # resume a specific session"
+echo "       claude --fork                        # branch a session"
+echo
+echo "   • Other useful options:"
+echo "       claude --add-dir ../shared           # grant access to another directory"
+echo "       claude --worktree                    # isolated git worktree session"
+echo "       claude --allowedTools \"Bash(git:*) Edit Read\""
+echo "       claude update                        # update to latest version"
+echo
 echo "   • Config file: ~/.claude/settings.json"
 echo "   • Docs: https://docs.anthropic.com/en/docs/claude-code"
+echo "   • CLI reference: https://code.claude.com/docs/en/cli-reference"
