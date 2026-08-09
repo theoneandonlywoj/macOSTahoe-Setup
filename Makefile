@@ -42,10 +42,13 @@ OPENCODE_REPO_CMDS      := $(OPENCODE_REPO_DIR)/commands
 OPENCODE_HOME_CMDS      := $(OPENCODE_HOME_DIR)/commands
 OPENCODE_BACKUP_DIR     := $(OPENCODE_HOME_DIR)/commands_backup_$(TIMESTAMP)
 
-# Claude (skills) paths — scoped to the skills/ subdir only
-CLAUDE_REPO_SKILLS  := ./.claude/skills
-CLAUDE_HOME_SKILLS  := $(HOME)/.claude/skills
-CLAUDE_BACKUP_DIR   := $(HOME)/.claude/skills_backup_$(TIMESTAMP)
+# Claude paths — skills/ subdir plus settings.json config
+CLAUDE_REPO_SKILLS     := ./.claude/skills
+CLAUDE_HOME_SKILLS     := $(HOME)/.claude/skills
+CLAUDE_BACKUP_DIR      := $(HOME)/.claude/skills_backup_$(TIMESTAMP)
+CLAUDE_REPO_SETTINGS   := ./.claude/settings.json
+CLAUDE_HOME_SETTINGS   := $(HOME)/.claude/settings.json
+CLAUDE_SETTINGS_BACKUP := $(CLAUDE_HOME_SETTINGS).backup_$(TIMESTAMP)
 
 # ============================================================
 # DEFAULT TARGET
@@ -100,15 +103,21 @@ doom-restore:
 
 doom-diff:
 	@echo "📊 Comparing Doom Emacs configurations..."
-	@echo
-	@echo "=== config.el ==="
-	@diff -u "$(HOME)/.doom.d/config.el" "$(DOOM_REPO_DIR)/config.el" 2>/dev/null || echo "(files differ or missing)"
-	@echo
-	@echo "=== init.el ==="
-	@diff -u "$(HOME)/.doom.d/init.el" "$(DOOM_REPO_DIR)/init.el" 2>/dev/null || echo "(files differ or missing)"
-	@echo
-	@echo "=== packages.el ==="
-	@diff -u "$(HOME)/.doom.d/packages.el" "$(DOOM_REPO_DIR)/packages.el" 2>/dev/null || echo "(files differ or missing)"
+	@if diff -q "$(HOME)/.doom.d/config.el" "$(DOOM_REPO_DIR)/config.el" >/dev/null 2>&1 \
+	   && diff -q "$(HOME)/.doom.d/init.el" "$(DOOM_REPO_DIR)/init.el" >/dev/null 2>&1 \
+	   && diff -q "$(HOME)/.doom.d/packages.el" "$(DOOM_REPO_DIR)/packages.el" >/dev/null 2>&1; then \
+		echo "✅ You are up to date with the configuration! 🎉"; \
+	else \
+		echo; \
+		echo "=== config.el ==="; \
+		diff -u "$(HOME)/.doom.d/config.el" "$(DOOM_REPO_DIR)/config.el" 2>/dev/null || echo "(files differ or missing)"; \
+		echo; \
+		echo "=== init.el ==="; \
+		diff -u "$(HOME)/.doom.d/init.el" "$(DOOM_REPO_DIR)/init.el" 2>/dev/null || echo "(files differ or missing)"; \
+		echo; \
+		echo "=== packages.el ==="; \
+		diff -u "$(HOME)/.doom.d/packages.el" "$(DOOM_REPO_DIR)/packages.el" 2>/dev/null || echo "(files differ or missing)"; \
+	fi
 
 # ============================================================
 # TMUX CONFIGURATION
@@ -149,7 +158,12 @@ tmux-restore:
 
 tmux-diff:
 	@echo "📊 Comparing tmux configurations..."
-	@diff -u "$(HOME)/.tmux.conf" "$(TMUX_REPO_FILE)" 2>/dev/null || echo "(files differ or missing)"
+	@if diff -q "$(HOME)/.tmux.conf" "$(TMUX_REPO_FILE)" >/dev/null 2>&1; then \
+		echo "✅ You are up to date with the configuration! 🎉"; \
+	else \
+		echo; \
+		diff -u "$(HOME)/.tmux.conf" "$(TMUX_REPO_FILE)" 2>/dev/null || echo "(files differ or missing)"; \
+	fi
 
 # ============================================================
 # HERDR CONFIGURATION
@@ -196,7 +210,12 @@ herdr-restore:
 
 herdr-diff:
 	@echo "📊 Comparing Herdr managed keybindings..."
-	@diff -u "$(HERDR_HOME_CONFIG)" "$(HERDR_REPO_CONFIG)" 2>/dev/null || echo "(files differ or missing)"
+	@if diff -q "$(HERDR_HOME_CONFIG)" "$(HERDR_REPO_CONFIG)" >/dev/null 2>&1; then \
+		echo "✅ You are up to date with the configuration! 🎉"; \
+	else \
+		echo; \
+		diff -u "$(HERDR_HOME_CONFIG)" "$(HERDR_REPO_CONFIG)" 2>/dev/null || echo "(files differ or missing)"; \
+	fi
 
 # ============================================================
 # OPENCODE COMMANDS
@@ -251,10 +270,15 @@ opencode-restore:
 
 opencode-diff:
 	@echo "📊 Comparing OpenCode config..."
-	@diff -u "$(OPENCODE_HOME_CONFIG)" "$(OPENCODE_REPO_CONFIG)" 2>/dev/null || echo "(files differ or missing)"
-	@echo
-	@echo "📊 Comparing OpenCode commands..."
-	@diff -ru "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_REPO_CMDS)" 2>/dev/null || echo "(files differ or missing)"
+	@if diff -q "$(OPENCODE_HOME_CONFIG)" "$(OPENCODE_REPO_CONFIG)" >/dev/null 2>&1 \
+	   && diff -rq "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_REPO_CMDS)" >/dev/null 2>&1; then \
+		echo "✅ You are up to date with the configuration! 🎉"; \
+	else \
+		diff -u "$(OPENCODE_HOME_CONFIG)" "$(OPENCODE_REPO_CONFIG)" 2>/dev/null || echo "(files differ or missing)"; \
+		echo; \
+		echo "📊 Comparing OpenCode commands..."; \
+		diff -ru "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_REPO_CMDS)" 2>/dev/null || echo "(files differ or missing)"; \
+	fi
 
 # ============================================================
 # CLAUDE SKILLS
@@ -264,7 +288,8 @@ claude-sync: claude-backup
 	@echo "📦 Copying new Claude skills..."
 	@mkdir -p $(HOME)/.claude
 	@cp -r $(CLAUDE_REPO_SKILLS) $(CLAUDE_HOME_SKILLS)
-	@echo "✅ New skills synced to $(CLAUDE_HOME_SKILLS)"
+	@cp $(CLAUDE_REPO_SETTINGS) $(CLAUDE_HOME_SETTINGS)
+	@echo "✅ New skills and settings synced to $(HOME)/.claude"
 
 claude-backup:
 	@if [ -d "$(CLAUDE_HOME_SKILLS)" ]; then \
@@ -273,6 +298,13 @@ claude-backup:
 		echo "✅ Backup created at $(CLAUDE_BACKUP_DIR)"; \
 	else \
 		echo "ℹ️  No existing $(CLAUDE_HOME_SKILLS) found — skipping backup."; \
+	fi
+	@if [ -f "$(CLAUDE_HOME_SETTINGS)" ]; then \
+		echo "💾 Backing up existing $(CLAUDE_HOME_SETTINGS) to $(CLAUDE_SETTINGS_BACKUP)..."; \
+		cp "$(CLAUDE_HOME_SETTINGS)" "$(CLAUDE_SETTINGS_BACKUP)"; \
+		echo "✅ Backup created at $(CLAUDE_SETTINGS_BACKUP)"; \
+	else \
+		echo "ℹ️  No existing $(CLAUDE_HOME_SETTINGS) found — skipping backup."; \
 	fi
 
 claude-restore:
@@ -289,10 +321,26 @@ claude-restore:
 	echo "♻️  Restoring from $$latest_backup..."; \
 	mv "$$latest_backup" "$(CLAUDE_HOME_SKILLS)"; \
 	echo "✅ Restore complete from $$latest_backup"
+	@echo "♻️  Restoring the most recent Claude settings backup..."
+	@latest_settings_backup=$$(ls -t $(CLAUDE_HOME_SETTINGS).backup_* 2>/dev/null | head -n 1); \
+	if [ -n "$$latest_settings_backup" ]; then \
+		cp "$$latest_settings_backup" "$(CLAUDE_HOME_SETTINGS)"; \
+		echo "✅ Settings restore complete from $$latest_settings_backup"; \
+	else \
+		echo "ℹ️  No Claude settings backup found — skipping settings restore."; \
+	fi
 
 claude-diff:
 	@echo "📊 Comparing Claude skills..."
-	@diff -ru "$(CLAUDE_HOME_SKILLS)" "$(CLAUDE_REPO_SKILLS)" 2>/dev/null || echo "(files differ or missing)"
+	@if diff -rq "$(CLAUDE_HOME_SKILLS)" "$(CLAUDE_REPO_SKILLS)" >/dev/null 2>&1 \
+	   && diff -q "$(CLAUDE_HOME_SETTINGS)" "$(CLAUDE_REPO_SETTINGS)" >/dev/null 2>&1; then \
+		echo "✅ You are up to date with the configuration! 🎉"; \
+	else \
+		diff -ru "$(CLAUDE_HOME_SKILLS)" "$(CLAUDE_REPO_SKILLS)" 2>/dev/null || echo "(files differ or missing)"; \
+		echo; \
+		echo "📊 Comparing Claude settings..."; \
+		diff -u "$(CLAUDE_HOME_SETTINGS)" "$(CLAUDE_REPO_SETTINGS)" 2>/dev/null || echo "(files differ or missing)"; \
+	fi
 
 # ============================================================
 # COMBINED SKILLS SYNC
@@ -385,8 +433,8 @@ clean-backup-opencode:
 	fi
 
 clean-backup-claude:
-	@echo "🧹 Removing Claude skill backups..."
-	@echo "⚠️  Current $(CLAUDE_HOME_SKILLS) is now treated as the source of truth."
+	@echo "🧹 Removing Claude skill and settings backups..."
+	@echo "⚠️  Current $(HOME)/.claude is now treated as the source of truth."
 	@found=false; \
 	for backup in "$(HOME)"/.claude/skills_backup_*; do \
 		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
@@ -397,8 +445,19 @@ clean-backup-claude:
 	done; \
 	if [ "$$found" = false ]; then \
 		echo "ℹ️  No Claude skill backups found."; \
+	fi
+	@found_settings=false; \
+	for backup in "$(CLAUDE_HOME_SETTINGS)".backup_*; do \
+		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
+			found_settings=true; \
+			echo "🗑  $$backup"; \
+			rm -f "$$backup"; \
+		fi; \
+	done; \
+	if [ "$$found_settings" = false ]; then \
+		echo "ℹ️  No Claude settings backups found."; \
 	else \
-		echo "✅ Removed Claude skill backups."; \
+		echo "✅ Removed Claude settings backups."; \
 	fi
 
 clean-backup-skills: clean-backup-opencode clean-backup-claude
@@ -670,19 +729,23 @@ help:
 	@echo "                        (current config and commands become source of truth)"
 	@echo "  make opencode-diff    Diff installed vs repo OpenCode config and commands"
 	@echo
-	@echo "CLAUDE SKILLS"
-	@echo "  make claude-sync      Back up existing ~/.claude/skills, then copy repo"
-	@echo "                        skills there (repo is source of truth). Moves the"
-	@echo "                        entire skills dir, so all skills must live in the repo"
-	@echo "                        (commit, pr, graphify, guide, create-skill) to survive sync."
+	@echo "CLAUDE SKILLS & SETTINGS"
+	@echo "  make claude-sync      Back up existing ~/.claude/skills and settings.json, then"
+	@echo "                        copy repo skills and settings there (repo is source of"
+	@echo "                        truth). Moves the entire skills dir, so all skills must"
+	@echo "                        live in the repo (commit, pr, graphify, guide, create-skill)"
+	@echo "                        to survive sync."
 	@echo "  make claude-backup    Move existing skills to a timestamped"
-	@echo "                        backup (~/.claude/skills_backup_YYYY_MM_DD_HH_MM)"
+	@echo "                        backup (~/.claude/skills_backup_YYYY_MM_DD_HH_MM) and copy"
+	@echo "                        settings.json to a timestamped backup"
 	@echo "  make claude-restore   Restore the most recent skills backup"
-	@echo "                        (deletes current skills first)"
+	@echo "                        (deletes current skills first) plus the most recent"
+	@echo "                        settings.json backup"
 	@echo "  make clean-backup-claude"
-	@echo "                        Delete all Claude skill backups"
-	@echo "                        (current skills become source of truth)"
+	@echo "                        Delete all Claude skill and settings backups"
+	@echo "                        (current ~/.claude becomes source of truth)"
 	@echo "  make claude-diff      Diff installed vs repo Claude skills (recursive)"
+	@echo "                        and settings.json"
 	@echo
 	@echo "COMBINED"
 	@echo "  make skills-sync      Run opencode-sync + claude-sync in one go"
