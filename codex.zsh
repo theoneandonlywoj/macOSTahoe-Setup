@@ -95,6 +95,46 @@ echo
 echo "💡 Next steps:"
 echo "   • Authenticate: codex login            (sign in with your ChatGPT account)"
 echo "   • Or use an API key: codex login --api-key"
-echo "   • Start it in any project: cd ~/my-project && codex"
+echo
+echo "🚀 Starting the Codex CLI:"
+echo
+echo "   • Start the TUI in any project:"
+echo "       cd ~/my-project && codex"
+echo
+echo "   • Choose a model:"
+echo "       codex --model gpt-5.4                # latest Codex model"
+echo "       codex --model gpt-5.4-mini           # faster/cheaper"
+echo "       codex -m <model>                     # short flag"
+echo "     In-session: /model"
+echo
+echo "   • Set reasoning effort (variant):"
+echo "       codex -c model_reasoning_effort=high   # deeper reasoning"
+echo "       codex -c model_reasoning_effort=low    # faster/cheaper"
+echo "     In-session: /model then pick an effort level"
+echo
+echo "   • Choose a mode — Build (default) or Plan (read-only):"
+echo "       codex \"refactor the auth module\"     # build: full access to workspace"
+echo "       codex -s read-only \"outline a plan\"   # plan: read-only sandbox"
+echo "       codex -s workspace-write              # writes only inside the repo"
+echo "     In-session: /plan for plan mode, /permissions to adjust approvals"
+echo
+echo "   • Run a one-off prompt without the TUI:"
+echo "       codex exec \"explain the test failures in src/auth\""
+echo "       codex exec --model gpt-5.4-mini \"fix the lint errors\""
+echo "       codex e \"add unit tests for utils\"    # short alias"
+echo
+echo "   • Work with sessions:"
+echo "       codex resume                          # resume most recent session"
+echo "       codex resume <session-id>             # resume a specific session"
+echo "       codex exec --last                     # resume last non-interactive run"
+echo
+echo "   • Other useful options:"
+echo "       codex --sandbox danger-full-access    # full system access (isolated envs only)"
+echo "       codex --full-auto                     # auto-approve permissions"
+echo "       codex -i screenshot.png \"fix the layout\"    # attach an image"
+echo "       codex --search                        # enable live web search"
+echo "       codex login                           # re-authenticate"
+echo
 echo "   • Config file: ~/.codex/config.toml"
 echo "   • Docs: https://developers.openai.com/codex/cli"
+echo "   • CLI reference: https://developers.openai.com/codex/cli/reference"
