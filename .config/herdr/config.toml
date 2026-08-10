@@ -40,12 +40,6 @@ rows = [["state_icon", "workspace"], ["branch", "git_status"]]
 # Native macOS notification when a background agent finishes or needs input.
 delivery = "system"
 
-[[keys.command]]
-key = "prefix+ctrl+w"
-type = "shell"
-command = "~/.config/herdr/scripts/new-workspace-3-tabs.zsh"
-description = "create workspace with 3 command tabs"
-
 # Suggested keybindings for optional developer plugins installed by herdr.zsh.
 # The installer appends active bindings for plugins you select successfully.
 # Uncomment manually only after installing the corresponding plugin.
