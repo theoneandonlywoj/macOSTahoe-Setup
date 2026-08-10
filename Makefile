@@ -540,7 +540,6 @@ soft-test:
 	@failed_count=0; \
 	total_count=0; \
 	\
-	# Test 1: Check if all .zsh scripts have shebang \
 	echo "📋 Step 1: Checking shebang lines..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -556,7 +555,6 @@ soft-test:
 	done; \
 	echo; \
 	\
-	# Test 2: Check Zsh syntax \
 	echo "📋 Step 2: Validating Zsh syntax..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -573,7 +571,6 @@ soft-test:
 	done; \
 	echo; \
 	\
-	# Test 3: Check executability \
 	echo "📋 Step 3: Checking file permissions..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -589,7 +586,6 @@ soft-test:
 	done; \
 	echo; \
 	\
-	# Test 4: Check for required structure \
 	echo "📋 Step 4: Checking script structure..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -624,7 +620,6 @@ soft-test:
 	done; \
 	echo; \
 	\
-	# Test 5: Check Doom config files \
 	echo "📋 Step 5: Checking Doom Emacs config..."; \
 	echo "-----------------------------------"; \
 	if [ -d "$(DOOM_REPO_DIR)" ]; then \
@@ -643,7 +638,6 @@ soft-test:
 	fi; \
 	echo; \
 	\
-	# Test 6: Check tmux config file \
 	echo "📋 Step 6: Checking tmux config..."; \
 	echo "-----------------------------------"; \
 	if [ -f "$(TMUX_REPO_FILE)" ]; then \
@@ -654,7 +648,6 @@ soft-test:
 	fi; \
 	echo; \
 	\
-	# Summary \
 	echo "==============================================="; \
 	echo "📊 Testing Summary"; \
 	echo "==============================================="; \
