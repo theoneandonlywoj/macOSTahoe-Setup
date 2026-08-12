@@ -1,18 +1,13 @@
 # === Makefile for config sync (macOS Tahoe) ===
-# Syncs Doom Emacs, tmux, OpenCode commands, and Claude skills between this repo and $HOME
+# Syncs Doom Emacs and tmux between this repo and $HOME
 # Moves existing configs to timestamped backups before installing new ones
 # Supports restore from the most recent backup and cleanup of accepted backups
 
 .PHONY: all doom-sync doom-backup doom-restore doom-diff \
         tmux-sync tmux-backup tmux-restore tmux-diff \
-        herdr-sync herdr-backup herdr-restore herdr-diff \
         sync backup restore diff tsync tbackup trestore tdiff \
-        opencode-sync opencode-backup opencode-restore opencode-diff \
-        claude-sync claude-backup claude-restore claude-diff \
-        clean-backup-doom clean-backup-tmux clean-backup-herdr clean-backup-opencode clean-backup-claude \
-        clean-backup-skills clean-backup-all \
-        skills-sync osync obackup orestore odiff csync cbackup crestore cdiff ssync \
-        hsync hbackup hrestore hdiff soft-test reload-shell help
+        clean-backup-doom clean-backup-tmux clean-backup-all \
+        soft-test reload-shell help
 
 # Generate timestamp in format YYYY_mm_dd_hh_MM
 TIMESTAMP := $(shell date +"%Y_%m_%d_%H_%M")
@@ -24,31 +19,6 @@ DOOM_REPO_DIR := ./.doom.d
 # tmux paths
 TMUX_BACKUP_FILE := $(HOME)/.tmux.conf.backup_$(TIMESTAMP)
 TMUX_REPO_FILE := ./tmux.conf
-
-# Herdr paths — scoped to this repo's managed keybinding additions only
-HERDR_REPO_DIR := ./.config/herdr
-HERDR_HOME_DIR := $(HOME)/.config/herdr
-HERDR_REPO_CONFIG := ./.config/herdr/config.toml
-HERDR_HOME_CONFIG := $(HOME)/.config/herdr/config.toml
-HERDR_BACKUP_FILE := $(HOME)/.config/herdr/config.toml.backup_$(TIMESTAMP)
-
-# OpenCode paths
-OPENCODE_REPO_DIR       := ./.config/opencode
-OPENCODE_HOME_DIR       := $(HOME)/.config/opencode
-OPENCODE_REPO_CONFIG    := $(OPENCODE_REPO_DIR)/opencode.jsonc
-OPENCODE_HOME_CONFIG    := $(OPENCODE_HOME_DIR)/opencode.jsonc
-OPENCODE_CONFIG_BACKUP  := $(OPENCODE_HOME_CONFIG).backup_$(TIMESTAMP)
-OPENCODE_REPO_CMDS      := $(OPENCODE_REPO_DIR)/commands
-OPENCODE_HOME_CMDS      := $(OPENCODE_HOME_DIR)/commands
-OPENCODE_BACKUP_DIR     := $(OPENCODE_HOME_DIR)/commands_backup_$(TIMESTAMP)
-
-# Claude paths — skills/ subdir plus settings.json config
-CLAUDE_REPO_SKILLS     := ./.claude/skills
-CLAUDE_HOME_SKILLS     := $(HOME)/.claude/skills
-CLAUDE_BACKUP_DIR      := $(HOME)/.claude/skills_backup_$(TIMESTAMP)
-CLAUDE_REPO_SETTINGS   := ./.claude/settings.json
-CLAUDE_HOME_SETTINGS   := $(HOME)/.claude/settings.json
-CLAUDE_SETTINGS_BACKUP := $(CLAUDE_HOME_SETTINGS).backup_$(TIMESTAMP)
 
 # ============================================================
 # DEFAULT TARGET
@@ -166,190 +136,6 @@ tmux-diff:
 	fi
 
 # ============================================================
-# HERDR CONFIGURATION
-# ============================================================
-
-herdr-sync: herdr-backup
-	@echo "📦 Copying Herdr keybinding additions and scripts..."
-	@mkdir -p "$(HERDR_HOME_DIR)"
-	@cp "$(HERDR_REPO_CONFIG)" "$(HERDR_HOME_CONFIG)"
-	@if [ -d "$(HERDR_REPO_DIR)/scripts" ]; then \
-		mkdir -p "$(HERDR_HOME_DIR)/scripts"; \
-		cp "$(HERDR_REPO_DIR)"/scripts/* "$(HERDR_HOME_DIR)/scripts/"; \
-		chmod +x "$(HERDR_HOME_DIR)"/scripts/*; \
-	fi
-	@if command -v herdr >/dev/null 2>&1; then \
-		echo "🔄 Reloading Herdr config..."; \
-		herdr server reload-config >/dev/null 2>&1 || true; \
-	fi
-	@echo "✅ Herdr keybinding additions synced to $(HERDR_HOME_CONFIG)"
-
-herdr-backup:
-	@if [ -f "$(HERDR_HOME_CONFIG)" ]; then \
-		echo "💾 Backing up existing $(HERDR_HOME_CONFIG) to $(HERDR_BACKUP_FILE)..."; \
-		cp "$(HERDR_HOME_CONFIG)" "$(HERDR_BACKUP_FILE)"; \
-		echo "✅ Backup created at $(HERDR_BACKUP_FILE)"; \
-	else \
-		echo "ℹ️  No existing $(HERDR_HOME_CONFIG) found — skipping backup."; \
-	fi
-
-herdr-restore:
-	@echo "♻️  Restoring the most recent Herdr backup..."
-	@latest_backup=$$(ls -t $(HOME)/.config/herdr/config.toml.backup_* 2>/dev/null | head -n 1); \
-	if [ -z "$$latest_backup" ]; then \
-		echo "❌ No backups found. Cannot restore."; \
-		exit 1; \
-	fi; \
-	echo "♻️  Restoring from $$latest_backup..."; \
-	cp "$$latest_backup" "$(HERDR_HOME_CONFIG)"; \
-	echo "✅ Restore complete from $$latest_backup"; \
-	if command -v herdr >/dev/null 2>&1; then \
-		echo "🔄 Reloading Herdr config..."; \
-		herdr server reload-config >/dev/null 2>&1 || true; \
-	fi
-
-herdr-diff:
-	@echo "📊 Comparing Herdr managed keybindings..."
-	@if diff -q "$(HERDR_HOME_CONFIG)" "$(HERDR_REPO_CONFIG)" >/dev/null 2>&1; then \
-		echo "✅ You are up to date with the configuration! 🎉"; \
-	else \
-		echo; \
-		diff -u "$(HERDR_HOME_CONFIG)" "$(HERDR_REPO_CONFIG)" 2>/dev/null || echo "(files differ or missing)"; \
-	fi
-
-# ============================================================
-# OPENCODE COMMANDS
-# ============================================================
-
-opencode-sync: opencode-backup
-	@echo "📦 Copying new OpenCode configuration..."
-	@mkdir -p $(OPENCODE_HOME_DIR)
-	@cp $(OPENCODE_REPO_CONFIG) $(OPENCODE_HOME_CONFIG)
-	@cp -r $(OPENCODE_REPO_CMDS) $(OPENCODE_HOME_CMDS)
-	@echo "✅ New OpenCode configuration synced to $(OPENCODE_HOME_DIR)"
-
-opencode-backup:
-	@if [ -f "$(OPENCODE_HOME_CONFIG)" ]; then \
-		echo "💾 Backing up existing $(OPENCODE_HOME_CONFIG) to $(OPENCODE_CONFIG_BACKUP)..."; \
-		cp "$(OPENCODE_HOME_CONFIG)" "$(OPENCODE_CONFIG_BACKUP)"; \
-		echo "✅ Backup created at $(OPENCODE_CONFIG_BACKUP)"; \
-	else \
-		echo "ℹ️  No existing $(OPENCODE_HOME_CONFIG) found — skipping backup."; \
-	fi
-	@if [ -d "$(OPENCODE_HOME_CMDS)" ]; then \
-		echo "💾 Backing up existing $(OPENCODE_HOME_CMDS) to $(OPENCODE_BACKUP_DIR)..."; \
-		mv "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_BACKUP_DIR)"; \
-		echo "✅ Backup created at $(OPENCODE_BACKUP_DIR)"; \
-	else \
-		echo "ℹ️  No existing $(OPENCODE_HOME_CMDS) found — skipping backup."; \
-	fi
-
-opencode-restore:
-	@echo "♻️  Restoring the most recent OpenCode configuration backup..."
-	@latest_config_backup=$$(ls -t $(OPENCODE_HOME_CONFIG).backup_* 2>/dev/null | head -n 1); \
-	if [ -n "$$latest_config_backup" ]; then \
-		echo "♻️  Restoring config from $$latest_config_backup..."; \
-		cp "$$latest_config_backup" "$(OPENCODE_HOME_CONFIG)"; \
-		echo "✅ Config restore complete from $$latest_config_backup"; \
-	else \
-		echo "ℹ️  No OpenCode config backup found — skipping config restore."; \
-	fi
-	@echo "♻️  Restoring the most recent OpenCode commands backup..."
-	@latest_backup=$$(ls -d $(HOME)/.config/opencode/commands_backup_* 2>/dev/null | sort -r | head -n 1); \
-	if [ -z "$$latest_backup" ]; then \
-		echo "❌ No backups found. Cannot restore."; \
-		exit 1; \
-	fi; \
-	if [ -d "$(OPENCODE_HOME_CMDS)" ]; then \
-		echo "🗑  Removing current $(OPENCODE_HOME_CMDS) before restore..."; \
-		rm -rf "$(OPENCODE_HOME_CMDS)"; \
-	fi; \
-	echo "♻️  Restoring from $$latest_backup..."; \
-	mv "$$latest_backup" "$(OPENCODE_HOME_CMDS)"; \
-	echo "✅ Restore complete from $$latest_backup"
-
-opencode-diff:
-	@echo "📊 Comparing OpenCode config..."
-	@if diff -q "$(OPENCODE_HOME_CONFIG)" "$(OPENCODE_REPO_CONFIG)" >/dev/null 2>&1 \
-	   && diff -rq "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_REPO_CMDS)" >/dev/null 2>&1; then \
-		echo "✅ You are up to date with the configuration! 🎉"; \
-	else \
-		diff -u "$(OPENCODE_HOME_CONFIG)" "$(OPENCODE_REPO_CONFIG)" 2>/dev/null || echo "(files differ or missing)"; \
-		echo; \
-		echo "📊 Comparing OpenCode commands..."; \
-		diff -ru "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_REPO_CMDS)" 2>/dev/null || echo "(files differ or missing)"; \
-	fi
-
-# ============================================================
-# CLAUDE SKILLS
-# ============================================================
-
-claude-sync: claude-backup
-	@echo "📦 Copying new Claude skills..."
-	@mkdir -p $(HOME)/.claude
-	@cp -r $(CLAUDE_REPO_SKILLS) $(CLAUDE_HOME_SKILLS)
-	@cp $(CLAUDE_REPO_SETTINGS) $(CLAUDE_HOME_SETTINGS)
-	@echo "✅ New skills and settings synced to $(HOME)/.claude"
-
-claude-backup:
-	@if [ -d "$(CLAUDE_HOME_SKILLS)" ]; then \
-		echo "💾 Backing up existing $(CLAUDE_HOME_SKILLS) to $(CLAUDE_BACKUP_DIR)..."; \
-		mv "$(CLAUDE_HOME_SKILLS)" "$(CLAUDE_BACKUP_DIR)"; \
-		echo "✅ Backup created at $(CLAUDE_BACKUP_DIR)"; \
-	else \
-		echo "ℹ️  No existing $(CLAUDE_HOME_SKILLS) found — skipping backup."; \
-	fi
-	@if [ -f "$(CLAUDE_HOME_SETTINGS)" ]; then \
-		echo "💾 Backing up existing $(CLAUDE_HOME_SETTINGS) to $(CLAUDE_SETTINGS_BACKUP)..."; \
-		cp "$(CLAUDE_HOME_SETTINGS)" "$(CLAUDE_SETTINGS_BACKUP)"; \
-		echo "✅ Backup created at $(CLAUDE_SETTINGS_BACKUP)"; \
-	else \
-		echo "ℹ️  No existing $(CLAUDE_HOME_SETTINGS) found — skipping backup."; \
-	fi
-
-claude-restore:
-	@echo "♻️  Restoring the most recent Claude skills backup..."
-	@latest_backup=$$(ls -d $(HOME)/.claude/skills_backup_* 2>/dev/null | sort -r | head -n 1); \
-	if [ -z "$$latest_backup" ]; then \
-		echo "❌ No backups found. Cannot restore."; \
-		exit 1; \
-	fi; \
-	if [ -d "$(CLAUDE_HOME_SKILLS)" ]; then \
-		echo "🗑  Removing current $(CLAUDE_HOME_SKILLS) before restore..."; \
-		rm -rf "$(CLAUDE_HOME_SKILLS)"; \
-	fi; \
-	echo "♻️  Restoring from $$latest_backup..."; \
-	mv "$$latest_backup" "$(CLAUDE_HOME_SKILLS)"; \
-	echo "✅ Restore complete from $$latest_backup"
-	@echo "♻️  Restoring the most recent Claude settings backup..."
-	@latest_settings_backup=$$(ls -t $(CLAUDE_HOME_SETTINGS).backup_* 2>/dev/null | head -n 1); \
-	if [ -n "$$latest_settings_backup" ]; then \
-		cp "$$latest_settings_backup" "$(CLAUDE_HOME_SETTINGS)"; \
-		echo "✅ Settings restore complete from $$latest_settings_backup"; \
-	else \
-		echo "ℹ️  No Claude settings backup found — skipping settings restore."; \
-	fi
-
-claude-diff:
-	@echo "📊 Comparing Claude skills..."
-	@if diff -rq "$(CLAUDE_HOME_SKILLS)" "$(CLAUDE_REPO_SKILLS)" >/dev/null 2>&1 \
-	   && diff -q "$(CLAUDE_HOME_SETTINGS)" "$(CLAUDE_REPO_SETTINGS)" >/dev/null 2>&1; then \
-		echo "✅ You are up to date with the configuration! 🎉"; \
-	else \
-		diff -ru "$(CLAUDE_HOME_SKILLS)" "$(CLAUDE_REPO_SKILLS)" 2>/dev/null || echo "(files differ or missing)"; \
-		echo; \
-		echo "📊 Comparing Claude settings..."; \
-		diff -u "$(CLAUDE_HOME_SETTINGS)" "$(CLAUDE_REPO_SETTINGS)" 2>/dev/null || echo "(files differ or missing)"; \
-	fi
-
-# ============================================================
-# COMBINED SKILLS SYNC
-# ============================================================
-
-skills-sync: opencode-sync claude-sync
-	@echo "✅ All AI coding skills synced (OpenCode commands + Claude skills)"
-
-# ============================================================
 # BACKUP CLEANUP
 # ============================================================
 
@@ -387,83 +173,7 @@ clean-backup-tmux:
 		echo "✅ Removed tmux backups."; \
 	fi
 
-clean-backup-herdr:
-	@echo "🧹 Removing Herdr backups..."
-	@echo "⚠️  Current $(HERDR_HOME_CONFIG) is now treated as the source of truth."
-	@found=false; \
-	for backup in "$(HOME)"/.config/herdr/config.toml.backup_*; do \
-		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
-			found=true; \
-			echo "🗑  $$backup"; \
-			rm -f "$$backup"; \
-		fi; \
-	done; \
-	if [ "$$found" = false ]; then \
-		echo "ℹ️  No Herdr backups found."; \
-	else \
-		echo "✅ Removed Herdr backups."; \
-	fi
-
-clean-backup-opencode:
-	@echo "🧹 Removing OpenCode backups..."
-	@echo "⚠️  Current $(OPENCODE_HOME_DIR) is now treated as the source of truth."
-	@found_config=false; \
-	for backup in "$(OPENCODE_HOME_CONFIG)".backup_*; do \
-		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
-			found_config=true; \
-			echo "🗑  $$backup"; \
-			rm -f "$$backup"; \
-		fi; \
-	done; \
-	if [ "$$found_config" = false ]; then \
-		echo "ℹ️  No OpenCode config backups found."; \
-	fi
-	@found=false; \
-	for backup in "$(HOME)"/.config/opencode/commands_backup_*; do \
-		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
-			found=true; \
-			echo "🗑  $$backup"; \
-			rm -rf "$$backup"; \
-		fi; \
-	done; \
-	if [ "$$found" = false ]; then \
-		echo "ℹ️  No OpenCode command backups found."; \
-	else \
-		echo "✅ Removed OpenCode command backups."; \
-	fi
-
-clean-backup-claude:
-	@echo "🧹 Removing Claude skill and settings backups..."
-	@echo "⚠️  Current $(HOME)/.claude is now treated as the source of truth."
-	@found=false; \
-	for backup in "$(HOME)"/.claude/skills_backup_*; do \
-		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
-			found=true; \
-			echo "🗑  $$backup"; \
-			rm -rf "$$backup"; \
-		fi; \
-	done; \
-	if [ "$$found" = false ]; then \
-		echo "ℹ️  No Claude skill backups found."; \
-	fi
-	@found_settings=false; \
-	for backup in "$(CLAUDE_HOME_SETTINGS)".backup_*; do \
-		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
-			found_settings=true; \
-			echo "🗑  $$backup"; \
-			rm -f "$$backup"; \
-		fi; \
-	done; \
-	if [ "$$found_settings" = false ]; then \
-		echo "ℹ️  No Claude settings backups found."; \
-	else \
-		echo "✅ Removed Claude settings backups."; \
-	fi
-
-clean-backup-skills: clean-backup-opencode clean-backup-claude
-	@echo "✅ Removed AI coding skill backups."
-
-clean-backup-all: clean-backup-doom clean-backup-tmux clean-backup-herdr clean-backup-skills
+clean-backup-all: clean-backup-doom clean-backup-tmux
 	@echo "✅ Removed all known config backups."
 
 # ============================================================
@@ -485,32 +195,6 @@ tbackup: tmux-backup
 trestore: tmux-restore
 
 tdiff: tmux-diff
-
-hsync: herdr-sync
-
-hbackup: herdr-backup
-
-hrestore: herdr-restore
-
-hdiff: herdr-diff
-
-osync: opencode-sync
-
-obackup: opencode-backup
-
-orestore: opencode-restore
-
-odiff: opencode-diff
-
-csync: claude-sync
-
-cbackup: claude-backup
-
-crestore: claude-restore
-
-cdiff: claude-diff
-
-ssync: skills-sync
 
 # ============================================================
 # TESTING
@@ -704,53 +388,7 @@ help:
 	@echo "                        (current ~/.tmux.conf becomes source of truth)"
 	@echo "  make tmux-diff        Diff the installed ~/.tmux.conf vs repo copy"
 	@echo
-	@echo "HERDR"
-	@echo "  make herdr-sync       Back up existing ~/.config/herdr/config.toml, then"
-	@echo "                        copy repo Herdr keybinding additions/scripts and reload"
-	@echo "  make herdr-backup     Copy existing Herdr config to a timestamped"
-	@echo "                        backup (~/.config/herdr/config.toml.backup_YYYY_MM_DD_HH_MM)"
-	@echo "  make herdr-restore    Restore the most recent Herdr config backup"
-	@echo "                        (reloads Herdr config when herdr is installed)"
-	@echo "  make clean-backup-herdr"
-	@echo "                        Delete all Herdr config backups"
-	@echo "                        (current Herdr config becomes source of truth)"
-	@echo "  make herdr-diff       Diff installed vs repo Herdr keybinding config"
-	@echo
-
-	@echo "OPENCODE"
-	@echo "  make opencode-sync    Back up existing OpenCode config and commands, then"
-	@echo "                        copy repo config to ~/.config/opencode"
-	@echo "  make opencode-backup  Back up opencode.jsonc and move existing commands"
-	@echo "                        to a timestamped commands backup"
-	@echo "  make opencode-restore Restore the most recent config and commands backup"
-	@echo "                        (deletes current commands first)"
-	@echo "  make clean-backup-opencode"
-	@echo "                        Delete all OpenCode config and command backups"
-	@echo "                        (current config and commands become source of truth)"
-	@echo "  make opencode-diff    Diff installed vs repo OpenCode config and commands"
-	@echo
-	@echo "CLAUDE SKILLS & SETTINGS"
-	@echo "  make claude-sync      Back up existing ~/.claude/skills and settings.json, then"
-	@echo "                        copy repo skills and settings there (repo is source of"
-	@echo "                        truth). Moves the entire skills dir, so all skills must"
-	@echo "                        live in the repo (commit, pr, graphify, guide, create-skill)"
-	@echo "                        to survive sync."
-	@echo "  make claude-backup    Move existing skills to a timestamped"
-	@echo "                        backup (~/.claude/skills_backup_YYYY_MM_DD_HH_MM) and copy"
-	@echo "                        settings.json to a timestamped backup"
-	@echo "  make claude-restore   Restore the most recent skills backup"
-	@echo "                        (deletes current skills first) plus the most recent"
-	@echo "                        settings.json backup"
-	@echo "  make clean-backup-claude"
-	@echo "                        Delete all Claude skill and settings backups"
-	@echo "                        (current ~/.claude becomes source of truth)"
-	@echo "  make claude-diff      Diff installed vs repo Claude skills (recursive)"
-	@echo "                        and settings.json"
-	@echo
-	@echo "COMBINED"
-	@echo "  make skills-sync      Run opencode-sync + claude-sync in one go"
-	@echo "  make clean-backup-skills"
-	@echo "                        Delete OpenCode + Claude skill backups"
+	@echo "BACKUP CLEANUP"
 	@echo "  make clean-backup-all"
 	@echo "                        Delete all known config backups"
 	@echo
@@ -763,19 +401,6 @@ help:
 	@echo "  make tbackup          Alias for tmux-backup"
 	@echo "  make trestore         Alias for tmux-restore"
 	@echo "  make tdiff            Alias for tmux-diff"
-	@echo "  make hsync            Alias for herdr-sync"
-	@echo "  make hbackup          Alias for herdr-backup"
-	@echo "  make hrestore         Alias for herdr-restore"
-	@echo "  make hdiff            Alias for herdr-diff"
-	@echo "  make osync            Alias for opencode-sync"
-	@echo "  make obackup          Alias for opencode-backup"
-	@echo "  make orestore         Alias for opencode-restore"
-	@echo "  make odiff            Alias for opencode-diff"
-	@echo "  make csync            Alias for claude-sync"
-	@echo "  make cbackup          Alias for claude-backup"
-	@echo "  make crestore         Alias for claude-restore"
-	@echo "  make cdiff            Alias for claude-diff"
-	@echo "  make ssync            Alias for skills-sync"
 	@echo
 	@echo "TESTING"
 	@echo "  make soft-test        Validate all .zsh scripts in the repo:"
