@@ -38,9 +38,12 @@ OPENCODE_HOME_DIR       := $(HOME)/.config/opencode
 OPENCODE_REPO_CONFIG    := $(OPENCODE_REPO_DIR)/opencode.jsonc
 OPENCODE_HOME_CONFIG    := $(OPENCODE_HOME_DIR)/opencode.jsonc
 OPENCODE_CONFIG_BACKUP  := $(OPENCODE_HOME_CONFIG).backup_$(TIMESTAMP)
-OPENCODE_REPO_CMDS      := $(OPENCODE_REPO_DIR)/commands
+OPENCODE_REPO_CMDS      := ./.opencode/commands
 OPENCODE_HOME_CMDS      := $(OPENCODE_HOME_DIR)/commands
 OPENCODE_BACKUP_DIR     := $(OPENCODE_HOME_DIR)/commands_backup_$(TIMESTAMP)
+OPENCODE_REPO_SKILLS    := ./.opencode/skills
+OPENCODE_HOME_SKILLS    := $(OPENCODE_HOME_DIR)/skills
+OPENCODE_SKILLS_BACKUP_DIR := $(OPENCODE_HOME_DIR)/skills_backup_$(TIMESTAMP)
 
 # Claude paths — skills/ subdir plus settings.json config
 CLAUDE_REPO_SKILLS     := ./.claude/skills
@@ -226,6 +229,7 @@ opencode-sync: opencode-backup
 	@mkdir -p $(OPENCODE_HOME_DIR)
 	@cp $(OPENCODE_REPO_CONFIG) $(OPENCODE_HOME_CONFIG)
 	@cp -r $(OPENCODE_REPO_CMDS) $(OPENCODE_HOME_CMDS)
+	@cp -r $(OPENCODE_REPO_SKILLS) $(OPENCODE_HOME_SKILLS)
 	@echo "✅ New OpenCode configuration synced to $(OPENCODE_HOME_DIR)"
 
 opencode-backup:
@@ -242,6 +246,13 @@ opencode-backup:
 		echo "✅ Backup created at $(OPENCODE_BACKUP_DIR)"; \
 	else \
 		echo "ℹ️  No existing $(OPENCODE_HOME_CMDS) found — skipping backup."; \
+	fi
+	@if [ -d "$(OPENCODE_HOME_SKILLS)" ]; then \
+		echo "💾 Backing up existing $(OPENCODE_HOME_SKILLS) to $(OPENCODE_SKILLS_BACKUP_DIR)..."; \
+		mv "$(OPENCODE_HOME_SKILLS)" "$(OPENCODE_SKILLS_BACKUP_DIR)"; \
+		echo "✅ Backup created at $(OPENCODE_SKILLS_BACKUP_DIR)"; \
+	else \
+		echo "ℹ️  No existing $(OPENCODE_HOME_SKILLS) found — skipping backup."; \
 	fi
 
 opencode-restore:
@@ -267,17 +278,34 @@ opencode-restore:
 	echo "♻️  Restoring from $$latest_backup..."; \
 	mv "$$latest_backup" "$(OPENCODE_HOME_CMDS)"; \
 	echo "✅ Restore complete from $$latest_backup"
+	@echo "♻️  Restoring the most recent OpenCode skills backup..."
+	@latest_skills_backup=$$(ls -d $(HOME)/.config/opencode/skills_backup_* 2>/dev/null | sort -r | head -n 1); \
+	if [ -z "$$latest_skills_backup" ]; then \
+		echo "ℹ️  No OpenCode skills backup found — skipping skills restore."; \
+	else \
+		if [ -d "$(OPENCODE_HOME_SKILLS)" ]; then \
+			echo "🗑  Removing current $(OPENCODE_HOME_SKILLS) before restore..."; \
+			rm -rf "$(OPENCODE_HOME_SKILLS)"; \
+		fi; \
+		echo "♻️  Restoring from $$latest_skills_backup..."; \
+		mv "$$latest_skills_backup" "$(OPENCODE_HOME_SKILLS)"; \
+		echo "✅ Skills restore complete from $$latest_skills_backup"; \
+	fi
 
 opencode-diff:
 	@echo "📊 Comparing OpenCode config..."
 	@if diff -q "$(OPENCODE_HOME_CONFIG)" "$(OPENCODE_REPO_CONFIG)" >/dev/null 2>&1 \
-	   && diff -rq "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_REPO_CMDS)" >/dev/null 2>&1; then \
+	   && diff -rq "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_REPO_CMDS)" >/dev/null 2>&1 \
+	   && diff -rq "$(OPENCODE_HOME_SKILLS)" "$(OPENCODE_REPO_SKILLS)" >/dev/null 2>&1; then \
 		echo "✅ You are up to date with the configuration! 🎉"; \
 	else \
 		diff -u "$(OPENCODE_HOME_CONFIG)" "$(OPENCODE_REPO_CONFIG)" 2>/dev/null || echo "(files differ or missing)"; \
 		echo; \
 		echo "📊 Comparing OpenCode commands..."; \
 		diff -ru "$(OPENCODE_HOME_CMDS)" "$(OPENCODE_REPO_CMDS)" 2>/dev/null || echo "(files differ or missing)"; \
+		echo; \
+		echo "📊 Comparing OpenCode skills..."; \
+		diff -ru "$(OPENCODE_HOME_SKILLS)" "$(OPENCODE_REPO_SKILLS)" 2>/dev/null || echo "(files differ or missing)"; \
 	fi
 
 # ============================================================
@@ -430,6 +458,19 @@ clean-backup-opencode:
 		echo "ℹ️  No OpenCode command backups found."; \
 	else \
 		echo "✅ Removed OpenCode command backups."; \
+	fi
+	@found_skills=false; \
+	for backup in "$(HOME)"/.config/opencode/skills_backup_*; do \
+		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
+			found_skills=true; \
+			echo "🗑  $$backup"; \
+			rm -rf "$$backup"; \
+		fi; \
+	done; \
+	if [ "$$found_skills" = false ]; then \
+		echo "ℹ️  No OpenCode skill backups found."; \
+	else \
+		echo "✅ Removed OpenCode skill backups."; \
 	fi
 
 clean-backup-claude:
@@ -718,16 +759,16 @@ help:
 	@echo
 
 	@echo "OPENCODE"
-	@echo "  make opencode-sync    Back up existing OpenCode config and commands, then"
-	@echo "                        copy repo config to ~/.config/opencode"
+	@echo "  make opencode-sync    Back up existing OpenCode config, commands and skills,"
+	@echo "                        then copy repo config to ~/.config/opencode"
 	@echo "  make opencode-backup  Back up opencode.jsonc and move existing commands"
-	@echo "                        to a timestamped commands backup"
-	@echo "  make opencode-restore Restore the most recent config and commands backup"
-	@echo "                        (deletes current commands first)"
+	@echo "                        and skills to timestamped backups"
+	@echo "  make opencode-restore Restore the most recent config, commands and skills"
+	@echo "                        backup (deletes current commands/skills first)"
 	@echo "  make clean-backup-opencode"
-	@echo "                        Delete all OpenCode config and command backups"
-	@echo "                        (current config and commands become source of truth)"
-	@echo "  make opencode-diff    Diff installed vs repo OpenCode config and commands"
+	@echo "                        Delete all OpenCode config, command and skill backups"
+	@echo "                        (current config, commands and skills become source of truth)"
+	@echo "  make opencode-diff    Diff installed vs repo OpenCode config, commands and skills"
 	@echo
 	@echo "CLAUDE SKILLS & SETTINGS"
 	@echo "  make claude-sync      Back up existing ~/.claude/skills and settings.json, then"

@@ -279,11 +279,11 @@ This repo includes a Makefile for managing Doom Emacs, tmux, OpenCode commands, 
 | `make tbackup` | Alias for `tmux-backup` |
 | `make trestore` | Alias for `tmux-restore` |
 | `make tdiff` | Alias for `tmux-diff` |
-| `make opencode-sync` | Back up existing `~/.config/opencode/commands`, copy repo commands there |
-| `make opencode-backup` | Move `~/.config/opencode/commands` to a timestamped backup |
-| `make opencode-restore` | Restore the most recent OpenCode commands backup |
-| `make clean-backup-opencode` | Delete OpenCode command backups after accepting current commands as source of truth |
-| `make opencode-diff` | Diff repo vs installed OpenCode commands (recursive) |
+| `make opencode-sync` | Back up existing `~/.config/opencode/commands` and `~/.config/opencode/skills`, copy repo commands and skills there |
+| `make opencode-backup` | Move `~/.config/opencode/commands` and `~/.config/opencode/skills` to timestamped backups |
+| `make opencode-restore` | Restore the most recent OpenCode commands and skills backups |
+| `make clean-backup-opencode` | Delete OpenCode command and skill backups after accepting current commands as source of truth |
+| `make opencode-diff` | Diff repo vs installed OpenCode commands and skills (recursive) |
 | `make claude-sync` | Back up existing `~/.claude/skills`, copy repo skills there |
 | `make claude-backup` | Move `~/.claude/skills` to a timestamped backup |
 | `make claude-restore` | Restore the most recent Claude skills backup |
@@ -313,7 +313,7 @@ This repo includes a Makefile for managing Doom Emacs, tmux, OpenCode commands, 
 
 ## AI coding skills
 
-This repo is the **source of truth** for global AI coding-assistant skills. The skills live in `.claude/skills/` (Claude Code) and `.config/opencode/commands/` (OpenCode) and are deployed to `~/.claude/skills/` and `~/.config/opencode/commands/` via the Makefile.
+This repo is the **source of truth** for global AI coding-assistant skills. The skills live in `.claude/skills/` (Claude Code) and `.opencode/commands/`, `.opencode/skills/` (OpenCode) and are deployed to `~/.claude/skills/`, `~/.config/opencode/commands/`, and `~/.config/opencode/skills/` via the Makefile.
 
 Deploy everything in one go:
 
@@ -338,11 +338,12 @@ See [docs/guide_superpowers.md](docs/guide_superpowers.md) for a full walkthroug
 
 | Skill | Where | Description |
 |---|---|---|
-| `/commit` | `.claude/skills/commit/`, `.config/opencode/commands/commit.md` | Generate a Conventional Commits message from staged changes and **print a ready-to-run `git commit -m ...` command** (no commit). |
-| `/pr` | `.claude/skills/pr/`, `.config/opencode/commands/pr.md` | Fill `.github/PULL_REQUEST_TEMPLATE.md` from the `main..HEAD` diff, create/overwrite `PR.md`, verify `gh auth status`, then create or update the GitHub PR title/body via `gh`. |
+| `/commit` | `.claude/skills/commit/`, `.opencode/commands/commit.md` | Generate a Conventional Commits message from staged changes and **print a ready-to-run `git commit -m ...` command** (no commit). |
+| `/pr` | `.claude/skills/pr/`, `.opencode/commands/pr.md` | Fill `.github/PULL_REQUEST_TEMPLATE.md` from the `main..HEAD` diff, create/overwrite `PR.md`, verify `gh auth status`, then create or update the GitHub PR title/body via `gh`. |
 | `/graphify` | `.claude/skills/graphify/` | Turn any folder/URL into a navigable knowledge graph (imported verbatim from the global skill). |
-| `/guide` | `.claude/skills/guide/`, `.config/opencode/commands/guide.md` | Create or improve a step-by-step guide under `docs/` with a `guide_*.md` filename, concrete examples, verification checks, and Mermaid diagrams when useful. |
-| `/create-skill` | `.claude/skills/create-skill/`, `.config/opencode/commands/create-skill.md` | Create, eval, and iterate new skills. Bundles its own eval toolchain (`scripts/`, `eval-viewer/`, `agents/`, `references/`, `assets/`). |
+| `/guide` | `.claude/skills/guide/`, `.opencode/commands/guide.md` | Create or improve a step-by-step guide under `docs/` with a `guide_*.md` filename, concrete examples, verification checks, and Mermaid diagrams when useful. |
+| `/create-skill` | `.claude/skills/create-skill/`, `.opencode/commands/create-skill.md` | Create, eval, and iterate new skills. Bundles its own eval toolchain (`scripts/`, `eval-viewer/`, `agents/`, `references/`, `assets/`). |
+| `/gherkin-note` | `.opencode/commands/gherkin-note.md`, `.opencode/skills/gherkin-note/` | Analyze a feature request and write a structured, testable Gherkin note to `./01_gherkin_notes/NNN-<slug>.md` with a numeric-sequence filename. Records assumptions and open questions instead of blocking on clarification. |
 
 ### PR template
 

@@ -37,23 +37,30 @@ Pick the type that best describes the change:
 | `perf`     | A performance improvement                                      | —      |
 | `test`     | Adding or correcting tests                                     | —      |
 | `revert`   | Reverting a previous commit                                    | —      |
+| `(any)`    | Marked with `!` or a `BREAKING CHANGE:` footer                 | MAJOR  |
 
-If a change fits more than one type, prefer making multiple commits. If a diff is unrelated to any single intent, split it before committing rather than forcing one message.
+A breaking change bumps MAJOR regardless of type — `!` in the prefix or a `BREAKING CHANGE:` footer can appear on a commit of ANY type.
+
+Custom types are spec-permitted: the spec fixes no type list, and this repo's history uses e.g. `other:` and even typeless subjects. `deps` is a repo extension — the spec's and Angular's lists use `build` for dependency changes.
+
+If a change fits more than one type, make multiple commits whenever possible (spec FAQ) — the only sanctioned path; see Chained types. If a diff is unrelated to any single intent, split it before committing rather than forcing one message.
 
 ### Chained types
 
-When a single change genuinely spans multiple types and cannot be split cleanly, chain the types with `+` in the prefix:
+The spec sanctions exactly one path when a change spans types: **make multiple commits whenever possible** (spec FAQ). Split-first decision procedure:
+
+1. Can the diff be split into self-contained commits, each with its own intent and history? Split it — one type per commit.
+2. Would any split fragment be broken, incomplete, or meaningless on its own? Keep one commit and use the type of the dominant intent; otherwise step 1 applies.
+
+Split-vs-chain criterion: a diff is **unrelated** (split it) when removing one part leaves the rest complete and independently useful — e.g. a dependency bump bundled with a function rename. A diff is **genuinely cohesive** when the parts only make sense together — e.g. renaming a config key and updating every place that reads it.
+
+Chained prefixes (`feat+fix:`) are a **non-standard repo extension**: they are not in the v1.0.0 spec, and strict parsers (semantic-release, commitlint) treat them as invalid or no-release. Use them only if the repo explicitly opts in via a documented extension policy. When opted in: the `+`-joined types act as one prefix (scope, `!`, and `:` follow as usual), keep the chain to the types that actually apply, and prefer `+` over multi-paragraph subject lines:
 
 ```
 feat+fix: add offline mode and correct date parsing
-chore+fix: bump dependencies and pin the dev toolchain
 ```
 
-Rules for chained types:
-- Only chain when the change is one cohesive unit — never force unrelated changes into one commit just to chain.
-- The `+`-joined types act as one type prefix; scope, `!`, and `:` follow as usual, e.g. `feat+fix(api)!: ...`.
-- For SemVer interpretation, use the strongest type in the chain (`feat` implies MINOR, a `fix` implies PATCH, a breaking change implies MAJOR).
-- Keep the chain to the types that actually apply; prefer `+` over multi-paragraph subject lines.
+`chore+fix: bump dependencies and pin the dev toolchain` is an anti-pattern even under the extension — it bundles two unrelated changes (a routine dependency bump and a toolchain pin) that belong in separate commits.
 
 ## Rules (from the specification)
 
@@ -65,14 +72,14 @@ Rules for chained types:
 6. The body, if present, MUST begin one blank line after the description and MAY be any number of newline-separated paragraphs.
 7. Footers, if present, MUST begin one blank line after the body. Each footer is `Token: value` or `Token #value`.
 8. Footer tokens MUST use `-` in place of whitespace (e.g. `Acked-by`), except `BREAKING CHANGE`.
-9. Breaking changes MUST be marked either with a `!` immediately before the `:` in the prefix (e.g. `feat!:`) or with a `BREAKING CHANGE: <description>` footer (uppercase, followed by colon and space). `BREAKING-CHANGE` is synonymous.
+9. Breaking changes MUST be marked either with a `!` immediately before the `:` in the prefix (e.g. `feat!:`) or with a `BREAKING CHANGE: <description>` footer (uppercase, followed by colon and space). `BREAKING-CHANGE` is synonymous. When `!` is used, the description SHALL describe the breaking change.
 10. Types are case-insensitive; stay consistent (lowercase). Only `BREAKING CHANGE` is case-sensitive and MUST be uppercase.
 
 ## Writing the subject (description)
 
 - Use the **imperative mood**: "add", "fix", "remove" — as if the commit performs the action ("fix ...", not "fixed ..." or "fixes ...").
 - Keep it concise and scannable; aim for under ~50 characters when possible.
-- Capitalize the first word, no trailing period.
+- Team style, not spec: capitalize the first word and use no trailing period — the spec is silent on case, and the examples in this skill (and the spec's) are lowercase.
 - Summarize the change, not the process.
 
 ## Writing the body
@@ -89,7 +96,7 @@ Use git trailer format for footers, each on its own line:
 - Value after `: ` or ` #`.
 - `BREAKING CHANGE: <description>` is the footer used to declare a breaking change when the `!` prefix is not used.
 - A `revert` commit uses a `Refs:` footer listing the SHAs being reverted, e.g. `Refs: 676104e, a215868`.
-- The commit author comes from git's configured identity; do not add attribution footers (`Co-authored-by`, `Signed-off-by`, etc.) — the commit carries only the configured author.
+- The commit author comes from git's configured identity. Repo policy, not spec: do not add attribution footers (`Co-authored-by`, `Signed-off-by`, etc.) — the commit carries only the configured author. The spec permits them (its example footer is `Reviewed-by: Z`), and DCO projects require `Signed-off-by`.
 
 ## Examples
 
@@ -129,10 +136,12 @@ Refs: 676104e, a215868
 
 ## Git command mapping
 
-Translate the message into a git command using two `-m` flags — the subject and the body:
+A subject + body + footer message has three paragraphs, so use three `-m` flags — one each for the subject, the body, and the footer:
 
 ```bash
-git commit -m "<type>(<scope>): <description>" -m "<body paragraph>"
+git commit -m "<type>(<scope>): <description>" -m "<body paragraph>" -m "<footer token: value>"
 ```
 
-Each `-m` becomes a paragraph in the final message. Always use single quotes around messages that contain double quotes or shell-special characters (e.g. `BREAKING CHANGE: ...`), or double quotes otherwise — be consistent and safe for `zsh`.
+Each `-m` becomes a paragraph in the final message. When the prefix carries `!`, the description SHALL describe the breaking change (rule 9).
+
+Quoting: single quotes are the safer default — they tolerate double quotes and shell-special characters (e.g. `BREAKING CHANGE: ...`) — but an apostrophe cannot appear inside a single-quoted string, so for such messages use double quotes and escape any inner `"`, `$`, or backtick, e.g. `git commit -m "fix: handle the parser's edge cases"`. Be consistent and safe for `zsh`.

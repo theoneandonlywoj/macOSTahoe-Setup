@@ -1,6 +1,6 @@
 ---
 name: gherkin-note
-description: Use when a user requests a Gherkin feature note, says "gherkin", or invokes /gherkin-note. Analyzes a feature request and writes a structured, testable Gherkin note to _woj/01-gherkin-note/NNN-<feature-name-slug>.md. Write immediately even when the request is ambiguous, recording assumptions and open questions in the note. Also use when a file path to an existing Gherkin note is passed (or the user wants to update a note with follow-up conclusions): append a Conclusions section to that note.
+description: Use when a user invokes /gherkin-note, or asks to "make a gherkin note", "write a feature file", or otherwise requests a Gherkin behavior specification. Analyzes a feature request and writes a structured, testable Gherkin note to _woj/01-gherkin-note/NNN-<feature-name-slug>.md. Write immediately even when the request is ambiguous, recording assumptions and open questions in the note. Also use when a file path to an existing Gherkin note is passed (or the user wants to update a note with follow-up conclusions): append a Conclusions section to that note.
 ---
 
 # Gherkin Note
@@ -13,6 +13,8 @@ Turn a feature request into a structured, testable Gherkin note saved under `_wo
 - The user asks to "make a gherkin note", "write a feature file", or otherwise wants Gherkin behavior specifications for a request.
 - The user passes a file path to an existing note (e.g. `/gherkin-note _woj/01-gherkin-note/002-...md <conclusions>`), or asks to "update the note with conclusions", "append conclusions", "capture follow-ups", or similar. This is **update mode** — see "Workflow (update mode)".
 
+**Scope gate:** trigger only on feature/behavior specification requests — requests with observable behavior to specify. The bare word "gherkin" (e.g. "what is Gherkin?") is not a trigger; such questions go to the general assistant. Bug reports belong to the sibling skills `create-ticket` and `investigate-issue`, not here. Non-testable (aesthetic) requests: still write the note, phrasing the benefit/outcome as an observable property where possible; if a behavior truly has no observable outcome, record the untestability explicitly in **Open questions**. A request covering multiple features gets one note per feature, one `NNN-<slug>` per note.
+
 ## Mode selection
 
 At the start, inspect the first argument:
@@ -22,6 +24,8 @@ At the start, inspect the first argument:
 - Otherwise, use **create mode** (default).
 
 ## Workflow (create mode)
+
+If the invocation carries no request (e.g. a bare `/gherkin-note`), do not invent a feature from nothing: ask the user what they want to capture and write the note once they reply. This is the single deliberate exception to "write immediately, never block" — with no request there is nothing to parse, assume about, or record.
 
 ### 1. Parse the request
 
@@ -94,15 +98,15 @@ A note is Markdown. The `## Feature`, `## Background`, and `## Scenarios` sectio
       When <action>
       Then <observable outcome>
 
-    Scenario Outline: <name>
+Scenario Outline: <name>
       Given <precondition with <placeholder>>
       When <action with <placeholder>>
       Then <outcome with <placeholder>>
 
-      Examples:
-        | <placeholder> | <another> |
-        | <value>       | <value>   |
-    ```
+    Examples:
+      | <placeholder> | <another> |
+      | <value>       | <value>   |
+```
 
 Drop sections that add no value (`Open questions`, `Background`) rather than leaving them empty.
 
@@ -118,8 +122,8 @@ Drop sections that add no value (`Open questions`, `Background`) rather than lea
 
 ### 6. Verify before finishing
 
+- Run `python3 _opencode_path/validate-gherkin.py <note>` on the written note. The script extracts the Gherkin fenced blocks and checks the rules in step 5: correct Gherkin keywords, scenario keywords (`Feature`, `Background`, `Scenario`, `Scenario Outline`, `Examples`) at column 0, steps indented, every `Scenario`/`Scenario Outline` with a `Then` or an `Examples` table, `Examples` placeholders bound in the table header, `Given` before `When` before `Then` ordering, and no duplicate scenario names. Fix every failure the script reports; it exits nonzero on failure.
 - Re-read the written file and confirm the filename followed the `NNN-<feature-name-slug>.md` rule.
-- Confirm the Gherkin block is syntactically consistent (keywords, indentation, `Examples` placeholders bound).
 - Confirm assumptions and open questions from step 2 actually made it into the note.
 
 ## Workflow (update mode)
@@ -134,8 +138,9 @@ When a file path to an existing note is provided:
 
 ### 2. Extract the follow-up conclusions
 
-- Take the remaining arguments as the follow-up conclusions (if any were supplied). Preserve them verbatim as list items, one per conclusion.
-- If no conclusions were supplied but the user referenced a prior discussion, derive the conclusions from that context; otherwise note in the Conclusions section that no conclusions were recorded yet.
+- Take the remaining arguments as the follow-up conclusions (if any were supplied). When supplied, preserve them **verbatim** as list items, one per conclusion — verbatim always wins over derivation.
+- If no conclusions were supplied but the user referenced a prior discussion, derive the conclusions from that context. Derivation is limited to what the referenced discussion actually supports: state only conclusions the discussion implies, one per discussed point, without adding new facts or outcomes the discussion did not settle.
+- If no conclusions were supplied and no prior discussion is referenced (e.g. `/gherkin-note <path>` and nothing else), the invocation is a **no-op**: append nothing, never write a placeholder Conclusions section, and report that no conclusions were recorded.
 
 ### 3. Append the Conclusions section
 
@@ -148,13 +153,15 @@ When a file path to an existing note is provided:
     - <conclusion>
     - <conclusion>
 
-- Leave the existing `## Source`, `## Assumptions`, `## Open questions`, `## Feature`, `## Background`, and `## Scenarios` content unchanged.
+- Conclusions are stored as a **bulleted list** (`-`), one item per conclusion — never a numbered list. The update-mode verify step checks against this same convention.
+
+- Leave the existing `## Source`, `## Assumptions`, `## Open questions`, `## Feature`, `## Background`, and `## Scenarios` content unchanged — except that a resolved open question may be struck through (see the next item); its original text always stays in place.
 - If a conclusion resolves an item previously listed under `## Open questions`, append the conclusion and optionally strike through the resolved question (e.g. `- ~~<resolved item>~~`), leaving the question text in place.
 
 ### 4. Verify before finishing
 
-- Re-read the file and confirm the original content is untouched and only `## Conclusions` (or its existing section) gained the new items.
-- Confirm conclusions are stored as a numbered list under `## Conclusions`.
+- Re-read the file and confirm the original content is untouched and only `## Conclusions` (or its existing section) gained the new items, with struck-through open questions still carrying their original text.
+- Confirm conclusions are stored as a bulleted list (`-` items) under `## Conclusions`, matching the format block in step 3. If the note had no conclusions and no context, confirm nothing was appended.
 
 ## Reporting back
 
