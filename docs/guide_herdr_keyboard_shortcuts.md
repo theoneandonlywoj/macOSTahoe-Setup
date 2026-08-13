@@ -17,10 +17,11 @@ A complete keyboard reference for Herdr (terminal agent multiplexer, [herdr.dev]
 9. [Navigate Mode (Goto)](#navigate-mode-goto)
 10. [Copy Mode & Scrollback](#copy-mode--scrollback)
 11. [Agents, Notifications & Session Control](#agents-notifications--session-control)
-12. [Customizing Keybindings](#customizing-keybindings)
-13. [Quick Reference](#quick-reference)
-14. [Troubleshooting](#troubleshooting)
-15. [Next Steps](#next-steps)
+12. [The Repo Config: Four-Tier Scheme](#the-repo-config-four-tier-scheme)
+13. [Customizing Keybindings](#customizing-keybindings)
+14. [Quick Reference](#quick-reference)
+15. [Troubleshooting](#troubleshooting)
+16. [Next Steps](#next-steps)
 
 ---
 
@@ -144,26 +145,27 @@ Panes are where your shells and agents live. Splits, movement, and lifecycle:
 
 | Action                    | Keys                      |
 |---------------------------|---------------------------|
-| Split right (vertical)    | `prefix+v`                |
-| Split down (horizontal)   | `prefix+minus` (`-`)      |
-| Focus pane left/down/up/right | `prefix+h` / `j` / `k` / `l` |
+| Split right (vertical)    | `prefix+ctrl+v`           |
+| Split down (horizontal)   | `prefix+ctrl+minus` (`-`) |
+| Focus pane left/down/up/right | `prefix+ctrl+h` / `j` / `k` / `l` |
 | Cycle to next pane        | `prefix+tab`              |
 | Cycle to previous pane    | `prefix+shift+tab`        |
-| Swap pane left/down/up/right | `prefix+shift+h` / `j` / `k` / `l` |
-| Zoom (fullscreen) focused pane | `prefix+z`           |
-| Close pane                | `prefix+x`                |
-| Rename pane               | `prefix+shift+p`          |
-| Enter resize mode         | `prefix+r`                |
+| Swap pane left/down/up/right | `prefix+ctrl+shift+h` / `j` / `k` / `l` |
+| Zoom (fullscreen) focused pane | `prefix+ctrl+z`      |
+| Close pane                | `prefix+ctrl+x`          |
+| Rename pane               | `prefix+ctrl+r`          |
+| Last pane (jump back and forth) | `prefix+ctrl+[`     |
+| Enter resize mode         | `prefix+r`               |
 
 Notes:
 
-- **Zoom** toggles: `prefix+z` again restores the layout.
+- **Zoom** toggles: `prefix+ctrl+z` again restores the layout.
 - **Resize mode** (`prefix+r`) is modal — adjust the focused pane's borders, then leave the mode. Its inner keys are listed in the `prefix+?` overlay.
-- `last_pane` (jump back and forth between two panes) exists but is **unbound by default**; see [Customizing Keybindings](#customizing-keybindings).
+- `last_pane` (jump back and forth between two panes) is bound to `prefix+ctrl+[` — outside the range commonly used by agent TUIs.
 
 ### Verify
 
-`prefix+v` then `prefix+minus` should give you three panes; `prefix+h/j/k/l` moves the focus ring between them; `prefix+z` makes one fill the tab.
+`prefix+ctrl+v` then `prefix+ctrl+minus` should give you three panes; `prefix+ctrl+h/j/k/l` moves the focus ring between them; `prefix+ctrl+z` makes one fill the tab.
 
 ---
 
@@ -175,10 +177,14 @@ Tabs group panes inside a workspace:
 |---------------------|--------------------|
 | New tab             | `prefix+c`         |
 | Next tab            | `prefix+n`         |
-| Previous tab        | `prefix+p`         |
+| Previous tab        | `prefix+shift+[`   |
 | Jump to tab 1–9     | `prefix+1..9`      |
 | Rename tab          | `prefix+shift+t`   |
 | Close tab           | `prefix+shift+x`   |
+
+Notes:
+
+- `prefix+shift+[` must be delivered by your terminal as the base `[` key with a shift modifier (kitty keyboard protocol or CSI-u, e.g. Ghostty or modern iTerm2). Terminals that send the shifted character `{` instead cannot deliver this chord — if `prefix+shift+[` does nothing in `prefix+?` on your terminal, use the mouse or `prefix+w`, or remap `previous_tab`.
 
 ---
 
@@ -191,14 +197,16 @@ Workspaces are top-level projects; each has its own working directory. Herdr can
 | Workspace picker                | `prefix+w`         |
 | Goto picker (navigate mode)     | `prefix+g`         |
 | New workspace                   | `prefix+shift+n`   |
-| New git worktree                | `prefix+shift+g`   |
 | Rename workspace                | `prefix+shift+w`   |
-| Close workspace                 | `prefix+ctrl+x`    |
+| Close workspace                 | `prefix+ctrl+shift+x` |
+| Previous workspace              | `prefix+shift+h`   |
+| Next workspace                  | `prefix+shift+l`   |
+| Switch to workspace 1–9         | `prefix+shift+1..9`|
 | Toggle sidebar                  | `prefix+b`         |
 
-Unbound by default (available to map yourself): `previous_workspace`, `next_workspace`, `switch_workspace` (indexed `prefix+1..9` style), `open_worktree`, `remove_worktree`.
+Worktree actions (`new_worktree`, `open_worktree`, `remove_worktree`) are intentionally left unbound in this repo — create worktrees from the sidebar instead.
 
-To close the current workspace, press `prefix+ctrl+x`, then confirm the prompt if `confirm_close` is enabled. This closes the workspace and its panes; use `prefix+x` for only the focused pane, `prefix+shift+x` for only the current tab, and `prefix+q` when you only want to detach from Herdr while keeping the session running.
+To close the current workspace, press `prefix+ctrl+shift+x`, then confirm the prompt if `confirm_close` is enabled. This closes the workspace and its panes; use `prefix+ctrl+x` for only the focused pane, `prefix+shift+x` for only the current tab, and `prefix+q` when you only want to detach from Herdr while keeping the session running.
 
 ---
 
@@ -249,17 +257,19 @@ Herdr auto-detects coding agents (Claude Code, Codex, OpenCode, ...) running in 
 
 | Action                                    | Keys               |
 |--------------------------------------------|--------------------|
-| Open the pane that raised a notification   | `prefix+o`         |
-| Previous / next agent in sidebar           | `prefix+shift+up` / `prefix+shift+down` |
-| Jump to agent 1-9                          | `prefix+ctrl+1..9` |
+| Open the pane that raised a notification   | `prefix+ctrl+shift+o` |
+| Previous / next agent in sidebar           | `prefix+ctrl+shift+[` / `prefix+ctrl+shift+]` |
+| Jump to agent 1-9                          | `prefix+ctrl+shift+1..9` |
 | Create 3-tab command workspace             | `prefix+ctrl+w`    |
 | Detach from the session (keeps running)    | `prefix+q`         |
 | Reload config                              | `prefix+shift+r`   |
 | Open settings                              | `prefix+s`         |
 
-Agent navigation is unbound by Herdr defaults, but this setup maps `previous_agent`, `next_agent`, and indexed `focus_agent` with prefix-only shortcuts so they do not collide with agent TUIs such as OpenCode. `focus_agent` only accepts the literal `1..9` range — Herdr does not support narrowing it to fewer slots. `open_notification_target` is pinned explicitly to `prefix+o` as well, even though it matches Herdr's own default — Herdr has no setting that focuses a pane automatically when a notification fires, so this manual follow-up keypress is the closest available equivalent to "auto-focus on notification."
+Agent navigation is unbound by Herdr defaults, but this setup maps `previous_agent`, `next_agent`, and indexed `focus_agent` with prefix-only shortcuts so they do not collide with agent TUIs such as OpenCode. `focus_agent` only accepts the literal `1..9` range — Herdr does not support narrowing it to fewer slots. `open_notification_target` is pinned explicitly to `prefix+ctrl+shift+o`, even though it deviates from Herdr's own `prefix+o` default — Herdr has no setting that focuses a pane automatically when a notification fires, so this manual follow-up keypress is the closest available equivalent to "auto-focus on notification."
 
-There is no separate `agent_picker` action like `workspace_picker` (`prefix+w`) in Herdr 0.7/0.8. For picker-style navigation, use `prefix+g` to open the session navigator, then move through workspaces and panes. For agent-specific movement, use `prefix+shift+up` / `prefix+shift+down` to step through agents in the sidebar, `prefix+ctrl+1..9` to jump directly to agent N, or `prefix+o` when a notification points at an agent that needs attention.
+In the agent tier, brackets mean previous/next (`[` = previous, `]` = next) and `o` opens the notification target, mirroring the pane tier's `prefix+ctrl+[` last-pane idiom.
+
+There is no separate `agent_picker` action like `workspace_picker` (`prefix+w`) in Herdr 0.7/0.8. For picker-style navigation, use `prefix+g` to open the session navigator, then move through workspaces and panes. For agent-specific movement, use `prefix+ctrl+shift+[` / `prefix+ctrl+shift+]` to step through agents in the sidebar, `prefix+ctrl+shift+1..9` to jump directly to agent N, or `prefix+ctrl+shift+o` when a notification points at an agent that needs attention.
 
 Each sidebar agent row shows its work status explicitly via `[ui.sidebar.agents]`, plus a native notification when something changes in the background. `agent_panel_sort = "spaces"` keeps agents grouped by workspace, in the same order as the spaces themselves, rather than sorting by priority — so agents don't shuffle position as their state changes:
 
@@ -325,6 +335,41 @@ Check what is installed with `herdr plugin list`. After new plugin keybindings a
 
 ---
 
+## The Repo Config: Four-Tier Scheme
+
+This repo ships a complete `[keys]` config in `herdr.config.toml` that organizes every Herdr action into **modifier tiers** — the modifier added to a prefix chord says what the action operates on:
+
+| Tier       | Modifier tier                 | Covered actions |
+|------------|-------------------------------|-----------------|
+| **Core**   | bare (`prefix+X`)              | `?` help · `s` settings · `q` detach · `shift+r` reload · `g` goto · `w` picker · `b` sidebar · `[` copy · `r` resize · `e` scrollback · `tab`/`shift+tab` cycle |
+| **Tabs**   | bare (`prefix+X`)              | `c` new · `n` next · `shift+[` previous · `1..9` jump · `shift+t` rename · `shift+x` close |
+| **Panes**  | `ctrl`                        | `ctrl+h/j/k/l` focus · `ctrl+shift+h/j/k/l` swap · `ctrl+v` split right · `ctrl+-` split down · `ctrl+z` zoom · `ctrl+x` close · `ctrl+r` rename · `ctrl+[` last pane |
+| **Workspaces** | `shift`                   | `shift+n` new · `shift+w` rename · `ctrl+shift+x` close · `shift+h`/`shift+l` previous/next · `shift+1..9` switch |
+| **Agents** | `ctrl+shift`                  | `ctrl+shift+[`/`ctrl+shift+]` previous/next · `ctrl+shift+1..9` focus · `ctrl+shift+o` open notification target |
+
+Emergent patterns: previous/next = tier + `[`/`]` (with `h`/`l` fallback where the bracket slots are exhausted); close escalates `x` → `shift+x` → `ctrl+x` → `ctrl+shift+x`; indexed jumps ladder `1..9` → `shift+1..9` → `ctrl+shift+1..9`; `prefix+w` remains the workspace front door (picker).
+
+**Deviation from the natural ladder (duplicate-chord avoidance):** `shift+[` is taken by `previous_tab`, so workspace previous/next use `prefix+shift+h` / `prefix+shift+l` (directional left/right = previous/next) instead of `shift+[`/`shift+]`. All other tiers keep the `[`/`]` pair.
+
+Worktree keys (`new_worktree`, `open_worktree`, `remove_worktree`) are left unset (feature skipped); `remote_image_paste` keeps its built-in direct `ctrl+v` default (remote-only).
+
+### Managing the global config from the repo
+
+The repo's `Makefile` manages `~/.config/herdr/config.toml`:
+
+| Command                      | What it does |
+|------------------------------|--------------|
+| `make herdr-global-set`      | Back up the current global config to `.herdr-<timestamp>/`, install the repo copy, best-effort `herdr server reload-config` |
+| `make herdr-global-unset`    | Remove the global config (prunes the dir if empty); Herdr falls back to built-in defaults |
+| `make herdr-global-backup`   | Copy the current global config into a repo-local `.herdr-YYYY_MM_DD_HH-MM-SS/` folder |
+| `make herdr-global-restore`  | Restore the most recent `.herdr-*` backup, best-effort reload |
+| `make herdr-global-diff`     | Unified diff of the installed global config vs the repo copy |
+| `make clean-backup-herdr`    | Delete all `.herdr-*` backup folders |
+
+Apply it with `make herdr-global-set`, then verify every binding with `prefix+?`. Note that `herdr-global-set` replaces the config wholesale: bindings appended to the global config by `./herdr.zsh` (the 3-tab command workspace, plugin actions) are removed on the next set — re-run `./herdr.zsh` afterwards to have them reappended.
+
+---
+
 ## Customizing Keybindings
 
 All bindings live in `~/.config/herdr/config.toml` under `[keys]`. Two binding syntaxes exist:
@@ -336,17 +381,20 @@ On macOS, `alt` means the **Option** key (`⌥`) physically, but Herdr config st
 
 ### Example: bind the unbound actions
 
+The values below match this repo's `herdr.config.toml` tier scheme:
+
 ```toml
 [keys]
 prefix = "ctrl+b"
-last_pane = "prefix+backtick"          # jump between two panes
-previous_workspace = "prefix+left"
-next_workspace = "prefix+right"
-switch_workspace = ""                  # use prefix+g or previous/next workspace
-close_workspace = "prefix+ctrl+x"       # close the current workspace after confirmation
-previous_agent = "prefix+shift+up"
-next_agent = "prefix+shift+down"
-focus_agent = "prefix+ctrl+1..9"        # jump straight to agent 1-9
+last_pane = "prefix+ctrl+["          # jump between two panes
+previous_workspace = "prefix+shift+h"
+next_workspace = "prefix+shift+l"
+switch_workspace = "prefix+shift+1..9"
+close_workspace = "prefix+ctrl+shift+x"  # close the current workspace after confirmation
+previous_agent = "prefix+ctrl+shift+["
+next_agent = "prefix+ctrl+shift+]"
+focus_agent = "prefix+ctrl+shift+1..9"   # jump straight to agent 1-9
+open_notification_target = "prefix+ctrl+shift+o"
 
 [[keys.command]]
 key = "prefix+ctrl+w"
@@ -461,34 +509,37 @@ Still parsed for compatibility — prefer `switch_tab`, `switch_workspace`, and 
 |-------------------------|---------------------------------|
 | `ctrl+b`                | Prefix (start every action)     |
 | `prefix+?`              | Keybinding help overlay         |
-| `prefix+v` / `prefix+-` | Split right / split down        |
-| `prefix+h/j/k/l`        | Focus pane in direction         |
-| `prefix+shift+h/j/k/l`  | Swap pane in direction          |
+| `prefix+ctrl+v` / `prefix+ctrl+-` | Split right / split down |
+| `prefix+ctrl+h/j/k/l`   | Focus pane in direction         |
+| `prefix+ctrl+shift+h/j/k/l` | Swap pane in direction      |
 | `prefix+tab` / `prefix+shift+tab` | Cycle panes           |
-| `prefix+z`              | Zoom pane (toggle)              |
-| `prefix+x`              | Close pane                      |
+| `prefix+ctrl+z`         | Zoom pane (toggle)              |
+| `prefix+ctrl+x`         | Close pane                      |
+| `prefix+ctrl+r`         | Rename pane                     |
+| `prefix+ctrl+[`         | Last pane (jump back/forth)     |
 | `prefix+r`              | Resize mode                     |
 | `prefix+[`              | Copy mode (vim keys, `y` copies)|
 | `prefix+e`              | Edit scrollback                 |
 | `prefix+c`              | New tab                         |
-| `prefix+n` / `prefix+p` | Next / previous tab             |
+| `prefix+n` / `prefix+shift+[` | Next / previous tab        |
 | `prefix+1..9`           | Jump to tab N                   |
 | `prefix+shift+t` / `prefix+shift+x` | Rename / close tab  |
 | `prefix+w`              | Workspace picker                |
 | `prefix+g`              | Goto picker (navigate mode)     |
 | `prefix+shift+n`        | New workspace                   |
-| `prefix+shift+g`        | New git worktree                |
-| `prefix+shift+w` / `prefix+ctrl+x` | Rename / close workspace |
+| `prefix+shift+h` / `prefix+shift+l` | Previous / next workspace |
+| `prefix+shift+1..9`     | Switch to workspace N           |
+| `prefix+shift+w` / `prefix+ctrl+shift+x` | Rename / close workspace |
 | `prefix+b`              | Toggle sidebar                  |
-| `prefix+o`              | Open notification target        |
-| `prefix+shift+up` / `prefix+shift+down` | Previous / next agent  |
-| `prefix+ctrl+1..9`    | Jump to agent N                 |
-| `prefix+ctrl+w`        | Create 3-tab command workspace  |
-| `prefix+alt+r`         | Toggle reviewr (optional plugin) |
-| `prefix+alt+s`         | Open Sessionizer (optional plugin) |
-| `prefix+alt+w`         | Open Sessionizer worktree picker (optional plugin) |
-| `prefix+alt+b`         | Open localhost in Herdr Browser (optional plugin) |
-| `prefix+alt+n`         | Send Focus Notify test notification (optional plugin) |
+| `prefix+ctrl+shift+o`   | Open notification target        |
+| `prefix+ctrl+shift+[` / `prefix+ctrl+shift+]` | Previous / next agent |
+| `prefix+ctrl+shift+1..9` | Jump to agent N                |
+| `prefix+ctrl+w`         | Create 3-tab command workspace  |
+| `prefix+alt+r`          | Toggle reviewr (optional plugin) |
+| `prefix+alt+s`          | Open Sessionizer (optional plugin) |
+| `prefix+alt+w`          | Open Sessionizer worktree picker (optional plugin) |
+| `prefix+alt+b`          | Open localhost in Herdr Browser (optional plugin) |
+| `prefix+alt+n`          | Send Focus Notify test notification (optional plugin) |
 | `prefix+s`              | Settings                        |
 | `prefix+shift+r`        | Reload config                   |
 | `prefix+q`              | Detach (session keeps running)  |

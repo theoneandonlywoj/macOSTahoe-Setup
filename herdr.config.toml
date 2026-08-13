@@ -1,0 +1,59 @@
+onboarding = false
+
+# 4-tier keyboard scheme (tier = modifier tier on top of the prefix):
+#   Core        bare             help, settings, detach, reload, goto, picker, sidebar, copy, resize, scrollback, cycle
+#   Tabs        bare             c / n / shift+[ / 1..9 / shift+t / shift+x
+#   Panes       ctrl             focus h/j/k/l, swap ctrl+shift+h/j/k/l, split v/- , zoom, close, rename, last pane
+#   Workspaces  shift            new, rename, close ctrl+shift+x, prev/next shift+h/l, switch shift+1..9
+#   Agents      ctrl+shift       prev/next [/], focus ctrl+shift+1..9, open notification target o
+# Worktree keys (new_worktree, open_worktree, remove_worktree) intentionally unset;
+# remote_image_paste keeps its built-in direct ctrl+v default (remote-only).
+[keys]
+prefix = "ctrl+b"
+
+help = "prefix+?"
+settings = "prefix+s"
+detach = "prefix+q"
+reload_config = "prefix+shift+r"
+goto = "prefix+g"
+workspace_picker = "prefix+w"
+toggle_sidebar = "prefix+b"
+copy_mode = "prefix+["
+resize_mode = "prefix+r"
+edit_scrollback = "prefix+e"
+cycle_pane_next = "prefix+tab"
+cycle_pane_previous = "prefix+shift+tab"
+
+new_tab = "prefix+c"
+next_tab = "prefix+n"
+previous_tab = "prefix+shift+["
+switch_tab = "prefix+1..9"
+rename_tab = "prefix+shift+t"
+close_tab = "prefix+shift+x"
+
+focus_pane_left = "prefix+ctrl+h"
+focus_pane_down = "prefix+ctrl+j"
+focus_pane_up = "prefix+ctrl+k"
+focus_pane_right = "prefix+ctrl+l"
+swap_pane_left = "prefix+ctrl+shift+h"
+swap_pane_down = "prefix+ctrl+shift+j"
+swap_pane_up = "prefix+ctrl+shift+k"
+swap_pane_right = "prefix+ctrl+shift+l"
+split_vertical = "prefix+ctrl+v"
+split_horizontal = "prefix+ctrl+minus"
+zoom = "prefix+ctrl+z"
+close_pane = "prefix+ctrl+x"
+rename_pane = "prefix+ctrl+r"
+last_pane = "prefix+ctrl+["
+
+new_workspace = "prefix+shift+n"
+rename_workspace = "prefix+shift+w"
+close_workspace = "prefix+ctrl+shift+x"
+previous_workspace = "prefix+shift+h"
+next_workspace = "prefix+shift+l"
+switch_workspace = "prefix+shift+1..9"
+
+previous_agent = "prefix+ctrl+shift+["
+next_agent = "prefix+ctrl+shift+]"
+focus_agent = "prefix+ctrl+shift+1..9"
+open_notification_target = "prefix+ctrl+shift+o"
