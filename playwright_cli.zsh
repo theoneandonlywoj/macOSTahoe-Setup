@@ -217,6 +217,7 @@ echo "   • Per-project: npm init playwright@latest  (adds @playwright/test to 
 echo "   • Tests live in tests/ by default; fixtures/ for data; update config after scaffold"
 echo "   • Updates: npm install -g playwright && playwright install"
 echo "   • Docs: https://playwright.dev/docs/intro"
+echo "   • Agent guide (writing tests): docs/guide_playwright_tests.md"
 echo "   • CLI reference: https://playwright.dev/docs/test-cli"
 echo
 echo "▶️  Run: playwright install && playwright codegen https://example.com"
