@@ -176,7 +176,7 @@ Tabs group panes inside a workspace:
 | Action              | Keys               |
 |---------------------|--------------------|
 | New tab             | `prefix+c`         |
-| Next tab            | `prefix+n`         |
+| Next tab            | `prefix+shift+]`  |
 | Previous tab        | `prefix+shift+[`   |
 | Jump to tab 1–9     | `prefix+1..9`      |
 | Rename tab          | `prefix+shift+t`   |
@@ -184,7 +184,7 @@ Tabs group panes inside a workspace:
 
 Notes:
 
-- `prefix+shift+[` must be delivered by your terminal as the base `[` key with a shift modifier (kitty keyboard protocol or CSI-u, e.g. Ghostty or modern iTerm2). Terminals that send the shifted character `{` instead cannot deliver this chord — if `prefix+shift+[` does nothing in `prefix+?` on your terminal, use the mouse or `prefix+w`, or remap `previous_tab`.
+- `prefix+shift+[` / `prefix+shift+]` must be delivered by your terminal as the base `[` / `]` key with a shift modifier (kitty keyboard protocol or CSI-u, e.g. Ghostty or modern iTerm2). Terminals that send the shifted characters `{` / `}` instead cannot deliver these chords — if `prefix+shift+[` does nothing in `prefix+?` on your terminal, use the mouse or `prefix+w`, or remap `previous_tab`.
 
 ---
 
@@ -342,7 +342,7 @@ This repo ships a complete `[keys]` config in `herdr.config.toml` that organizes
 | Tier       | Modifier tier                 | Covered actions |
 |------------|-------------------------------|-----------------|
 | **Core**   | bare (`prefix+X`)              | `?` help · `s` settings · `q` detach · `shift+r` reload · `g` goto · `w` picker · `b` sidebar · `[` copy · `r` resize · `e` scrollback · `tab`/`shift+tab` cycle |
-| **Tabs**   | bare (`prefix+X`)              | `c` new · `n` next · `shift+[` previous · `1..9` jump · `shift+t` rename · `shift+x` close |
+| **Tabs**   | bare (`prefix+X`)              | `c` new · `shift+[` previous · `shift+]` next · `1..9` jump · `shift+t` rename · `shift+x` close |
 | **Panes**  | `ctrl`                        | `ctrl+h/j/k/l` focus · `ctrl+shift+h/j/k/l` swap · `ctrl+v` split right · `ctrl+-` split down · `ctrl+z` zoom · `ctrl+x` close · `ctrl+r` rename · `ctrl+[` last pane |
 | **Workspaces** | `shift`                   | `shift+n` new · `shift+w` rename · `ctrl+shift+x` close · `shift+h`/`shift+l` previous/next · `shift+1..9` switch |
 | **Agents** | `ctrl+shift`                  | `ctrl+shift+[`/`ctrl+shift+]` previous/next · `ctrl+shift+1..9` focus · `ctrl+shift+o` open notification target |
@@ -521,7 +521,7 @@ Still parsed for compatibility — prefer `switch_tab`, `switch_workspace`, and 
 | `prefix+[`              | Copy mode (vim keys, `y` copies)|
 | `prefix+e`              | Edit scrollback                 |
 | `prefix+c`              | New tab                         |
-| `prefix+n` / `prefix+shift+[` | Next / previous tab        |
+| `prefix+shift+[` / `prefix+shift+]` | Previous / next tab        |
 | `prefix+1..9`           | Jump to tab N                   |
 | `prefix+shift+t` / `prefix+shift+x` | Rename / close tab  |
 | `prefix+w`              | Workspace picker                |

@@ -2,7 +2,7 @@ onboarding = false
 
 # 4-tier keyboard scheme (tier = modifier tier on top of the prefix):
 #   Core        bare             help, settings, detach, reload, goto, picker, sidebar, copy, resize, scrollback, cycle
-#   Tabs        bare             c / n / shift+[ / 1..9 / shift+t / shift+x
+#   Tabs        bare             c / shift+[ / shift+] / 1..9 / shift+t / shift+x
 #   Panes       ctrl             focus h/j/k/l, swap ctrl+shift+h/j/k/l, split v/- , zoom, close, rename, last pane
 #   Workspaces  shift            new, rename, close ctrl+shift+x, prev/next shift+h/l, switch shift+1..9
 #   Agents      ctrl+shift       prev/next [/], focus ctrl+shift+1..9, open notification target o
@@ -25,7 +25,7 @@ cycle_pane_next = "prefix+tab"
 cycle_pane_previous = "prefix+shift+tab"
 
 new_tab = "prefix+c"
-next_tab = "prefix+n"
+next_tab = "prefix+shift+]"
 previous_tab = "prefix+shift+["
 switch_tab = "prefix+1..9"
 rename_tab = "prefix+shift+t"
