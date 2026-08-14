@@ -6,9 +6,9 @@
 .PHONY: all doom-sync doom-backup doom-restore doom-diff \
         tmux-sync tmux-backup tmux-restore tmux-diff \
         herdr-global-set herdr-global-unset herdr-global-backup \
-        herdr-global-restore herdr-global-diff \
+        herdr-global-restore herdr-global-diff herdr-remove-backups \
         sync backup restore diff tsync tbackup trestore tdiff \
-        clean-backup-doom clean-backup-tmux clean-backup-herdr clean-backup-all \
+        clean-backup-doom clean-backup-tmux clean-backup-all \
         soft-test reload-shell help
 
 # Generate timestamp in format YYYY_mm_dd_hh_MM
@@ -216,6 +216,30 @@ herdr-global-diff:
 		diff -u "$(HERDR_GLOBAL_CONFIG)" "$(HERDR_REPO_FILE)" 2>/dev/null || echo "(files differ or missing)"; \
 	fi
 
+herdr-remove-backups:
+	@echo "🧹 Removing Herdr backups..."
+	@echo "⚠️  Repo config ./herdr.config.toml is now treated as the source of truth."
+	@if [ -d .herdr-* ] 2>/dev/null || ls .herdr-* >/dev/null 2>&1; then \
+		read -r -p "🗑  Delete all .herdr-* backups? [Y/n] " answer; \
+		case "$$answer" in \
+			[nN]|[nN][oO]) echo "✅ Aborted — no backups deleted."; exit 0;; \
+			*) ;; \
+		esac; \
+	fi; \
+	@found=false; \
+	for backup in .herdr-*; do \
+		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
+			found=true; \
+			echo "🗑  $$backup"; \
+			rm -rf "$$backup"; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "ℹ️  No Herdr backups found."; \
+	else \
+		echo "✅ Removed Herdr backups."; \
+	fi
+
 # ============================================================
 # BACKUP CLEANUP
 # ============================================================
@@ -254,24 +278,7 @@ clean-backup-tmux:
 		echo "✅ Removed tmux backups."; \
 	fi
 
-clean-backup-herdr:
-	@echo "🧹 Removing Herdr backups..."
-	@echo "⚠️  Repo config ./herdr.config.toml is now treated as the source of truth."
-	@found=false; \
-	for backup in .herdr-*; do \
-		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
-			found=true; \
-			echo "🗑  $$backup"; \
-			rm -rf "$$backup"; \
-		fi; \
-	done; \
-	if [ "$$found" = false ]; then \
-		echo "ℹ️  No Herdr backups found."; \
-	else \
-		echo "✅ Removed Herdr backups."; \
-	fi
-
-clean-backup-all: clean-backup-doom clean-backup-tmux clean-backup-herdr
+clean-backup-all: clean-backup-doom clean-backup-tmux
 	@echo "✅ Removed all known config backups."
 
 # ============================================================
@@ -499,7 +506,7 @@ help:
 	@echo "  make herdr-global-restore"
 	@echo "                        Restore the most recent .herdr-* backup"
 	@echo "                        (reloads best-effort)"
-	@echo "  make clean-backup-herdr"
+	@echo "  make herdr-remove-backups"
 	@echo "                        Delete all .herdr-* backups"
 	@echo "                        (repo herdr.config.toml becomes source of truth)"
 	@echo "  make herdr-global-diff"
