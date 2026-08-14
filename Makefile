@@ -5,6 +5,8 @@
 
 .PHONY: all doom-sync doom-backup doom-restore doom-diff \
         tmux-sync tmux-backup tmux-restore tmux-diff \
+        herdr-global-set herdr-global-unset herdr-global-backup \
+        herdr-global-restore herdr-global-diff herdr-remove-backups \
         sync backup restore diff tsync tbackup trestore tdiff \
         clean-backup-doom clean-backup-tmux clean-backup-all \
         soft-test reload-shell help
@@ -19,6 +21,11 @@ DOOM_REPO_DIR := ./.doom.d
 # tmux paths
 TMUX_BACKUP_FILE := $(HOME)/.tmux.conf.backup_$(TIMESTAMP)
 TMUX_REPO_FILE := ./tmux.conf
+
+# herdr paths
+HERDR_BACKUP_DIR := ./.herdr-$(shell date +"%Y_%m_%d_%H-%M-%S")
+HERDR_GLOBAL_CONFIG := $(HOME)/.config/herdr/config.toml
+HERDR_REPO_FILE := ./herdr.config.toml
 
 # ============================================================
 # DEFAULT TARGET
@@ -133,6 +140,104 @@ tmux-diff:
 	else \
 		echo; \
 		diff -u "$(HOME)/.tmux.conf" "$(TMUX_REPO_FILE)" 2>/dev/null || echo "(files differ or missing)"; \
+	fi
+
+# ============================================================
+# HERDR CONFIGURATION
+# ============================================================
+
+herdr-global-set: herdr-global-backup
+	@echo "📦 Copying new Herdr configuration..."
+	@cp "$(HERDR_REPO_FILE)" "$(HERDR_GLOBAL_CONFIG)"
+	@if command -v herdr >/dev/null 2>&1; then \
+		echo "🔄 Reloading Herdr config..."; \
+		herdr server reload-config >/dev/null 2>&1 || echo "⚠️  Reload failed (server not running?). Run: herdr server reload-config"; \
+	else \
+		echo "⚠️  herdr command not found — config copied, reload skipped"; \
+	fi
+	@echo "✅ New configuration synced to $(HERDR_GLOBAL_CONFIG)"
+
+herdr-global-backup:
+	@if [ -f "$(HERDR_GLOBAL_CONFIG)" ]; then \
+		echo "💾 Backing up existing $(HERDR_GLOBAL_CONFIG) to $(HERDR_BACKUP_DIR)..."; \
+		mkdir -p "$(HERDR_BACKUP_DIR)"; \
+		cp "$(HERDR_GLOBAL_CONFIG)" "$(HERDR_BACKUP_DIR)/config.toml"; \
+		echo "✅ Backup created at $(HERDR_BACKUP_DIR)"; \
+	else \
+		echo "ℹ️  No existing $(HERDR_GLOBAL_CONFIG) found — skipping backup."; \
+	fi
+
+herdr-global-unset:
+	@echo "🗑  Removing global Herdr config..."
+	@if [ -f "$(HERDR_GLOBAL_CONFIG)" ]; then \
+		rm -f "$(HERDR_GLOBAL_CONFIG)"; \
+		echo "✅ Removed $(HERDR_GLOBAL_CONFIG)"; \
+	else \
+		echo "ℹ️  No global Herdr config to remove."; \
+	fi
+	@if [ -d "$$(dirname $(HERDR_GLOBAL_CONFIG))" ]; then \
+		if [ -z "$$(ls -A "$$(dirname $(HERDR_GLOBAL_CONFIG))" 2>/dev/null)" ]; then \
+			rmdir "$$(dirname $(HERDR_GLOBAL_CONFIG))"; \
+			echo "🧹 Pruned empty $$(dirname $(HERDR_GLOBAL_CONFIG))"; \
+		fi; \
+	fi
+	@if command -v herdr >/dev/null 2>&1; then \
+		echo "🔄 Reloading Herdr config..."; \
+		herdr server reload-config >/dev/null 2>&1 || echo "⚠️  Reload failed (server not running?). Run: herdr server reload-config"; \
+	fi
+
+herdr-global-restore:
+	@echo "♻️  Restoring the most recent Herdr backup..."
+	@latest_backup=$$(ls -d .herdr-* 2>/dev/null | sort -r | head -n 1); \
+	if [ -z "$$latest_backup" ]; then \
+		echo "❌ No backups found. Cannot restore."; \
+		exit 1; \
+	fi; \
+	backup_file=$$(ls "$$latest_backup"/config.toml 2>/dev/null); \
+	if [ -z "$$backup_file" ]; then \
+		echo "❌ No config.toml inside $$latest_backup. Cannot restore."; \
+		exit 1; \
+	fi; \
+	mkdir -p "$$(dirname $(HERDR_GLOBAL_CONFIG))"; \
+	echo "♻️  Restoring from $$backup_file..."; \
+	cp "$$backup_file" "$(HERDR_GLOBAL_CONFIG)"; \
+	echo "✅ Restore complete from $$backup_file"; \
+	if command -v herdr >/dev/null 2>&1; then \
+		echo "🔄 Reloading Herdr config..."; \
+		herdr server reload-config >/dev/null 2>&1 || echo "⚠️  Reload failed (server not running?). Run: herdr server reload-config"; \
+	fi
+
+herdr-global-diff:
+	@echo "📊 Comparing Herdr configurations..."
+	@if diff -q "$(HERDR_GLOBAL_CONFIG)" "$(HERDR_REPO_FILE)" >/dev/null 2>&1; then \
+		echo "✅ You are up to date with the configuration! 🎉"; \
+	else \
+		echo; \
+		diff -u "$(HERDR_GLOBAL_CONFIG)" "$(HERDR_REPO_FILE)" 2>/dev/null || echo "(files differ or missing)"; \
+	fi
+
+herdr-remove-backups:
+	@echo "🧹 Removing Herdr backups..."
+	@echo "⚠️  Repo config ./herdr.config.toml is now treated as the source of truth."
+	@if [ -d .herdr-* ] 2>/dev/null || ls .herdr-* >/dev/null 2>&1; then \
+		read -r -p "🗑  Delete all .herdr-* backups? [Y/n] " answer; \
+		case "$$answer" in \
+			[nN]|[nN][oO]) echo "✅ Aborted — no backups deleted."; exit 0;; \
+			*) ;; \
+		esac; \
+	fi; \
+	@found=false; \
+	for backup in .herdr-*; do \
+		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
+			found=true; \
+			echo "🗑  $$backup"; \
+			rm -rf "$$backup"; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "ℹ️  No Herdr backups found."; \
+	else \
+		echo "✅ Removed Herdr backups."; \
 	fi
 
 # ============================================================
@@ -387,6 +492,26 @@ help:
 	@echo "                        Delete all ~/.tmux.conf.backup_* backups"
 	@echo "                        (current ~/.tmux.conf becomes source of truth)"
 	@echo "  make tmux-diff        Diff the installed ~/.tmux.conf vs repo copy"
+	@echo
+	@echo "HERDR"
+	@echo "  make herdr-global-set Back up existing config, then copy herdr.config.toml"
+	@echo "                        from repo to ~/.config/herdr/config.toml and"
+	@echo "                        reload (best-effort herdr server reload-config)"
+	@echo "  make herdr-global-backup"
+	@echo "                        Copy existing ~/.config/herdr/config.toml to a"
+	@echo "                        timestamped repo-local backup (.herdr-YYYY_MM_DD_HH-MM-SS/)"
+	@echo "  make herdr-global-unset"
+	@echo "                        Remove ~/.config/herdr/config.toml (prunes the dir"
+	@echo "                        if empty), reload; Herdr falls back to built-in defaults"
+	@echo "  make herdr-global-restore"
+	@echo "                        Restore the most recent .herdr-* backup"
+	@echo "                        (reloads best-effort)"
+	@echo "  make herdr-remove-backups"
+	@echo "                        Delete all .herdr-* backups"
+	@echo "                        (repo herdr.config.toml becomes source of truth)"
+	@echo "  make herdr-global-diff"
+	@echo "                        Diff the installed ~/.config/herdr/config.toml"
+	@echo "                        vs the repo copy (untracked files diffs included)"
 	@echo
 	@echo "BACKUP CLEANUP"
 	@echo "  make clean-backup-all"
