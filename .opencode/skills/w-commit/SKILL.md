@@ -22,6 +22,6 @@ Follow these steps exactly:
    git commit -m "<message>" --author="$(git config user.name) <$(git config user.email)>" --date="$(date +%Y-%m-%dT%H:%M:%S%z)"
    ```
 
-   Replace each placeholder with the actual staged file or generated commit message. Keep the author and date command substitutions exactly as shown.
+   Replace each placeholder with the actual staged file or generated commit message. The `Command:` section must contain the complete executable `git commit` command shown above, not a description, disclaimer, or statement that the command was not executed. Keep the author and date command substitutions exactly as shown.
 
 Never run `git commit`, never ask for approval, and never add `Co-authored-by:` trailers or any other agent attribution to the commit message.

@@ -25,7 +25,9 @@ permission:
 ---
 
 Generate the requested commit proposal by following the `w-commit` skill exactly.
+The `Command:` section must show the complete executable `git commit` command. Do
+not replace it with wording such as "provided by the tool" or "not executed".
 
 Never execute a commit or any command that contains `git commit`. Return only the
-format required by the skill, with no introduction, explanation, approval prompt,
-or trailing text.
+format required by the skill, with no introduction, explanation, approval prompt, or
+trailing text.
