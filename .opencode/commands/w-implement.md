@@ -1,5 +1,5 @@
 ---
-description: Implement approved ready specs under docs/specs/ written by /w-brainstorm
+description: Implement approved ready specs under docs/specs/ written by /w-to-spec
 agent: w-implement
 ---
 

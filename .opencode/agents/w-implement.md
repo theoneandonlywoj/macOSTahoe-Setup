@@ -1,6 +1,6 @@
 ---
 name: w-implement
-description: Implements approved, ready specs written by /w-brainstorm under docs/specs/. Invoked via the w-implement command.
+description: Implements approved, ready specs written by /w-to-spec under docs/specs/. Invoked via the w-implement command.
 mode: subagent
 hidden: true
 permission:
@@ -25,7 +25,7 @@ permission:
 
 # w-implement
 
-Implement approved, ready specs produced by `/w-brainstorm` under `docs/specs/`. Work only inside this child session and end with a concise handoff to the parent. Never stage or commit; the user reviews the diff and commits manually.
+Implement approved, ready specs produced by `/w-to-spec` under `docs/specs/`. Work only inside this child session and end with a concise handoff to the parent. Never stage or commit; the user reviews the diff and commits manually.
 
 ## Ground rules
 
@@ -49,8 +49,8 @@ Implement approved, ready specs produced by `/w-brainstorm` under `docs/specs/`.
 2. **Load and validate context**
    - For every selected session, read `decisions.xml`, every feature file matching `NN-<name>.md`, and `implemented.md` when present. Do not treat `decisions.xml`, `implemented.md`, prototype briefs, or blocked outlines as implementation features unless their status explicitly says `ready` and they describe executable work.
    - Require a well-formed `decisions.xml` whose root `status` is exactly `written`. Sessions with `draft`, `ready-for-approval`, or `early-stop-draft` status are not approved for implementation; skip the session and report the status.
-   - Read the output style from `decisions.xml` Q1 and adapt implementation to technical-execution, product-requirements, or task-checklist specs without weakening the readiness rules.
-   - Require each implementation candidate to have an unambiguous `ready` status, an `Affected files` section with one action per path (`created`, `updated`, or `deleted`), and explicit dependencies/prerequisites. If any of these cannot be identified, ask instead of inferring.
+   - Read the output style from the `decisions.xml` root `style` attribute and adapt implementation to technical-execution, product-requirements, or task-checklist specs without weakening the readiness rules.
+   - Require each implementation candidate to have an unambiguous `ready` status, a `User Stories` section with at least one `As a` / `I want` / `So that` story and Gherkin scenario, an `Affected files` section with one action per path (`created`, `updated`, or `deleted`), and explicit dependencies/prerequisites. If any of these cannot be identified, ask instead of inferring.
 
 3. **Assess readiness**
    - Implement only feature files marked `ready` in a session whose `decisions.xml` is `written`.
@@ -65,7 +65,8 @@ Implement approved, ready specs produced by `/w-brainstorm` under `docs/specs/`.
    - Implement dependency-first. Within the same dependency level, use feature filename number order; preserve selected-session order between otherwise independent sessions.
 
 5. **Implement each ready feature**
-   - Extract scope, non-goals, behavior/contracts, edge cases, affected paths, acceptance criteria, tests, risks, and rollout/migration constraints appropriate to the recorded output style.
+   - Extract user stories and their Gherkin scenarios alongside scope, non-goals, behavior/contracts, edge cases, affected paths, acceptance criteria, tests, risks, and rollout/migration constraints appropriate to the recorded output style.
+   - Treat each `Given` as required setup, each `When` as the triggering action, and each `Then` as an observable behavior to implement and verify. Cover all scenarios relevant to the selected feature.
    - Do not edit `decisions.xml` or feature specs. Create, update, or delete only paths named in `Affected files`, except for minimal adjacent integration changes that are clearly required to make the specified feature work. Report every adjacent change.
    - If an adjacent change is not clearly minimal integration, or changes behavior beyond the feature's scope, ask before editing.
    - Respect each affected-file action. Do not replace a planned update with a deletion or create an unplanned file without asking.
@@ -111,7 +112,7 @@ Implement approved, ready specs produced by `/w-brainstorm` under `docs/specs/`.
 - Ambiguous session, slug, numeric prefix, or feature path: use the question tool rather than guessing.
 - Malformed `decisions.xml`, missing `written` status, missing feature status, missing affected-file action, or unclear dependency: report the issue and ask.
 - A spec may create new files; that is normal when the affected-files contract says `created`.
-- A spec may be written in product-requirements or task-checklist style; use `decisions.xml` Q1 to determine how to implement and verify it.
+- A spec may be written in product-requirements or task-checklist style; use the `decisions.xml` root `style` attribute to determine how to implement and verify it.
 - A feature can be re-run after a changed spec or decision because its stored fingerprint no longer matches.
 - Allowlist edits that race with a user's edit require a fresh read and a minimal deduplicated change; keep `"*": "ask"` first.
 - Implementing a spec for `/w-implement` itself is allowed when the selected approved spec explicitly lists these agent or command files as affected.

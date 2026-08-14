@@ -1,9 +1,10 @@
 ---
-description: Grill an idea into an implementation-ready spec under docs/specs/
+description: Grill an idea one question at a time until /w-to-spec is invoked
 agent: w-brainstorm
-subtask: true
+subtask: false
 ---
 
-Run a w-brainstorm session for the following topic: $ARGUMENTS
+[w-brainstorm:start]
+Topic argument: $ARGUMENTS
 
-If no topic argument is supplied, ask the user for one. Interview the user, checkpoint `decisions.xml` after each question round, and do not write normal feature specs until the user clearly approves the completed artifact summary.
+Start a repository-informed interview for this topic. Ask exactly one normal-message question and return control to the user.
