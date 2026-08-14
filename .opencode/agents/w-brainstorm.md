@@ -3,7 +3,6 @@ name: w-brainstorm
 description: Runs the /w-brainstorm interview and produces reviewable implementation specs under docs/specs/.
 mode: subagent
 hidden: true
-model: opencode/deepseek-v4-flash-free
 variant: high
 permission:
   read: allow
