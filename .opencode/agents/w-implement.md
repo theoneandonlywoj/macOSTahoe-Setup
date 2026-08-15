@@ -12,6 +12,10 @@ permission:
     "*": allow
   bash:
     "*": ask
+    "git status --short && git diff --check && opencode debug config >/dev/null": allow
+    "opencode debug config >/dev/null && opencode debug agent * >/dev/null": allow
+    "git diff --check -- .opencode/commands/*.md .opencode/agents/*.md": allow
+    "opencode *": allow
   external_directory: deny
   webfetch: allow
   websearch: allow
