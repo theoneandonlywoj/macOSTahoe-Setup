@@ -7,6 +7,7 @@
         tmux-sync tmux-backup tmux-restore tmux-diff \
         herdr-global-set herdr-global-unset herdr-global-backup \
         herdr-global-restore herdr-global-diff herdr-remove-backups \
+        opencode-sync-to-repo opencode-delete-from-repo opencode-sync-from-repo \
         sync backup restore diff tsync tbackup trestore tdiff \
         clean-backup-doom clean-backup-tmux clean-backup-all \
         soft-test reload-shell help
@@ -26,6 +27,9 @@ TMUX_REPO_FILE := ./tmux.conf
 HERDR_BACKUP_DIR := ./.herdr-$(shell date +"%Y_%m_%d_%H-%M-%S")
 HERDR_GLOBAL_CONFIG := $(HOME)/.config/herdr/config.toml
 HERDR_REPO_FILE := ./herdr.config.toml
+
+# opencode paths
+OPENCODE_CONFIG_NAMES := opencode.json opencode.jsonc .opencode
 
 # ============================================================
 # DEFAULT TARGET
@@ -226,7 +230,7 @@ herdr-remove-backups:
 			*) ;; \
 		esac; \
 	fi; \
-	@found=false; \
+	found=false; \
 	for backup in .herdr-*; do \
 		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
 			found=true; \
@@ -239,6 +243,126 @@ herdr-remove-backups:
 	else \
 		echo "✅ Removed Herdr backups."; \
 	fi
+
+# ============================================================
+# OPENCODE CONFIGURATION
+# ============================================================
+
+opencode-sync-to-repo:
+	@read -r -p "Path to target repository: " repo; \
+	if [ -z "$$repo" ]; then \
+		echo "❌ No path provided. Aborting."; \
+		exit 1; \
+	fi; \
+	if [ ! -d "$$repo" ]; then \
+		echo "❌ Directory not found: $$repo"; \
+		exit 1; \
+	fi; \
+	ts=$$(date +"%Y_%m_%d_%H-%M-%S"); \
+	backup_dir="$$repo/.opencode-backup-$$ts"; \
+	needed_backup=false; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+			needed_backup=true; \
+			break; \
+		fi; \
+	done; \
+	if [ "$$needed_backup" = true ]; then \
+		mkdir -p "$$backup_dir"; \
+		for name in $(OPENCODE_CONFIG_NAMES); do \
+			if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+				echo "💾 Backing up $$repo/$$name → $$backup_dir/"; \
+				mv "$$repo/$$name" "$$backup_dir/"; \
+			fi; \
+		done; \
+	fi; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "./$$name" ] || [ -L "./$$name" ]; then \
+			echo "📦 Copying ./$$name → $$repo/"; \
+			cp -R "./$$name" "$$repo/"; \
+		fi; \
+	done; \
+	echo "✅ OpenCode configuration synced to $$repo"
+
+opencode-delete-from-repo:
+	@read -r -p "Path to repository to clean: " repo; \
+	if [ -z "$$repo" ]; then \
+		echo "❌ No path provided. Aborting."; \
+		exit 1; \
+	fi; \
+	if [ ! -d "$$repo" ]; then \
+		echo "❌ Directory not found: $$repo"; \
+		exit 1; \
+	fi; \
+	found=false; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+			found=true; \
+			break; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "ℹ️  No OpenCode configuration found in $$repo"; \
+		exit 0; \
+	fi; \
+	read -r -p "🗑  Delete OpenCode config from $$repo? [Y/n] " answer; \
+	case "$$answer" in \
+		[nN]|[nN][oO]) echo "✅ Aborted."; exit 0;; \
+	esac; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+			echo "🗑  Removing $$repo/$$name"; \
+			rm -rf "$$repo/$$name"; \
+		fi; \
+	done; \
+	echo "✅ OpenCode configuration removed from $$repo"
+
+opencode-sync-from-repo:
+	@read -r -p "Path to source repository: " repo; \
+	if [ -z "$$repo" ]; then \
+		echo "❌ No path provided. Aborting."; \
+		exit 1; \
+	fi; \
+	if [ ! -d "$$repo" ]; then \
+		echo "❌ Directory not found: $$repo"; \
+		exit 1; \
+	fi; \
+	found=false; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+			found=true; \
+			break; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "❌ No OpenCode configuration found in $$repo"; \
+		exit 1; \
+	fi; \
+	ts=$$(date +"%Y_%m_%d_%H-%M-%S"); \
+	backup_dir="./.opencode-backup-$$ts"; \
+	needed_backup=false; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "./$$name" ] || [ -L "./$$name" ]; then \
+			needed_backup=true; \
+			break; \
+		fi; \
+	done; \
+	if [ "$$needed_backup" = true ]; then \
+		mkdir -p "$$backup_dir"; \
+		for name in $(OPENCODE_CONFIG_NAMES); do \
+			if [ -e "./$$name" ] || [ -L "./$$name" ]; then \
+				echo "💾 Backing up ./$$name → $$backup_dir/"; \
+				mv "./$$name" "$$backup_dir/"; \
+			fi; \
+		done; \
+	fi; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+			echo "📦 Copying $$repo/$$name → ./"; \
+			cp -R "$$repo/$$name" "./"; \
+		fi; \
+	done; \
+	echo "✅ OpenCode configuration synced from $$repo into current repository"
 
 # ============================================================
 # BACKUP CLEANUP
@@ -512,6 +636,22 @@ help:
 	@echo "  make herdr-global-diff"
 	@echo "                        Diff the installed ~/.config/herdr/config.toml"
 	@echo "                        vs the repo copy (untracked files diffs included)"
+	@echo
+	@echo "OPENCODE"
+	@echo "  make opencode-sync-to-repo"
+	@echo "                        Copy this repo's OpenCode config (opencode.json[c]"
+	@echo "                        and .opencode/) into another repository. Prompts"
+	@echo "                        for the target repo path and backs up any existing"
+	@echo "                        OpenCode config there first"
+	@echo "  make opencode-delete-from-repo"
+	@echo "                        Remove OpenCode config (opencode.json[c] and"
+	@echo "                        .opencode/) from a repository. Prompts for the repo"
+	@echo "                        path and asks for confirmation before deleting"
+	@echo "  make opencode-sync-from-repo"
+	@echo "                        Copy OpenCode config from another repository into"
+	@echo "                        the current repo. Prompts for the source repo path"
+	@echo "                        and backs up the current repo's OpenCode config"
+	@echo "                        before overwriting"
 	@echo
 	@echo "BACKUP CLEANUP"
 	@echo "  make clean-backup-all"
