@@ -1,6 +1,5 @@
 ---
 description: Split unstaged changes into small logical commits and generate commands without executing them
-model: opencode/deepseek-v4-flash-free
 agent: w-into-commits
 subtask: true
 ---

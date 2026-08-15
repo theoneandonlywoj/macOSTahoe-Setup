@@ -2,7 +2,6 @@
 name: w-into-commits
 description: Splits unstaged changes into small logical commits and generates copyable commands without executing them.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
 hidden: true
 steps: 12
 permission:
