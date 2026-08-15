@@ -73,7 +73,16 @@ selection happen before any files are changed.
 5. Record every package whose locked version changed, including transitive
    dependencies. Do not limit documentation to the originally selected direct
    dependencies.
-6. Record blocked dependencies that remained unchanged.
+6. For every blocked dependency that remained unchanged, identify and record:
+   - Its current and latest versions.
+   - The exact incompatible version constraint or dependency requirement.
+   - Where that requirement comes from, such as a `mix.exs` declaration or the
+     package and version that introduces a transitive constraint.
+   - Why the resolver cannot select the latest version while that requirement
+     remains. List every independent blocker when more than one applies.
+   Use resolver output, `mix deps.tree`, lockfile metadata, and upstream package
+   requirements as needed. Do not describe a dependency only as "blocked by
+   current constraints."
 
 ## 5. Verify the Project
 
@@ -153,6 +162,18 @@ Create or replace `PR.md` at the repository root with:
    ```
 
 5. A `Blocked dependencies` section when any latest version remains blocked.
+   Include one subsection per dependency using this format:
+
+   ```markdown
+   ### `package` current -> latest
+
+   - **Blocked by:** `<constraint>` from `<mix.exs path or dependent package and version>`.
+   - **Reason:** <why the current requirement and latest version are incompatible>.
+   - **What would unblock it:** <minimal constraint or upstream dependency change required>.
+   ```
+
+   Include every independent blocker and use concrete constraints and sources;
+   never use only a generic statement such as "blocked by current constraints."
 6. A `Project changes` section listing every file changed by this workflow and a
    concise description. If no application source or configuration changes were
    needed, say so explicitly.
