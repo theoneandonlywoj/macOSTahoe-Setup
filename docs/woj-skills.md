@@ -16,8 +16,12 @@ The workflow separates interviewing, specification, implementation, and commit p
 | `/w-to-spec [target]` | End brainstorming and materialize approved specs | Only `docs/specs/**` |
 | `/w-implement [target]` | Implement ready specs and verify the result | Yes |
 | `/w-commit` | Propose a commit message and copyable command from staged changes | No |
+| `/w-into-commits` | Split unstaged changes into logical copyable commit commands | No |
+| `/w-research <topic>` | Write one new sourced report under `research/` | Only one new report |
+| `/w-elixir-update-deps` | Select, update, verify, and document Elixir dependencies | Yes, after selection |
+| `/w-playwright-gen-test <url> <scenario>` | Generate and verify one bounded Playwright spec | One new spec |
 
-OpenCode loads agents, commands, and plugins at startup. Restart OpenCode after changing files under `.opencode/`.
+OpenCode loads project configuration at startup. After changing `.opencode/opencode.jsonc` or any file under `.opencode/`, quit every running OpenCode process and restart it.
 
 ## Standalone Playwright Test Generation
 
@@ -195,6 +199,9 @@ The implementation agent:
 - Treats spec files as read-only.
 - Limits normal edits to each feature's `Affected files` contract plus minimal adjacent integration changes.
 - Runs acceptance criteria and repository-specific checks.
+- Defines each behavioral claim before editing and selects the narrowest evidence that can prove it.
+- Runs changed-file diagnostics, targeted tests, relevant broader checks, and a matching user-facing exercise in that order.
+- Classifies unsuccessful checks as implementation failures, pre-existing failures, external blockers, or inconclusive evidence.
 - Records outcomes and spec fingerprints in `implemented.md`.
 - Never stages or commits changes.
 
@@ -255,23 +262,24 @@ Use `/w-to-spec` in the session containing the brainstorm. Starting an unrelated
 
 `/w-implement` remains a separate implementation subagent. It does not need the interview transcript because `docs/specs/` is its durable handoff.
 
+`/w-research` also runs as an isolated one-shot child workflow and never delegates. `/w-commit` and `/w-into-commits` use isolated child sessions. `/w-elixir-update-deps` and `/w-playwright-gen-test` remain in the current session so their direct interactive or restricted output is preserved.
+
 ## Configuration Files
 
 | Path | Purpose |
 | --- | --- |
-| `.opencode/agents/w-brainstorm.md` | Read-only, one-question interview behavior |
-| `.opencode/commands/w-brainstorm.md` | Same-session brainstorm command and start marker |
+| `.opencode/opencode.jsonc` | Official-schema project config that prevents ordinary primary agents from auto-selecting `w-*` agents or skills |
+| `.opencode/agents/*.md` | Eight hidden command-only agents with workflow permission boundaries |
+| `.opencode/commands/*.md` | Eight slash-command routers with explicit same-session or child-session mode |
+| `.opencode/skills/*/SKILL.md` | Detailed procedures and output contracts for all eight workflows |
 | `.opencode/plugins/w-brainstorm-context.ts` | Canonical state reconstruction and token pruning |
-| `.opencode/agents/w-to-spec.md` | Research, inference, and spec-writing contract |
-| `.opencode/commands/w-to-spec.md` | Same-session stop-and-materialize command |
-| `.opencode/agents/w-implement.md` | Ready-spec implementation and verification |
-| `.opencode/commands/w-implement.md` | Implementation target selection |
-| `.opencode/skills/w-commit/SKILL.md` | Commit proposal format |
-| `.opencode/commands/w-playwright-gen-test.md` | Passes the URL and scenario unchanged to the restricted agent for one-shot execution |
-| `.opencode/agents/w-playwright-gen-test.md` | Hidden bounded agent with narrow browser, runner, and new-spec permissions |
-| `.opencode/skills/w-playwright-gen-test/SKILL.md` | Preflight, safe exploration, generation, repair, cleanup, and handoff contract |
+| `.opencode/scripts/cleanup-playwright-session.mjs` | Trusted exact-session Playwright artifact cleanup |
+| `.opencode/scripts/validate-definitions.mjs` | Frontmatter, inventory, session-mode, and command-reference validation |
+| `.opencode/tests/*` | Cleanup security and brainstorm context regression tests |
+| `.opencode/package.json` and `.opencode/package-lock.json` | OpenCode-aligned plugin dependency and reproducible test/typecheck tooling |
+| `.opencode/tsconfig.json` | Strict plugin and TypeScript test typechecking |
 
-The existing `Makefile` `.opencode` synchronization copies all three Playwright command files without a Makefile change. Restart OpenCode after synchronization because command, agent, and skill definitions load at startup.
+The Makefile synchronization copies project OpenCode configuration while excluding `node_modules`, coverage, caches, logs, and temporary files. Quit and restart OpenCode after synchronization because configuration-time files are not hot-reloaded.
 
 ## Troubleshooting
 
@@ -288,13 +296,19 @@ Restart OpenCode after changing `.opencode` files. Agent and plugin configuratio
 Run:
 
 ```zsh
+make opencode-check
 opencode debug config
 opencode debug agent w-brainstorm
 opencode debug agent w-to-spec
+opencode debug agent w-implement
+opencode debug agent w-research
+opencode debug agent w-commit
+opencode debug agent w-into-commits
+opencode debug agent w-elixir-update-deps
 opencode debug agent w-playwright-gen-test
 ```
 
-The resolved commands should show `subtask: false` for both `/w-brainstorm` and `/w-to-spec`.
+The resolved definitions should show `.env` protection, external-directory denial, narrow shell access, and one matching skill per agent. Commands should resolve with `subtask: true` for `/w-implement`, `/w-research`, `/w-commit`, and `/w-into-commits`; the other four commands use `subtask: false`.
 
 ### `/w-playwright-gen-test` stops before writing
 

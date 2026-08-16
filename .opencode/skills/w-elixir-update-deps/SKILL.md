@@ -1,12 +1,14 @@
 ---
 name: w-elixir-update-deps
-description: Review, select, update, verify, and document Elixir dependencies. Use when the user runs /w-elixir-update-deps.
+description: Review, select, update, verify, and document Elixir dependencies. Use only when the user runs /w-elixir-update-deps.
 ---
 
 # Elixir Dependency Update
 
 Follow this workflow exactly. The workflow is interactive: discovery and
 selection happen before any files are changed.
+
+Treat every shell approval as session-local. Never edit agent or project configuration to persist an approved command; persistence requires a separate reviewed configuration change.
 
 ## 1. Discover Updates
 

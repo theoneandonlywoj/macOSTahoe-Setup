@@ -10,7 +10,7 @@
         opencode-sync-to-repo opencode-delete-from-repo opencode-sync-from-repo \
         sync backup restore diff tsync tbackup trestore tdiff \
         clean-backup-doom clean-backup-tmux clean-backup-all \
-        soft-test reload-shell help
+        soft-test fix-script-permissions opencode-check reload-shell help
 
 # Generate timestamp in format YYYY_mm_dd_hh_MM
 TIMESTAMP := $(shell date +"%Y_%m_%d_%H_%M")
@@ -30,6 +30,9 @@ HERDR_REPO_FILE := ./herdr.config.toml
 
 # opencode paths
 OPENCODE_CONFIG_NAMES := opencode.json opencode.jsonc .opencode
+OPENCODE_SYNC_EXCLUDES := --exclude='*/node_modules' --exclude='*/coverage' \
+                          --exclude='*/.cache' --exclude='*.tmp' \
+                          --exclude='*.log' --exclude='*/.DS_Store'
 
 # ============================================================
 # DEFAULT TARGET
@@ -279,7 +282,7 @@ opencode-sync-to-repo:
 	for name in $(OPENCODE_CONFIG_NAMES); do \
 		if [ -e "./$$name" ] || [ -L "./$$name" ]; then \
 			echo "📦 Copying ./$$name → $$repo/"; \
-			cp -R "./$$name" "$$repo/"; \
+			tar $(OPENCODE_SYNC_EXCLUDES) -C . -cf - "$$name" | tar -C "$$repo" -xf -; \
 		fi; \
 	done; \
 	echo "✅ OpenCode configuration synced to $$repo"
@@ -359,7 +362,7 @@ opencode-sync-from-repo:
 	for name in $(OPENCODE_CONFIG_NAMES); do \
 		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
 			echo "📦 Copying $$repo/$$name → ./"; \
-			cp -R "$$repo/$$name" "./"; \
+			tar $(OPENCODE_SYNC_EXCLUDES) -C "$$repo" -cf - "$$name" | tar -C . -xf -; \
 		fi; \
 	done; \
 	echo "✅ OpenCode configuration synced from $$repo into current repository"
@@ -435,8 +438,6 @@ soft-test:
 	@echo
 	@failed_count=0; \
 	total_count=0; \
-	\
-	# Test 1: Check if all .zsh scripts have shebang \
 	echo "📋 Step 1: Checking shebang lines..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -451,8 +452,6 @@ soft-test:
 		fi; \
 	done; \
 	echo; \
-	\
-	# Test 2: Check Zsh syntax \
 	echo "📋 Step 2: Validating Zsh syntax..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -468,8 +467,6 @@ soft-test:
 		fi; \
 	done; \
 	echo; \
-	\
-	# Test 3: Check executability \
 	echo "📋 Step 3: Checking file permissions..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -477,15 +474,12 @@ soft-test:
 			if [ -x "$$script" ]; then \
 				echo "✅ $$script is executable"; \
 			else \
-				echo "⚠️  $$script is not executable"; \
-				chmod +x "$$script"; \
-				echo "   → Made executable"; \
+				echo "❌ $$script is not executable"; \
+				failed_count=$$((failed_count + 1)); \
 			fi; \
 		fi; \
 	done; \
 	echo; \
-	\
-	# Test 4: Check for required structure \
 	echo "📋 Step 4: Checking script structure..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -519,8 +513,6 @@ soft-test:
 		fi; \
 	done; \
 	echo; \
-	\
-	# Test 5: Check Doom config files \
 	echo "📋 Step 5: Checking Doom Emacs config..."; \
 	echo "-----------------------------------"; \
 	if [ -d "$(DOOM_REPO_DIR)" ]; then \
@@ -538,8 +530,6 @@ soft-test:
 		failed_count=$$((failed_count + 1)); \
 	fi; \
 	echo; \
-	\
-	# Test 6: Check tmux config file \
 	echo "📋 Step 6: Checking tmux config..."; \
 	echo "-----------------------------------"; \
 	if [ -f "$(TMUX_REPO_FILE)" ]; then \
@@ -549,8 +539,6 @@ soft-test:
 		failed_count=$$((failed_count + 1)); \
 	fi; \
 	echo; \
-	\
-	# Summary \
 	echo "==============================================="; \
 	echo "📊 Testing Summary"; \
 	echo "==============================================="; \
@@ -569,6 +557,25 @@ soft-test:
 		echo "💡 Fix the issues above before pushing"; \
 		exit 1; \
 	fi
+
+fix-script-permissions:
+	@echo "🔧 Making all repository .zsh scripts executable..."
+	@for script in *.zsh; do \
+		if [ -f "$$script" ]; then chmod +x "$$script"; fi; \
+	done
+	@echo "✅ Script permissions updated"
+
+opencode-check:
+	@echo "🧪 Validating OpenCode configuration and workflows..."
+	@npm run validate --prefix .opencode
+	@npm test --prefix .opencode
+	@npm run typecheck --prefix .opencode
+	@opencode debug config >/dev/null
+	@for agent in w-brainstorm w-to-spec w-implement w-research w-commit w-into-commits w-elixir-update-deps w-playwright-gen-test; do \
+		echo "Checking $$agent..."; \
+		opencode debug agent "$$agent" >/dev/null || exit 1; \
+	done
+	@echo "✅ OpenCode checks passed"
 
 # ============================================================
 # SHELL
@@ -671,7 +678,11 @@ help:
 	@echo "  make soft-test        Validate all .zsh scripts in the repo:"
 	@echo "                        shebang lines, Zsh syntax, file permissions,"
 	@echo "                        script structure (Purpose, Author, echo),"
-	@echo "                        and Doom/tmux config file presence"
+	@echo "                        and Doom/tmux config file presence; read-only"
+	@echo "  make fix-script-permissions"
+	@echo "                        Make all repository .zsh scripts executable"
+	@echo "  make opencode-check   Validate OpenCode config, definitions, agents,"
+	@echo "                        plugin/helper tests, and TypeScript types"
 	@echo
 	@echo "SHELL"
 	@echo "  make reload-shell     Reload shell (restart with .zshrc)"

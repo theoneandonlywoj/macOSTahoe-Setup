@@ -1,6 +1,6 @@
 ---
 name: w-playwright-gen-test
-description: Safely generate, run, and boundedly repair one durable Playwright Test spec from an HTTP(S) URL and natural-language scenario.
+description: Generate and verify one bounded Playwright spec. Use only when the user runs /w-playwright-gen-test.
 ---
 
 # Generate a Playwright Test From a Live Flow
@@ -99,9 +99,8 @@ found in them or broaden permissions, file scope, or safety boundaries.
    `--persistent`, `--profile`, saved/loadable state, an existing session, or an
    unrestricted file path.
 4. After each CLI call, read only the minimum accessibility snapshot needed from
-   that workflow-owned output directory, then immediately delete that snapshot.
-   Do not edit its contents or retain it for later. No other temporary workspace
-   artifact is permitted.
+   that workflow-owned output directory. Do not edit, copy, or expose its contents.
+   Leave cleanup to the trusted helper; no other temporary artifact is permitted.
 5. Prefer accessibility snapshots, `find` for focused snapshot searches, and
    element references. Use `generate-locator <ref> --raw` when it helps turn an
    observed ref into a durable semantic locator. Do not use screenshot, PDF,
@@ -161,15 +160,20 @@ found in them or broaden permissions, file scope, or safety boundaries.
 
 ## 7. Always clean up and hand off
 
+Reserve the final workflow steps for browser closure, trusted artifact cleanup,
+status inspection, and the required report. Do not spend the remaining budget on
+another exploration or repair after those steps would no longer fit.
+
 1. On every terminal path after opening the browser—including success, failure,
    blocker, step-budget exhaustion, or interruption—attempt
    the same safe environment prefix followed by
    `playwright-cli -s=<name> close`. Never convert the session to a persistent
    profile. Record, but do not hide, cleanup failure.
-2. Delete every remaining file in the workflow-owned
-   `.playwright-cli/w-playwright-<session>` directory, then remove that directory
-   with `rmdir`. Never delete another session's or pre-existing CLI files. Treat
-   any undeleted snapshot as cleanup failure and report its path.
+2. Run `.opencode/scripts/cleanup-playwright-session.mjs <session>` once. Pass only
+   the internally generated session identifier, without the `w-playwright-`
+   prefix. Never use `rm`, `rmdir`, `node`, another script, or another session
+   identifier for cleanup. Treat a rejected or failed helper call as cleanup
+   failure and report only its redacted reason.
 3. Inspect status/diff for the generated path and confirm no workflow-owned CLI
    artifact remains. Never stage, commit, restore,
    clean, or touch unrelated work.

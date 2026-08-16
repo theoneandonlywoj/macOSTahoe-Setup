@@ -1,6 +1,6 @@
 ---
 name: w-into-commits
-description: Split unstaged changes into small logical commits and generate copyable git add and git commit commands without executing them. Use when the user runs /w-into-commits.
+description: Split unstaged changes into commit proposals. Use only when the user runs /w-into-commits.
 ---
 
 # Split Changes Into Commits

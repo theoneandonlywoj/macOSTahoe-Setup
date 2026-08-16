@@ -1,11 +1,15 @@
 ---
 name: w-into-commits
-description: Splits unstaged changes into small logical commits and generates copyable commands without executing them.
+description: Plans logical commits through /w-into-commits; never changes the index, worktree, or history.
 mode: subagent
 hidden: true
 steps: 12
 permission:
-  read: allow
+  read:
+    "*": allow
+    "*.env": deny
+    "*.env.*": deny
+    "*.env.example": allow
   glob: allow
   grep: allow
   list: allow
@@ -29,10 +33,6 @@ permission:
     "w-into-commits": allow
 ---
 
-Generate the requested commit sequence by following the `w-into-commits` skill
-exactly. Every candidate file must appear in exactly one commit group, and every
-group must contain complete, executable `git add` and `git commit` commands.
+Use only through `/w-into-commits`. Follow the `w-into-commits` skill exactly.
 
-Never execute `git add`, `git commit`, or any other command that changes the
-repository. Return only the format required by the skill, with no introduction,
-explanation, approval prompt, Markdown fence, or trailing text.
+Never execute generated commands or change the index, worktree, or repository history.

@@ -1,20 +1,15 @@
-import type { Plugin } from "@opencode-ai/plugin"
+import type { Hooks, Plugin } from "@opencode-ai/plugin"
 
 const BRAINSTORM_START = "[w-brainstorm:start]"
 const TO_SPEC_START = "[w-to-spec:start]"
 const QUESTION_PATTERN =
   /^Q(\d+) \[([a-z0-9]+(?:[.-][a-z0-9]+)*)\]\r?\nEvidence: ([^\r\n]*)\r?\nRecommendation: ([^\r\n]*)\r?\nQuestion: ([^\r\n]*)$/
 
-type Message = {
-  info: {
-    role: string
-    agent?: string
-    sessionID?: string
-  }
-  parts: Array<Record<string, any>>
-}
+type TransformHook = NonNullable<Hooks["experimental.chat.messages.transform"]>
+export type ChatMessage = Parameters<TransformHook>[1]["messages"][number]
+type TextPart = Extract<ChatMessage["parts"][number], { type: "text" }>
 
-type Question = {
+export type Question = {
   id: string
   key: string
   evidence: string
@@ -23,7 +18,7 @@ type Question = {
   answer?: string
 }
 
-type BrainstormState = {
+export type BrainstormState = {
   v: 1
   topic: string
   lastQuestion: number
@@ -31,15 +26,33 @@ type BrainstormState = {
   pending?: Omit<Question, "answer">
 }
 
-function messageText(message: Message) {
+export function messageText(message: ChatMessage, includeSynthetic = true) {
   return message.parts
-    .filter((part) => part.type === "text" && typeof part.text === "string" && !part.ignored)
+    .filter(
+      (part): part is TextPart =>
+        part.type === "text" &&
+        !part.ignored &&
+        (includeSynthetic || part.synthetic !== true),
+    )
     .map((part) => part.text)
     .join("\n")
     .trim()
 }
 
-function parseQuestion(text: string): Omit<Question, "answer"> | undefined {
+export function messageAgent(message: ChatMessage) {
+  return message.info.role === "user" ? message.info.agent : message.info.mode
+}
+
+export function hasSyntheticControlLine(message: ChatMessage, marker: string) {
+  return message.parts.some(
+    (part) =>
+      part.type === "text" &&
+      part.synthetic === true &&
+      part.text.split(/\r?\n/).some((line) => line === marker),
+  )
+}
+
+export function parseQuestion(text: string): Omit<Question, "answer"> | undefined {
   const match = text.trim().match(QUESTION_PATTERN)
   if (!match) return
   return {
@@ -55,23 +68,23 @@ function topicArgument(text: string) {
   return text.match(/^Topic argument:[ \t]*([^\r\n]*)/m)?.[1]?.trim() ?? ""
 }
 
-function latestBrainstormStart(messages: Message[]) {
+export function latestBrainstormStart(messages: ChatMessage[]) {
   for (let index = messages.length - 1; index >= 0; index--) {
     const message = messages[index]
-    if (message.info.role !== "user" || message.info.agent !== "w-brainstorm") continue
-    if (messageText(message).includes(BRAINSTORM_START)) return index
+    if (message.info.role !== "user" || messageAgent(message) !== "w-brainstorm") continue
+    if (hasSyntheticControlLine(message, BRAINSTORM_START)) return index
   }
   return -1
 }
 
-function buildState(messages: Message[], start: number): BrainstormState {
+export function buildState(messages: ChatMessage[], start: number): BrainstormState {
   const settled = new Map<string, Question>()
   let pending: Omit<Question, "answer"> | undefined
   let lastQuestion = 0
 
   for (let index = start + 1; index < messages.length; index++) {
     const message = messages[index]
-    if (message.info.role !== "assistant" || message.info.agent !== "w-brainstorm") continue
+    if (message.info.role !== "assistant" || messageAgent(message) !== "w-brainstorm") continue
     const question = parseQuestion(messageText(message))
     if (!question) continue
 
@@ -79,11 +92,22 @@ function buildState(messages: Message[], start: number): BrainstormState {
     let answer: string | undefined
     for (let next = index + 1; next < messages.length; next++) {
       const candidate = messages[next]
-      if (candidate.info.role === "assistant" && parseQuestion(messageText(candidate))) break
+      if (
+        candidate.info.role === "assistant" &&
+        messageAgent(candidate) === "w-brainstorm" &&
+        parseQuestion(messageText(candidate))
+      ) {
+        break
+      }
       if (candidate.info.role !== "user") continue
-      const text = messageText(candidate)
-      if (text.includes(TO_SPEC_START) || text.includes(BRAINSTORM_START)) break
-      if (candidate.info.agent === "w-brainstorm" && text) answer = text
+      if (
+        hasSyntheticControlLine(candidate, TO_SPEC_START) ||
+        hasSyntheticControlLine(candidate, BRAINSTORM_START)
+      ) {
+        break
+      }
+      const text = messageText(candidate, false)
+      if (messageAgent(candidate) === "w-brainstorm" && text) answer = text
       break
     }
 
@@ -98,21 +122,20 @@ function buildState(messages: Message[], start: number): BrainstormState {
   }
 
   const startText = messageText(messages[start])
-  const topicDecision = settled.get("topic")?.answer
   return {
     v: 1,
-    topic: topicArgument(startText) || topicDecision || "",
+    topic: topicArgument(startText) || settled.get("topic")?.answer || "",
     lastQuestion,
     decisions: [...settled.values()],
     ...(pending ? { pending } : {}),
   }
 }
 
-function capsule(state: BrainstormState) {
+export function capsule(state: BrainstormState) {
   return `[w-brainstorm-context]\n${JSON.stringify(state)}\n[/w-brainstorm-context]`
 }
 
-function replaceUserText(message: Message, text: string): Message | undefined {
+export function replaceUserText(message: ChatMessage, text: string): ChatMessage | undefined {
   let replaced = false
   const parts = message.parts.flatMap((part) => {
     if (part.type !== "text" || part.synthetic) return [part]
@@ -123,48 +146,71 @@ function replaceUserText(message: Message, text: string): Message | undefined {
   return replaced ? { ...message, parts } : undefined
 }
 
-export const BrainstormContextPlugin = (async () => {
+export function transformBrainstormMessages(messages: ChatMessage[]) {
+  const start = latestBrainstormStart(messages)
+  if (start < 0) return
+
+  const latestUserIndex = messages.findLastIndex((message) => message.info.role === "user")
+  if (latestUserIndex < 0) return
+  const latestUser = messages[latestUserIndex]
+  const activeAgent = messageAgent(latestUser)
+  if (activeAgent !== "w-brainstorm" && activeAgent !== "w-to-spec") return
+
+  const state = buildState(messages, start)
+  const context = capsule(state)
+  const currentText = messageText(latestUser)
+  const replacement =
+    activeAgent === "w-to-spec"
+      ? `${currentText}\n\n${context}`
+      : `[w-brainstorm:continue]\n${context}\nAsk the next single question.`
+  const compactUser = replaceUserText(latestUser, replacement)
+  if (!compactUser) return
+
+  return {
+    messages: [compactUser, ...messages.slice(latestUserIndex + 1)],
+    context,
+    sessionID: latestUser.info.sessionID,
+  }
+}
+
+export function createBrainstormContextHooks(
+  logError: (error: unknown) => Promise<void> = async () => {},
+): Hooks {
   const capsuleBySession = new Map<string, string>()
 
   return {
     "experimental.chat.messages.transform": async (_input, output) => {
       try {
-        const messages = output.messages as Message[]
-        const start = latestBrainstormStart(messages)
-        if (start < 0) return
-
-        const latestUserIndex = messages.findLastIndex((message) => message.info.role === "user")
-        if (latestUserIndex < 0) return
-        const latestUser = messages[latestUserIndex]
-        const activeAgent = latestUser.info.agent
-        if (activeAgent !== "w-brainstorm" && activeAgent !== "w-to-spec") return
-
-        const state = buildState(messages, start)
-        const context = capsule(state)
-        const sessionID = latestUser.info.sessionID
-        if (sessionID) capsuleBySession.set(sessionID, context)
-
-        const currentText = messageText(latestUser)
-        const replacement =
-          activeAgent === "w-to-spec"
-            ? `${currentText}\n\n${context}`
-            : `[w-brainstorm:continue]\n${context}\nAsk the next single question.`
-        const compactUser = replaceUserText(latestUser, replacement)
-        if (!compactUser) return
-
-        output.messages.splice(
-          0,
-          output.messages.length,
-          compactUser as (typeof output.messages)[number],
-          ...output.messages.slice(latestUserIndex + 1),
-        )
-      } catch {
-        // Context optimization must never prevent the underlying workflow from running.
+        const result = transformBrainstormMessages(output.messages)
+        if (!result) return
+        output.messages.splice(0, output.messages.length, ...result.messages)
+        capsuleBySession.set(result.sessionID, result.context)
+      } catch (error) {
+        try {
+          await logError(error)
+        } catch {
+          // Context optimization must fail open even when logging is unavailable.
+        }
       }
+    },
+    event: async ({ event }) => {
+      if (event.type === "session.deleted") capsuleBySession.delete(event.properties.info.id)
     },
     "experimental.session.compacting": async (input, output) => {
       const context = capsuleBySession.get(input.sessionID)
       if (context) output.context.push(`Preserve this brainstorm state exactly:\n${context}`)
     },
   }
-}) satisfies Plugin
+}
+
+export const BrainstormContextPlugin = (async ({ client }) =>
+  createBrainstormContextHooks(async (error) => {
+    await client.app.log({
+      body: {
+        service: "w-brainstorm-context",
+        level: "error",
+        message: "Failed to transform brainstorm context",
+        extra: { error: error instanceof Error ? error.message : String(error) },
+      },
+    })
+  })) satisfies Plugin

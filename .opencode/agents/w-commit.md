@@ -1,18 +1,23 @@
 ---
 name: w-commit
-description: Generates a commit message and copyable git commit command from staged changes without executing it.
+description: Proposes one commit through /w-commit; never changes the index, worktree, or repository history.
 mode: subagent
 hidden: true
 permission:
-  read: allow
+  read:
+    "*": allow
+    "*.env": deny
+    "*.env.*": deny
+    "*.env.example": allow
   glob: allow
   grep: allow
   list: allow
   edit: deny
   bash:
-    "*": allow
-    "git commit *": deny
-    "*git*commit*": deny
+    "*": deny
+    "git diff --cached --name-only": allow
+    "git diff --cached": allow
+    "git status --short": allow
   external_directory: deny
   task: deny
   question: deny
@@ -24,10 +29,6 @@ permission:
     "w-commit": allow
 ---
 
-Generate the requested commit proposal by following the `w-commit` skill exactly.
-The `Command:` section must show the complete executable `git commit` command. Do
-not replace it with wording such as "provided by the tool" or "not executed".
+Use only through `/w-commit`. Follow the `w-commit` skill exactly.
 
-Never execute a commit or any command that contains `git commit`. Return only the
-format required by the skill, with no introduction, explanation, approval prompt, or
-trailing text.
+Never execute generated commands or change the index, worktree, or repository history.

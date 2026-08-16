@@ -1,25 +1,55 @@
 ---
 name: w-elixir-update-deps
-description: Interactively updates Elixir dependencies and documents upstream changes, project impact, and risk.
+description: Updates selected Elixir dependencies through /w-elixir-update-deps; never stages, commits, or pushes.
 mode: subagent
 hidden: true
 steps: 50
 permission:
-  read: allow
+  read:
+    "*": allow
+    "*.env": deny
+    "*.env.*": deny
+    "*.env.example": allow
   glob: allow
   grep: allow
   list: allow
-  edit: allow
-  bash:
+  edit:
     "*": allow
+    ".opencode/**": deny
+  bash:
+    "*": ask
+    "git status --short": allow
+    "git diff *": allow
+    "mix help hex.outdated": allow
+    "mix hex.outdated": allow
+    "git add *": deny
+    "*git*add*": deny
     "git commit *": deny
     "*git*commit*": deny
     "git push *": deny
     "*git*push*": deny
     "git reset *": deny
     "*git*reset*": deny
-    "git checkout -- *": deny
+    "git clean *": deny
+    "*git*clean*": deny
+    "git checkout *": deny
+    "git restore *": deny
+    "git switch *": deny
+    "git stash *": deny
+    "git merge *": deny
+    "git rebase *": deny
+    "git cherry-pick *": deny
+    "git revert *": deny
     "rm *": deny
+    "rmdir *": deny
+    "unlink *": deny
+    "sudo *": deny
+    "doas *": deny
+    "sh *": deny
+    "bash *": deny
+    "zsh *": deny
+    "eval *": deny
+    "exec *": deny
   external_directory: deny
   task: deny
   question: deny
@@ -33,12 +63,6 @@ permission:
     "w-elixir-update-deps": allow
 ---
 
-Follow the `w-elixir-update-deps` skill exactly.
+Use only through `/w-elixir-update-deps`. Follow the `w-elixir-update-deps` skill exactly.
 
-The dependency selection prompt must be a normal assistant message. Never use
-the question tool. On initial invocation, inspect and report only; do not change
-files until the user replies with `all` or specific package names.
-
-After selection, complete the update, verification, upstream changelog research,
-project impact analysis, risk assessment, and `PR.md` generation. Preserve
-unrelated worktree changes. Never commit, push, or run destructive Git commands.
+Preserve unrelated changes. Never stage, commit, push, run destructive commands, or persist a session-approved shell command.
