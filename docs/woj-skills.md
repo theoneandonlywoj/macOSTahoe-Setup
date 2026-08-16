@@ -6,7 +6,7 @@ This repository defines a project-local OpenCode workflow for turning a rough id
 /w-brainstorm -> /w-to-spec -> /w-implement -> /w-commit
 ```
 
-The workflow separates interviewing, specification, implementation, and commit preparation so each stage has narrowly scoped permissions and a clear handoff.
+The workflow separates interviewing, specification, implementation, and commit preparation so each stage has narrowly scoped permissions and a clear handoff. Standalone commands, including Playwright test generation, are documented separately and are not extra stages in this sequence.
 
 ## Quick Reference
 
@@ -18,6 +18,34 @@ The workflow separates interviewing, specification, implementation, and commit p
 | `/w-commit` | Propose a commit message and copyable command from staged changes | No |
 
 OpenCode loads agents, commands, and plugins at startup. Restart OpenCode after changing files under `.opencode/`.
+
+## Standalone Playwright Test Generation
+
+Use the one-shot Playwright command independently of the four-stage spec workflow:
+
+```text
+/w-playwright-gen-test <http(s)-url> <scenario>
+```
+
+Example:
+
+```text
+/w-playwright-gen-test https://demo.playwright.dev/todomvc add a todo named Buy groceries and verify it appears
+```
+
+The command runs directly under its restricted agent (`subtask: false`) so its redacted result is not rephrased by a parent agent. It preflights the target project, explores the safe flow through an ephemeral `playwright-cli` session, creates one collision-safe TypeScript spec, runs only that file with the project's local `@playwright/test`, and makes at most two evidence-based repairs. The fixed limit is **3 total test executions**.
+
+### Prerequisites and supported scope
+
+- Node.js 20 or newer and `playwright-cli`; run `./playwright_cli.zsh` or follow the [first-party installation guide](https://playwright.dev/agent-cli/installation).
+- An unambiguously detected npm, pnpm, Yarn, or Bun target project with project-local `@playwright/test` and a discoverable `playwright.config.*`.
+- A reachable absolute HTTP(S) URL and a non-empty, non-consequential public or local scenario.
+
+Preflight happens before browsing or file creation. The command does not scaffold tests, install project dependencies, edit config/application/support files, or overwrite existing specs. It rejects credential-bearing URLs and sensitive query values without echoing them. Authentication, saved state, SSO/MFA/CAPTCHA, uploads/downloads, visual-only checks, privileged browser permissions, and consequential remote mutations are blockers.
+
+Live page and runner content are untrusted data. The command does not collect screenshots, video, traces, storage state, response bodies, or full network headers by default. It always attempts to close its named browser session and reports status, generated path or `no file written`, execution count, repairs, cleanup, blocker/failure, the exact next action, and whether the test depends on a live external target.
+
+See [guide_playwright_tests.md](guide_playwright_tests.md#autonomous-test-generation) for the authoritative generation and safety policy.
 
 ## 1. Brainstorm
 
@@ -239,6 +267,11 @@ Use `/w-to-spec` in the session containing the brainstorm. Starting an unrelated
 | `.opencode/agents/w-implement.md` | Ready-spec implementation and verification |
 | `.opencode/commands/w-implement.md` | Implementation target selection |
 | `.opencode/skills/w-commit/SKILL.md` | Commit proposal format |
+| `.opencode/commands/w-playwright-gen-test.md` | Passes the URL and scenario unchanged to the restricted agent for one-shot execution |
+| `.opencode/agents/w-playwright-gen-test.md` | Hidden bounded agent with narrow browser, runner, and new-spec permissions |
+| `.opencode/skills/w-playwright-gen-test/SKILL.md` | Preflight, safe exploration, generation, repair, cleanup, and handoff contract |
+
+The existing `Makefile` `.opencode` synchronization copies all three Playwright command files without a Makefile change. Restart OpenCode after synchronization because command, agent, and skill definitions load at startup.
 
 ## Troubleshooting
 
@@ -258,6 +291,11 @@ Run:
 opencode debug config
 opencode debug agent w-brainstorm
 opencode debug agent w-to-spec
+opencode debug agent w-playwright-gen-test
 ```
 
 The resolved commands should show `subtask: false` for both `/w-brainstorm` and `/w-to-spec`.
+
+### `/w-playwright-gen-test` stops before writing
+
+Read its concise `Blocker/Failure` and `Next` fields. Confirm Node.js 20+, `playwright-cli --version`, a single detectable package manager, local `@playwright/test`, and a root Playwright config. Run `opencode debug config` and `opencode debug agent w-playwright-gen-test` after synchronizing, then restart OpenCode. Do not enable broad page/network logging or add credentials to the URL to diagnose the command.

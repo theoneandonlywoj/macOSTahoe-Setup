@@ -12,6 +12,14 @@ permission:
     "*": allow
   bash:
     "*": ask
+    "ls *": allow
+    "node *": allow
+    "rg *": allow
+    "make soft-test*": allow
+    "git diff *": allow
+    "opencode debug config >/dev/null": allow
+    "git status * && git diff *": allow
+    "git status *": allow
     "git status --short && git diff --check && opencode debug config >/dev/null": allow
     "opencode debug config >/dev/null && opencode debug agent * >/dev/null": allow
     "git diff --check -- .opencode/commands/*.md .opencode/agents/*.md": allow
