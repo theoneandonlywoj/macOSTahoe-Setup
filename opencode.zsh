@@ -330,6 +330,8 @@ echo "   • Continue the last session: opencode --continue"
 echo "   • Start in planning mode: opencode --agent plan"
 echo "   • Run one non-interactive task: opencode run \"Review this repository\""
 echo "   • Select a model: opencode --model provider/model"
+echo "   • Prefer task-specific agents: fast/low-effort for discovery, stronger/high-effort for verification."
+echo '   • Ask explicitly: Adapt the model, reasoning effort, and step budget to each subtask.'
 echo "   • Launch Desktop via Spotlight (⌘ Space → 'OpenCode')"
 echo
 echo "🔐 Limit or enforce OpenCode behavior:"
@@ -337,6 +339,10 @@ echo "   • Put repository rules in: $odw_project_root/opencode.json"
 echo "   • Use permission values: allow, ask, or deny. Specific rules override earlier wildcards."
 echo "   • Limit nested subagents with subagent_depth; 0 disables subagent launches."
 echo "   • Limit agent iterations with agent.<name>.steps."
+echo "   • Configure each agent with model, steps, and provider-specific reasoningEffort."
+echo "   • Give agents precise descriptions so OpenCode can route each task to the appropriate capability."
+echo "   • Use subagent_depth: 1 or higher when task-specific agents should be invoked automatically."
+echo "   • Reserve expensive models/high effort for ambiguous planning, verification, and final synthesis."
 echo "   • Create a repository-only restricted agent:"
 echo "     opencode agent create --path .opencode/agents/review.md --description \"Read-only review\" --mode primary --permissions read,glob,grep,skill"
 echo "   • Example restrictive opencode.json:"
@@ -366,10 +372,12 @@ echo
 echo "🌊 Open Dynamic Workflows quick start:"
 echo "   • Restart OpenCode, then ask:"
 echo '     Use the open-dynamic-workflows skill to write workflows/audit.js for this task.'
+echo '     Bound fan-out and use fast models for discovery, stronger models for verification and synthesis.'
 echo "   • Review the generated JavaScript before running it."
 echo "   • Run it: $odw_bin run workflows/audit.js"
 echo "   • Pass bounded input: $odw_bin run workflows/audit.js --args '{\"maxAgents\":4}'"
 echo "   • Select the runtime model: $odw_bin run workflows/audit.js --model MODEL_ID"
+echo "   • Treat --model as the default; override model inside each agent() call when tasks differ."
 echo "   • Cancel with Ctrl-C; resume completed work with: $odw_bin run workflows/audit.js --resume RUN_ID"
 echo "   • Run logs and saved scripts are stored in .workflow-runs/ by default."
 echo
@@ -378,6 +386,11 @@ echo "   • Bound fan-out in workflow code; do not pass an unbounded list to pa
 echo '     const requested = Number(args.maxAgents ?? 4)'
 echo '     const maxAgents = Math.max(1, Math.min(requested, 8))'
 echo '     const selected = items.slice(0, maxAgents)'
+echo "   • Route workflow tasks by complexity instead of using one model everywhere:"
+echo "     const scan = await agent('Find candidates', { model: FAST_MODEL })"
+echo "     const verdict = await agent('Verify candidates rigorously', { model: STRONG_MODEL })"
+echo "     const result = await agent('Synthesize the final answer', { model: STRONG_MODEL })"
+echo "     Replace FAST_MODEL and STRONG_MODEL with model IDs supported by the ODW executor."
 echo "   • Enforce an output contract with agent(..., { schema: GATE }), then stop on failure:"
 echo '     const GATE = {'
 echo "       type: 'object', required: ['approved'], additionalProperties: false,"
@@ -395,6 +408,8 @@ echo "   • tokensSpent is reporting only; enforce cost limits by bounding agen
 echo "   • OpenCode permissions govern the host. They do not automatically propagate to ODW subprocesses."
 echo "   • ODW $verified_odw_version uses Claude Code as its default executor (claude --print) with acceptEdits mode."
 echo "     Its CLI has no permission-mode flag; --model uses a Claude model ID. Review workflows before execution."
+echo "   • ODW $verified_odw_version supports per-agent model overrides but not per-agent reasoning-effort settings."
+echo "     Express extra effort with stronger models and explicit verify/retry stages, or inject a custom executor."
 echo
 echo "📚 More information:"
 echo "   • Run dock_cleanup.zsh to add OpenCode to your Dock"
