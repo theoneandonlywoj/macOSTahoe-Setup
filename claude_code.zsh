@@ -27,9 +27,33 @@ if command -v "$claude_bin" >/dev/null 2>&1 || [[ -x "$claude_path" ]]; then
     export PATH="$HOME/.local/bin:$PATH"
   fi
   echo
-  echo "💡 To update, run: claude update"
-  echo "   or:              curl -fsSL https://claude.ai/install.sh | bash"
-  echo "🎉 Nothing to do!"
+
+  # Ask whether to update
+  current_ver_num=${current_version%% *}
+  latest_version=$(npm view @anthropic-ai/claude-code version 2>/dev/null || echo "unknown")
+  echo "   Before: $current_version"
+  echo "   Latest: $latest_version"
+  if [[ "$latest_version" = "unknown" || "$latest_version" = "$current_ver_num" ]]; then
+    echo "✅ Already up to date."
+    echo "🎉 Nothing to do!"
+    exit 0
+  fi
+  if [[ -t 0 ]]; then
+    read "REPLY?🔄 Update now? (y/n): "
+  else
+    REPLY="n"
+  fi
+  if [[ "$REPLY" = y || "$REPLY" = Y ]]; then
+    echo "📥 Running: claude update"
+    claude update
+    new_version=$("$claude_bin" --version 2>/dev/null || echo "unknown")
+    echo "   After:  $new_version"
+  else
+    echo "🎉 Nothing to do!"
+  fi
+  echo
+  echo "💡 Manual update later: claude update"
+  echo "   or:                   curl -fsSL https://claude.ai/install.sh | bash"
   exit 0
 fi
 
