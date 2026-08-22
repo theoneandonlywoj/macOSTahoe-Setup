@@ -1,0 +1,19 @@
+{
+  "name": "macos-tahoe-opencode-config",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --import tsx --test tests/*.test.*",
+    "typecheck": "tsc --noEmit",
+    "validate": "node scripts/validate-definitions.mjs"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "1.18.18"
+  },
+  "devDependencies": {
+    "@types/node": "26.2.0",
+    "tsx": "4.23.12",
+    "typescript": "7.0.2",
+    "yaml": "2.9.0"
+  }
+}

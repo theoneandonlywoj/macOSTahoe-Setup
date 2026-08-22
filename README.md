@@ -280,7 +280,9 @@ This repo includes a Makefile for managing Doom Emacs and tmux. Run `make help` 
 | `make trestore` | Alias for `tmux-restore` |
 | `make tdiff` | Alias for `tmux-diff` |
 | `make clean-backup-all` | Delete all known config backups |
-| `make soft-test` | Validate `.zsh` scripts and config files |
+| `make soft-test` | Read-only validation of `.zsh` scripts and config files |
+| `make fix-script-permissions` | Make repository `.zsh` scripts executable |
+| `make opencode-check` | Validate OpenCode config, workflows, tests, and TypeScript |
 | `make help` | Show available commands |
 
 ## Notes & troubleshooting
