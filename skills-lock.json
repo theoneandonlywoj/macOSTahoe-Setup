@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "open-dynamic-workflows": {
+      "source": "imsai-sh/open-dynamic-workflows",
+      "sourceType": "github",
+      "skillPath": "skills/open-dynamic-workflows/SKILL.md",
+      "computedHash": "0b21ab38edfc4f95c1610845a6d571127ef24d32d1a154862bc5e1ccde90f815"
+    }
+  }
+}
