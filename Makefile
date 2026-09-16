@@ -7,9 +7,10 @@
         tmux-sync tmux-backup tmux-restore tmux-diff \
         herdr-global-set herdr-global-unset herdr-global-backup \
         herdr-global-restore herdr-global-diff herdr-remove-backups \
+        opencode-sync-to-repo opencode-delete-from-repo opencode-sync-from-repo \
         sync backup restore diff tsync tbackup trestore tdiff \
         clean-backup-doom clean-backup-tmux clean-backup-all \
-        soft-test reload-shell help
+        soft-test fix-script-permissions opencode-check reload-shell help
 
 # Generate timestamp in format YYYY_mm_dd_hh_MM
 TIMESTAMP := $(shell date +"%Y_%m_%d_%H_%M")
@@ -26,6 +27,12 @@ TMUX_REPO_FILE := ./tmux.conf
 HERDR_BACKUP_DIR := ./.herdr-$(shell date +"%Y_%m_%d_%H-%M-%S")
 HERDR_GLOBAL_CONFIG := $(HOME)/.config/herdr/config.toml
 HERDR_REPO_FILE := ./herdr.config.toml
+
+# opencode paths
+OPENCODE_CONFIG_NAMES := opencode.json opencode.jsonc .opencode
+OPENCODE_SYNC_EXCLUDES := --exclude='*/node_modules' --exclude='*/coverage' \
+                          --exclude='*/.cache' --exclude='*.tmp' \
+                          --exclude='*.log' --exclude='*/.DS_Store'
 
 # ============================================================
 # DEFAULT TARGET
@@ -226,7 +233,7 @@ herdr-remove-backups:
 			*) ;; \
 		esac; \
 	fi; \
-	@found=false; \
+	found=false; \
 	for backup in .herdr-*; do \
 		if [ -e "$$backup" ] || [ -L "$$backup" ]; then \
 			found=true; \
@@ -239,6 +246,126 @@ herdr-remove-backups:
 	else \
 		echo "✅ Removed Herdr backups."; \
 	fi
+
+# ============================================================
+# OPENCODE CONFIGURATION
+# ============================================================
+
+opencode-sync-to-repo:
+	@read -r -p "Path to target repository: " repo; \
+	if [ -z "$$repo" ]; then \
+		echo "❌ No path provided. Aborting."; \
+		exit 1; \
+	fi; \
+	if [ ! -d "$$repo" ]; then \
+		echo "❌ Directory not found: $$repo"; \
+		exit 1; \
+	fi; \
+	ts=$$(date +"%Y_%m_%d_%H-%M-%S"); \
+	backup_dir="$$repo/.opencode-backup-$$ts"; \
+	needed_backup=false; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+			needed_backup=true; \
+			break; \
+		fi; \
+	done; \
+	if [ "$$needed_backup" = true ]; then \
+		mkdir -p "$$backup_dir"; \
+		for name in $(OPENCODE_CONFIG_NAMES); do \
+			if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+				echo "💾 Backing up $$repo/$$name → $$backup_dir/"; \
+				mv "$$repo/$$name" "$$backup_dir/"; \
+			fi; \
+		done; \
+	fi; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "./$$name" ] || [ -L "./$$name" ]; then \
+			echo "📦 Copying ./$$name → $$repo/"; \
+			tar $(OPENCODE_SYNC_EXCLUDES) -C . -cf - "$$name" | tar -C "$$repo" -xf -; \
+		fi; \
+	done; \
+	echo "✅ OpenCode configuration synced to $$repo"
+
+opencode-delete-from-repo:
+	@read -r -p "Path to repository to clean: " repo; \
+	if [ -z "$$repo" ]; then \
+		echo "❌ No path provided. Aborting."; \
+		exit 1; \
+	fi; \
+	if [ ! -d "$$repo" ]; then \
+		echo "❌ Directory not found: $$repo"; \
+		exit 1; \
+	fi; \
+	found=false; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+			found=true; \
+			break; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "ℹ️  No OpenCode configuration found in $$repo"; \
+		exit 0; \
+	fi; \
+	read -r -p "🗑  Delete OpenCode config from $$repo? [Y/n] " answer; \
+	case "$$answer" in \
+		[nN]|[nN][oO]) echo "✅ Aborted."; exit 0;; \
+	esac; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+			echo "🗑  Removing $$repo/$$name"; \
+			rm -rf "$$repo/$$name"; \
+		fi; \
+	done; \
+	echo "✅ OpenCode configuration removed from $$repo"
+
+opencode-sync-from-repo:
+	@read -r -p "Path to source repository: " repo; \
+	if [ -z "$$repo" ]; then \
+		echo "❌ No path provided. Aborting."; \
+		exit 1; \
+	fi; \
+	if [ ! -d "$$repo" ]; then \
+		echo "❌ Directory not found: $$repo"; \
+		exit 1; \
+	fi; \
+	found=false; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+			found=true; \
+			break; \
+		fi; \
+	done; \
+	if [ "$$found" = false ]; then \
+		echo "❌ No OpenCode configuration found in $$repo"; \
+		exit 1; \
+	fi; \
+	ts=$$(date +"%Y_%m_%d_%H-%M-%S"); \
+	backup_dir="./.opencode-backup-$$ts"; \
+	needed_backup=false; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "./$$name" ] || [ -L "./$$name" ]; then \
+			needed_backup=true; \
+			break; \
+		fi; \
+	done; \
+	if [ "$$needed_backup" = true ]; then \
+		mkdir -p "$$backup_dir"; \
+		for name in $(OPENCODE_CONFIG_NAMES); do \
+			if [ -e "./$$name" ] || [ -L "./$$name" ]; then \
+				echo "💾 Backing up ./$$name → $$backup_dir/"; \
+				mv "./$$name" "$$backup_dir/"; \
+			fi; \
+		done; \
+	fi; \
+	for name in $(OPENCODE_CONFIG_NAMES); do \
+		if [ -e "$$repo/$$name" ] || [ -L "$$repo/$$name" ]; then \
+			echo "📦 Copying $$repo/$$name → ./"; \
+			tar $(OPENCODE_SYNC_EXCLUDES) -C "$$repo" -cf - "$$name" | tar -C . -xf -; \
+		fi; \
+	done; \
+	echo "✅ OpenCode configuration synced from $$repo into current repository"
 
 # ============================================================
 # BACKUP CLEANUP
@@ -311,8 +438,6 @@ soft-test:
 	@echo
 	@failed_count=0; \
 	total_count=0; \
-	\
-	# Test 1: Check if all .zsh scripts have shebang \
 	echo "📋 Step 1: Checking shebang lines..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -327,8 +452,6 @@ soft-test:
 		fi; \
 	done; \
 	echo; \
-	\
-	# Test 2: Check Zsh syntax \
 	echo "📋 Step 2: Validating Zsh syntax..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -344,8 +467,6 @@ soft-test:
 		fi; \
 	done; \
 	echo; \
-	\
-	# Test 3: Check executability \
 	echo "📋 Step 3: Checking file permissions..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -353,15 +474,12 @@ soft-test:
 			if [ -x "$$script" ]; then \
 				echo "✅ $$script is executable"; \
 			else \
-				echo "⚠️  $$script is not executable"; \
-				chmod +x "$$script"; \
-				echo "   → Made executable"; \
+				echo "❌ $$script is not executable"; \
+				failed_count=$$((failed_count + 1)); \
 			fi; \
 		fi; \
 	done; \
 	echo; \
-	\
-	# Test 4: Check for required structure \
 	echo "📋 Step 4: Checking script structure..."; \
 	echo "-----------------------------------"; \
 	for script in *.zsh; do \
@@ -395,8 +513,6 @@ soft-test:
 		fi; \
 	done; \
 	echo; \
-	\
-	# Test 5: Check Doom config files \
 	echo "📋 Step 5: Checking Doom Emacs config..."; \
 	echo "-----------------------------------"; \
 	if [ -d "$(DOOM_REPO_DIR)" ]; then \
@@ -414,8 +530,6 @@ soft-test:
 		failed_count=$$((failed_count + 1)); \
 	fi; \
 	echo; \
-	\
-	# Test 6: Check tmux config file \
 	echo "📋 Step 6: Checking tmux config..."; \
 	echo "-----------------------------------"; \
 	if [ -f "$(TMUX_REPO_FILE)" ]; then \
@@ -425,8 +539,6 @@ soft-test:
 		failed_count=$$((failed_count + 1)); \
 	fi; \
 	echo; \
-	\
-	# Summary \
 	echo "==============================================="; \
 	echo "📊 Testing Summary"; \
 	echo "==============================================="; \
@@ -445,6 +557,25 @@ soft-test:
 		echo "💡 Fix the issues above before pushing"; \
 		exit 1; \
 	fi
+
+fix-script-permissions:
+	@echo "🔧 Making all repository .zsh scripts executable..."
+	@for script in *.zsh; do \
+		if [ -f "$$script" ]; then chmod +x "$$script"; fi; \
+	done
+	@echo "✅ Script permissions updated"
+
+opencode-check:
+	@echo "🧪 Validating OpenCode configuration and workflows..."
+	@npm run validate --prefix .opencode
+	@npm test --prefix .opencode
+	@npm run typecheck --prefix .opencode
+	@opencode debug config >/dev/null
+	@for agent in w-brainstorm w-to-spec w-implement w-research w-commit w-into-commits w-elixir-update-deps w-playwright-gen-test; do \
+		echo "Checking $$agent..."; \
+		opencode debug agent "$$agent" >/dev/null || exit 1; \
+	done
+	@echo "✅ OpenCode checks passed"
 
 # ============================================================
 # SHELL
@@ -513,6 +644,22 @@ help:
 	@echo "                        Diff the installed ~/.config/herdr/config.toml"
 	@echo "                        vs the repo copy (untracked files diffs included)"
 	@echo
+	@echo "OPENCODE"
+	@echo "  make opencode-sync-to-repo"
+	@echo "                        Copy this repo's OpenCode config (opencode.json[c]"
+	@echo "                        and .opencode/) into another repository. Prompts"
+	@echo "                        for the target repo path and backs up any existing"
+	@echo "                        OpenCode config there first"
+	@echo "  make opencode-delete-from-repo"
+	@echo "                        Remove OpenCode config (opencode.json[c] and"
+	@echo "                        .opencode/) from a repository. Prompts for the repo"
+	@echo "                        path and asks for confirmation before deleting"
+	@echo "  make opencode-sync-from-repo"
+	@echo "                        Copy OpenCode config from another repository into"
+	@echo "                        the current repo. Prompts for the source repo path"
+	@echo "                        and backs up the current repo's OpenCode config"
+	@echo "                        before overwriting"
+	@echo
 	@echo "BACKUP CLEANUP"
 	@echo "  make clean-backup-all"
 	@echo "                        Delete all known config backups"
@@ -531,7 +678,11 @@ help:
 	@echo "  make soft-test        Validate all .zsh scripts in the repo:"
 	@echo "                        shebang lines, Zsh syntax, file permissions,"
 	@echo "                        script structure (Purpose, Author, echo),"
-	@echo "                        and Doom/tmux config file presence"
+	@echo "                        and Doom/tmux config file presence; read-only"
+	@echo "  make fix-script-permissions"
+	@echo "                        Make all repository .zsh scripts executable"
+	@echo "  make opencode-check   Validate OpenCode config, definitions, agents,"
+	@echo "                        plugin/helper tests, and TypeScript types"
 	@echo
 	@echo "SHELL"
 	@echo "  make reload-shell     Reload shell (restart with .zshrc)"
