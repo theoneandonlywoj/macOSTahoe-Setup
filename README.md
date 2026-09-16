@@ -24,7 +24,7 @@ Each script is intended to be run from this repository directory and is safe to 
 From the repository root:
 
 ```zsh
-chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh herdr.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh dock_cleanup.zsh
+chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh herdr.zsh orca.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh dock_cleanup.zsh
 
 ./brew.zsh
 ./vivaldi_browser.zsh
@@ -38,6 +38,7 @@ chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh
 ./vscode_ide.zsh
 ./opencode.zsh
 ./herdr.zsh
+./orca.zsh
 ./podman.zsh
 ./docker_compose.zsh
 ./kubectl_and_krew.zsh
@@ -166,6 +167,17 @@ chmod +x herdr.zsh
 ```
 
 See [docs/guide_herdr_keyboard_shortcuts.md](docs/guide_herdr_keyboard_shortcuts.md) for an extensive keyboard shortcuts guide (prefix key, panes, tabs, workspaces, copy mode, custom bindings).
+
+#### Orca
+
+Installs Orca (agent development environment that runs many coding agents in parallel git worktrees) via Homebrew cask, verifies the bundled `orca` CLI, and reports which installed coding-agent CLIs (Claude Code, Codex, Cursor, OpenCode, ...) Orca will pick up automatically. Safe to rerun.
+
+```zsh
+chmod +x orca.zsh
+./orca.zsh
+```
+
+See [https://onorca.dev/docs](https://onorca.dev/docs) for the full documentation and CLI reference.
 
 ### Containers & Kubernetes
 
