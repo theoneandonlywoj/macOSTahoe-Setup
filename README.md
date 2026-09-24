@@ -24,7 +24,7 @@ Each script is intended to be run from this repository directory and is safe to 
 From the repository root:
 
 ```zsh
-chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh herdr.zsh orca.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh dock_cleanup.zsh
+chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh 1password.zsh postman.zsh cursor_ide.zsh vscode_ide.zsh opencode.zsh herdr.zsh orca.zsh executor.zsh podman.zsh docker_compose.zsh kubectl_and_krew.zsh kafka_cli.zsh mise.zsh elixir_and_erlang.zsh emacs.zsh doom_emacs.zsh dock_cleanup.zsh
 
 ./brew.zsh
 ./vivaldi_browser.zsh
@@ -39,6 +39,7 @@ chmod +x brew.zsh vivaldi_browser.zsh git.zsh gh.zsh google_chrome.zsh slack.zsh
 ./opencode.zsh
 ./herdr.zsh
 ./orca.zsh
+./executor.zsh
 ./podman.zsh
 ./docker_compose.zsh
 ./kubectl_and_krew.zsh
@@ -178,6 +179,17 @@ chmod +x orca.zsh
 ```
 
 See [https://onorca.dev/docs](https://onorca.dev/docs) for the full documentation and CLI reference.
+
+#### Executor
+
+Installs the Executor CLI (open-source MCP gateway — configure every integration once, share one tool catalog across all your agents) via npm, registers it as a background service, optionally installs the Executor Desktop app via Homebrew cask, and detects installed coding-agent CLIs (Claude Code, Codex, Gemini, Cursor, OpenCode) — asking before connecting each one to the local MCP endpoint. Safe to rerun after installing a new agent.
+
+```zsh
+chmod +x executor.zsh
+./executor.zsh
+```
+
+See [https://executor.sh/docs](https://executor.sh/docs) for the full documentation and CLI reference.
 
 ### Containers & Kubernetes
 
